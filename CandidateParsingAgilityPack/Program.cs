@@ -34,9 +34,9 @@
             //      paragraphs
             //      lists + paragraph above
             //      tables + paragraph above
-            // For each structural candidate, does it contain the known company and known brand for the company?
-            // If the known company is present in the page metadata, presence of known brand is sufficient
-
+            // For each known brand for the known company for the page:
+            //      Find candidates which contain the brand and add to the list of candidates, noting the company + brand for that candidate
+            //      For lists & tables, include the previous paragraph if there is one. For paragraphs, check the 3 sibling paragraphs above & below for a mention of the company, include if one is found.
 
             foreach (var page in pages)
             {
@@ -48,7 +48,7 @@
 
                 List<string> knownCompaniesPresent = new List<string>();
 
-                List<HtmlNode> nodesContainingKnownCompany = new List<HtmlNode>();
+                // List<HtmlNode> nodesContainingKnownCompany = new List<HtmlNode>();
 
                 // Check if the page contains any known seed company names
                 foreach (var knownCompany in knownCompanies)
