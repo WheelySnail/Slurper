@@ -59,26 +59,6 @@
 
             var candidates = new List<Candidate>();
 
-            // For each page:
-            // Does it contain a known company and its related known brand in metadata or text? (Quickly discard ones that don't without much processing) If so which company?
-            // If so, which known companies?
-            // Exit if it doesn't
-
-            // Option 1:
-            // For each known company present in the doc, find the individual paragraph, ul or table nodes containing the brand name or a node that contains the brand name.            
-            // Check the previous element (s?) for mention of company name, include in the candidate if it does.
-
-            // Option 2: 
-            // Find all structural candidates:
-            //      paragraphs
-            //      lists + paragraph above
-            //      tables + paragraph above
-            // For each known brand for the known company for the page:
-            //      Find candidates which contain the brand and add to the list of candidates, noting the company + brand for that candidate
-            //      For lists & tables, include the previous paragraph if there is one. For paragraphs, check the 3 sibling paragraphs above & below for a mention of the company, include if one is found.
-
-            // 
-
             foreach (var page in pages)
             {
                 doc.Load(page);
@@ -87,36 +67,30 @@
 
                 bool containsKnownRelationship = false;
 
-                var knownOwnerCompaniesPresent = new List<string>();
-
-                // List<HtmlNode> nodesContainingKnownCompany = new List<HtmlNode>();
+                // The relations containing an owner company mentioned in this page
+                var relationsWhereOwnerMentionedOnPage = new List<CompanyBrandRelationship>();
 
                 // Check if the page contains any known seed company names
-                foreach (var knownRelationship in knownCompanyBrandRelationships)
+                foreach (var relation in knownCompanyBrandRelationships)
                 {
-                    var companyName = knownRelationship.OwnerNames.First();
-
-                    if (root.OuterHtml.Contains(knownRelationship.OwnerNames.First()))
+                    foreach (var ownerCompanySynonym in relation.OwnerNames)
                     {
-                        containsKnownRelationship = true;
-                        knownOwnerCompaniesPresent.Add(knownRelationship.OwnerNames.First());
+                        if (root.OuterHtml.Contains(ownerCompanySynonym))
+                        {
+                            containsKnownRelationship = true;
+                            // TODO need some way of de-duping the list. Use a dictionary?
+                            relationsWhereOwnerMentionedOnPage.Add(relation);
+                        }
                     }
-
-                    //var nodes = root.Descendants().Where(d => d.InnerText.Contains(company));
-                    //foreach (var node in nodes)
-                    //{
-                    //    nodesContainingKnownCompany.Add(node);
-                    //    Console.WriteLine("NEXT" + node.OriginalName + node.InnerText);
-                    //}
                 }
 
-                // Skip document if it doesn't contain a seed company name
+                // Skip to next page if the current page doesn't contain a seed company name
                 if (!containsKnownRelationship)
                 {
                     continue;
                 }
 
-                // Gather the title which is an attribute of all candidates
+                // Gather the page title which is an attribute of all candidates
                 var title = root.Descendants("title").SingleOrDefault();
 
                 if (title != null)
@@ -124,6 +98,7 @@
                     Console.WriteLine("Page title: {0}", title.InnerText);
                 }
 
+                // Gather all tables, lists and paragraphs
                 var tables = root.Descendants("table").ToList();
 
                 var lists = root.Descendants("ul").ToList();
@@ -132,60 +107,166 @@
 
                 foreach (var table in tables)
                 {
-                    // Need a new candidate for each known company, even for the same page segment.
-                    foreach (var knownCompany in knownOwnerCompaniesPresent)
+                    // Need a new candidate for each known company, even for the same page segment. Use the subset of relations where the owner is mentioned on the page
+                    foreach (var relation in relationsWhereOwnerMentionedOnPage)
                     {
-                        if (table.OuterHtml.Contains(knownCompany))
+                        foreach (var brandSynonym in relation.BrandNames)
                         {
-                            var candidate = new Candidate
-                                                {
-                                                        IsTableSegment = true,
-                                                        CandidateHtmlAndText = table.OuterHtml,
-                                                        KnownCompany = knownCompany
-                                                };
-
-                            candidate.Uri = page;
-
-                            if (title != null)
+                            // If the document title contains the relation name, the presence of the brand name alone in the segment is sufficient
+                            // TODO loop through owner names
+                            if (title.OuterHtml.Contains(relation.OwnerNames.First()))
                             {
-                                candidate.PageTitle = title.ToString();
+                                if (table.OuterHtml.Contains(brandSynonym))
+                                {
+                                    // TODO Previous sibling where it's an h1, h2, h3, h4, h5, or <p><strong>
+                                    //var previousHeading = 
+                                    var candidate = new Candidate
+                                                        {
+                                                                IsTableSegment = true,
+                                                                IsListSegment = false,
+                                                                IsTextSegment = false,
+                                                                //NearestHeading = previousHeading  //var nodes = root.Descendants().Where(d => d.InnerText.Contains(company));,
+                                                                CandidateHtmlAndText =
+                                                                        table.PreviousSibling + table.OuterHtml,
+                                                                KnownCompany = relation.OwnerNames,
+                                                                KnownBrand = brandSynonym,
+                                                                KnownCompanyBrandRelationship = relation,
+                                                                TitleContainsOwner = true
+                                                        };
+
+                                    candidate.Uri = page;
+
+                                    if (title != null)
+                                    {
+                                        candidate.PageTitle = title.ToString();
+                                    }
+
+                                    candidates.Add(candidate);
+                                }
                             }
 
-                            candidates.Add(candidate);
+                                    // If the document title doesn't contain the relation name, it needs to be present in the table, or it's previous sibling
+                            else if (table.OuterHtml.Contains(brandSynonym)
+                                     && (table.OuterHtml.Contains(relation.OwnerNames.First())
+                                         || table.PreviousSibling.OuterHtml.Contains(relation.OwnerNames.First())))
+                            {
+                                //var previousHeading = 
+                                var candidate = new Candidate
+                                                    {
+                                                            IsTableSegment = true,
+                                                            IsListSegment = false,
+                                                            IsTextSegment = false,
+                                                            //NearestHeading = previousHeading  //var nodes = root.Descendants().Where(d => d.InnerText.Contains(company));,
+                                                            CandidateHtmlAndText =
+                                                                    table.PreviousSibling + table.OuterHtml,
+                                                            KnownCompany = relation.OwnerNames,
+                                                            KnownBrand = brandSynonym,
+                                                            KnownCompanyBrandRelationship = relation,
+                                                            TitleContainsOwner = false
+                                                    };
+
+                                candidate.Uri = page;
+
+                                if (title != null)
+                                {
+                                    candidate.PageTitle = title.ToString();
+                                }
+
+                                candidates.Add(candidate);
+                            }
                         }
                     }
                 }
 
                 foreach (var list in lists)
-                {
-                    var candidate = new Candidate { IsTableSegment = true };
-
-                    if (title != null)
                     {
-                        candidate.PageTitle = title.ToString();
+                    // Need a new candidate for each known company, even for the same page segment. Use the subset of relations where the owner is mentioned on the page
+                    foreach (var relation in relationsWhereOwnerMentionedOnPage)
+                    {
+                        foreach (var brandSynonym in relation.BrandNames)
+                        {
+                            // If the document title contains the relation name, the presence of the brand name alone in the segment is sufficient
+                            // TODO loop through owner names
+                            if (title.OuterHtml.Contains(relation.OwnerNames.First()))
+                            {
+                                if (list.OuterHtml.Contains(brandSynonym))
+                                {
+                                    // TODO Previous sibling where it's an h1, h2, h3, h4, h5, or <p><strong>
+                                    //var previousHeading = 
+                                    var candidate = new Candidate
+                                                        {
+                                                                IsTableSegment = true,
+                                                                IsListSegment = false,
+                                                                IsTextSegment = false,
+                                                                //NearestHeading = previousHeading  //var nodes = root.Descendants().Where(d => d.InnerText.Contains(company));,
+                                                                CandidateHtmlAndText =
+                                                                        list.PreviousSibling + list.OuterHtml,
+                                                                KnownCompany = relation.OwnerNames,
+                                                                KnownBrand = brandSynonym,
+                                                                KnownCompanyBrandRelationship = relation,
+                                                                TitleContainsOwner = true
+                                                        };
+
+                                    candidate.Uri = page;
+
+                                    if (title != null)
+                                    {
+                                        candidate.PageTitle = title.ToString();
+                                    }
+
+                                    candidates.Add(candidate);
+                                }
+                            }
+
+                                    // If the document title doesn't contain the relation name, it needs to be present in the table, or it's previous sibling
+                            else if (list.OuterHtml.Contains(brandSynonym)
+                                     && (list.OuterHtml.Contains(relation.OwnerNames.First())
+                                         || list.PreviousSibling.OuterHtml.Contains(relation.OwnerNames.First())))
+                            {
+                                //var previousHeading = 
+                                var candidate = new Candidate
+                                                    {
+                                                            IsTableSegment = false,
+                                                            IsListSegment = true,
+                                                            IsTextSegment = false,
+                                                            //NearestHeading = previousHeading  //var nodes = root.Descendants().Where(d => d.InnerText.Contains(company));,
+                                                            CandidateHtmlAndText =
+                                                                    list.PreviousSibling + list.OuterHtml,
+                                                            KnownCompany = relation.OwnerNames,
+                                                            KnownBrand = brandSynonym,
+                                                            KnownCompanyBrandRelationship = relation,
+                                                            TitleContainsOwner = false
+                                                    };
+
+                                candidate.Uri = page;
+
+                                if (title != null)
+                                {
+                                    candidate.PageTitle = title.ToString();
+                                }
+
+                                candidates.Add(candidate);
+                            }
+                        }
+                    }
                     }
 
-                    candidate.CandidateHtmlAndText = list.OuterHtml;
-
-                    //Console.WriteLine("Table text: {0}", list.InnerText.Trim());
-                }
-
-                foreach (var paragraph in paragraphs)
-                {
-                    var candidate = new Candidate { IsTableSegment = true };
-
-                    if (title != null)
+                    foreach (var paragraph in paragraphs)
                     {
-                        candidate.PageTitle = title.ToString();
+                        var candidate = new Candidate { IsTableSegment = true };
+
+                        if (title != null)
+                        {
+                            candidate.PageTitle = title.ToString();
+                        }
+
+                        candidate.CandidateHtmlAndText = paragraph.OuterHtml;
+
                     }
-
-                    candidate.CandidateHtmlAndText = paragraph.OuterHtml;
-
-                    //Console.WriteLine("Table text: {0}", list.InnerText.Trim());
                 }
-            }
             return candidates;
-        }
+
+            }
 
         private static List<CompanyBrandRelationship> GetKnownCompanyBrandRelationships()
         {
@@ -194,18 +275,17 @@
                               new CompanyBrandRelationship
                                   {
                                           OwnerNames = new List<string>() { "Nestle, Nestlé" },
-                                          BrandNames =
-                                                  new List<string>()
-                                                      {
-                                                              "Buxton",
-                                                              //"Kit Kat",
-                                                              //"Nescafé",
-                                                              //"Smarties",
-                                                              //"Nesquik",
-                                                              //"Stouffer's",
-                                                              //"Maggi",
-                                                              //"L'Oreal"
-                                                      }
+                                          BrandNames = new List<string>()
+                                                           {
+                                                                   "Buxton",
+                                                                   //"Kit Kat",
+                                                                   //"Nescafé",
+                                                                   //"Smarties",
+                                                                   //"Nesquik",
+                                                                   //"Stouffer's",
+                                                                   //"Maggi",
+                                                                   //"L'Oreal"
+                                                           }
                                   });
             relationships.Add(
                               new CompanyBrandRelationship

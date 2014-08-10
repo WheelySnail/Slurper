@@ -9,9 +9,12 @@ namespace CandidateParsingAgilityPack
     {
         public String PageTitle { get; set; }
 
-        public String KnownCompany { get; set; }
+        public List<string> KnownCompany { get; set; }
 
-        public String KnownCompanyBrandRelationship { get; set; }
+        public string KnownBrand { get; set; }
+
+        // Does it make sense to have this here? 
+        public CompanyBrandRelationship KnownCompanyBrandRelationship { get; set; }
 
         public String DomainName { get; set; }
 
@@ -30,5 +33,7 @@ namespace CandidateParsingAgilityPack
         public List<String> NamedEntities { get; set; }
 
         public string Uri { get; set; }
+
+        public bool TitleContainsOwner { get; set; }
     }
 }
