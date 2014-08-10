@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="Candidate.cs" />
     <Compile Include="Company.cs" />
+    <Compile Include="CompanyBrandRelationship.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
