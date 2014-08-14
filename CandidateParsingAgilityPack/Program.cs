@@ -28,31 +28,11 @@
 
             // When using local files: 
 
-            var knownCompanyBrandRelationships = GetKnownCompanyBrandRelationships();
+            GetTrainingCandidates();
 
-            var pages = GetPages("C:/Users/Alice/Desktop/TestDocuments");
-
-            var candidates = GetCandidatesFromPages(pages, knownCompanyBrandRelationships);
-
-            var file = new StreamWriter("C:/Users/Alice/Desktop/Candidates.txt");
-
-            foreach (var candidate in candidates)
-            {
-                file.WriteLine(
-                               "Page title: " + candidate.PageTitle + Environment.NewLine + Environment.NewLine + "Known company: " + candidate.KnownCompany.ToList()
-                                + Environment.NewLine + Environment.NewLine + "\r Html & Text: " + candidate.CandidateHtmlAndText + Environment.NewLine + Environment.NewLine);
-                Console.WriteLine(
-                                  candidate.PageTitle + Environment.NewLine + ' ' + candidate.KnownCompany.ToList().ToString() + Environment.NewLine + ' '
-                                  + candidate.CandidateHtmlAndText + Environment.NewLine);
-            }
-
-            file.Close();
-
-            Console.WriteLine(candidates.Count.ToString());
-
-            Console.ReadLine();
+            GetTestCandidates();
         }
-
+        
         // Get training examples which contain a known company/ brand relationship
         private static List<Candidate> GetCandidatesFromPages(
                 IEnumerable<string> pages,
@@ -136,7 +116,9 @@
                         foreach (var brandSynonym in relation.BrandNames)
                         {
                             // Check if a brand synonym is present in the initial candidate. This is a necessary but not sufficient condition for creating a candidate
-                            if (initialcandidate.Node.OuterHtml.ToLowerInvariant().Contains(brandSynonym.ToLowerInvariant()))
+                            if (
+                                    initialcandidate.Node.OuterHtml.ToLowerInvariant()
+                                                    .Contains(brandSynonym.ToLowerInvariant()))
                             {
                                 var domainOrTitleContainsOwner = false;
                                 var initialCandidateOrPreviousSiblingContainOwner = false;
@@ -144,12 +126,16 @@
                                 // If the document domain/ filename or title contains the relation name, the presence of the brand name alone in the segment is sufficient
                                 foreach (var ownerSynonym in relation.OwnerNames)
                                 {
-                                    if (page.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant()) || title.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant()))
+                                    if (page.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant())
+                                        || title.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant()))
                                     {
                                         domainOrTitleContainsOwner = true;
                                     }
-                                    if (initialcandidate.Node.OuterHtml.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant())
-                                        || initialcandidate.Node.PreviousSibling.OuterHtml.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant()))
+                                    if (
+                                            initialcandidate.Node.OuterHtml.ToLowerInvariant()
+                                                            .Contains(ownerSynonym.ToLowerInvariant())
+                                            || initialcandidate.Node.PreviousSibling.OuterHtml.ToLowerInvariant()
+                                                               .Contains(ownerSynonym.ToLowerInvariant()))
                                     {
                                         initialCandidateOrPreviousSiblingContainOwner = true;
                                     }
@@ -171,14 +157,16 @@
                                                         {
                                                                 IsTableSegment = initialcandidate.Type == "table",
                                                                 IsListSegment = initialcandidate.Type == "list",
-                                                                IsParagraphSegment = initialcandidate.Type == "paragraph",
+                                                                IsParagraphSegment =
+                                                                        initialcandidate.Type == "paragraph",
                                                                 //NearestHeading = previousHeading,
                                                                 CandidateHtmlAndText = candidateHtmlAndText,
                                                                 KnownCompany = relation.OwnerNames,
                                                                 // TODO will there be one candidate per brand synonym or one per brand? 
                                                                 KnownBrand = brandSynonym,
                                                                 KnownCompanyBrandRelationship = relation,
-                                                                DomainOrPageTitleContainsOwner = domainOrTitleContainsOwner,
+                                                                DomainOrPageTitleContainsOwner =
+                                                                        domainOrTitleContainsOwner,
                                                                 Uri = page,
                                                                 PageTitle = title.ToString()
                                                         };
@@ -223,17 +211,16 @@
             relationships.Add(
                               new CompanyBrandRelationship
                                   {
-
-                                      OwnerId = "1",
-                                      OwnerNames = new List<string>() { "Nestle", "Nestlé" },
-                                      BrandNames = new List<string>() { "Nespresso" }
+                                          OwnerId = "1",
+                                          OwnerNames = new List<string>() { "Nestle", "Nestlé" },
+                                          BrandNames = new List<string>() { "Nespresso" }
                                   });
 
             relationships.Add(
                               new CompanyBrandRelationship
                                   {
-                                      OwnerId = "2",
-                                      OwnerNames = new List<string>() { "Cadbury", "Cadburies" },
+                                          OwnerId = "2",
+                                          OwnerNames = new List<string>() { "Cadbury", "Cadburies" },
                                           BrandNames = new List<string>()
                                                            {
                                                                    "Dairy Milk",
@@ -245,8 +232,8 @@
             relationships.Add(
                               new CompanyBrandRelationship
                                   {
-                                      OwnerId = "3",
-                                      OwnerNames =
+                                          OwnerId = "3",
+                                          OwnerNames =
                                                   new List<string>()
                                                       {
                                                               "Bayer",
@@ -257,26 +244,25 @@
                                                               "Bayer Consumer Care",
                                                               "Bayer Animal Health",
                                                       },
-                                          BrandNames =
-                                                  new List<string>()
-                                                      {
-                                                              //"Miles Laboratories",
-                                                              //"Miles Canada",
-                                                              //"Cutter Laboratories",
-                                                              //"Alka-Seltzer",
-                                                              //"Flintstones vitamins",
-                                                              //"One-A-Day vitamins",
-                                                              //"Cutter insect repellent",
-                                                              //"Bomac Group",
-                                                              //"Xofigo",
-                                                              //"Aventis",
-                                                              //"Sanofi",
-                                                              "LibertyLink",
-                                                              //"Jatropha",
-                                                              //"Yasmin",
-                                                              //"Nexavar",
-                                                              //"Kogenate"
-                                                      }
+                                          BrandNames = new List<string>()
+                                                           {
+                                                                   //"Miles Laboratories",
+                                                                   //"Miles Canada",
+                                                                   //"Cutter Laboratories",
+                                                                   //"Alka-Seltzer",
+                                                                   //"Flintstones vitamins",
+                                                                   //"One-A-Day vitamins",
+                                                                   //"Cutter insect repellent",
+                                                                   //"Bomac Group",
+                                                                   //"Xofigo",
+                                                                   //"Aventis",
+                                                                   //"Sanofi",
+                                                                   "LibertyLink",
+                                                                   //"Jatropha",
+                                                                   //"Yasmin",
+                                                                   //"Nexavar",
+                                                                   //"Kogenate"
+                                                           }
                                   });
 
             return relationships;
@@ -300,12 +286,43 @@
         {
             return Directory.GetFiles(path, "*.htm*", SearchOption.AllDirectories);
         }
-    }
 
-    internal class InitialCandidate
-    {
-        public HtmlNode Node { get; set; }
+        private static void GetTestCandidates()
+        {
+            // TODO 
+            Console.ReadLine();
+        }
 
-        public string Type { get; set; }
+        private static void GetTrainingCandidates()
+        {
+            // TODO must sanitise this data, as it's user generated
+
+            var knownCompanyBrandRelationships = GetKnownCompanyBrandRelationships();
+
+            var pages = GetPages("C:/Users/Alice/Desktop/TestDocuments");
+
+            var candidates = GetCandidatesFromPages(pages, knownCompanyBrandRelationships);
+
+            var file = new StreamWriter("C:/Users/Alice/Desktop/Candidates.txt");
+
+            foreach (var candidate in candidates)
+            {
+                file.WriteLine(
+                               "Page title: " + candidate.PageTitle + Environment.NewLine + Environment.NewLine
+                               + "Known company: " + candidate.KnownCompany.ToList() + Environment.NewLine
+                               + Environment.NewLine + "\r Html & Text: " + candidate.CandidateHtmlAndText
+                               + Environment.NewLine + Environment.NewLine);
+                Console.WriteLine(
+                                  candidate.PageTitle + Environment.NewLine + ' '
+                                  + candidate.KnownCompany.ToList().ToString() + Environment.NewLine + ' '
+                                  + candidate.CandidateHtmlAndText + Environment.NewLine);
+            }
+
+            file.Close();
+
+            Console.WriteLine(candidates.Count.ToString());
+
+            Console.ReadLine();
+        }
     }
 }
