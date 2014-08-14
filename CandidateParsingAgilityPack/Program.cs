@@ -39,14 +39,16 @@
             foreach (var candidate in candidates)
             {
                 file.WriteLine(
-                               "Page title: " + candidate.PageTitle + "\r Known company: " + candidate.KnownCompany
-                               + "\r Html & Text: " + candidate.CandidateHtmlAndText + "\r ");
+                               "Page title: " + candidate.PageTitle + Environment.NewLine + Environment.NewLine + "Known company: " + candidate.KnownCompany.ToList()
+                                + Environment.NewLine + Environment.NewLine + "\r Html & Text: " + candidate.CandidateHtmlAndText + Environment.NewLine + Environment.NewLine);
                 Console.WriteLine(
-                                  candidate.PageTitle + ' ' + candidate.KnownCompany + ' '
-                                  + candidate.CandidateHtmlAndText);
+                                  candidate.PageTitle + Environment.NewLine + ' ' + candidate.KnownCompany.ToList().ToString() + Environment.NewLine + ' '
+                                  + candidate.CandidateHtmlAndText + Environment.NewLine);
             }
 
             file.Close();
+
+            Console.WriteLine(candidates.Count.ToString());
 
             Console.ReadLine();
         }
@@ -96,7 +98,7 @@
                 }
 
                 // Gather the page title which is an attribute of all candidates
-                var title = root.Descendants("title").SingleOrDefault();
+                var title = doc.DocumentNode.SelectSingleNode("//head/title").InnerText;
 
                 // Gather all tables, lists and paragraphs. Doesn't seem to be a way to retrieve a node's html element type after it's been stored so add this to an initial candidate object
 
@@ -134,7 +136,7 @@
                         foreach (var brandSynonym in relation.BrandNames)
                         {
                             // Check if a brand synonym is present in the initial candidate. This is a necessary but not sufficient condition for creating a candidate
-                            if (initialcandidate.Node.OuterHtml.Contains(brandSynonym))
+                            if (initialcandidate.Node.OuterHtml.ToLowerInvariant().Contains(brandSynonym.ToLowerInvariant()))
                             {
                                 var domainOrTitleContainsOwner = false;
                                 var initialCandidateOrPreviousSiblingContainOwner = false;
@@ -142,12 +144,12 @@
                                 // If the document domain/ filename or title contains the relation name, the presence of the brand name alone in the segment is sufficient
                                 foreach (var ownerSynonym in relation.OwnerNames)
                                 {
-                                    if (page.Contains(ownerSynonym) || title.OuterHtml.Contains(ownerSynonym))
+                                    if (page.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant()) || title.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant()))
                                     {
                                         domainOrTitleContainsOwner = true;
                                     }
-                                    if (initialcandidate.Node.OuterHtml.Contains(ownerSynonym)
-                                        || initialcandidate.Node.PreviousSibling.OuterHtml.Contains(ownerSynonym))
+                                    if (initialcandidate.Node.OuterHtml.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant())
+                                        || initialcandidate.Node.PreviousSibling.OuterHtml.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant()))
                                     {
                                         initialCandidateOrPreviousSiblingContainOwner = true;
                                     }
@@ -173,6 +175,7 @@
                                                                 //NearestHeading = previousHeading,
                                                                 CandidateHtmlAndText = candidateHtmlAndText,
                                                                 KnownCompany = relation.OwnerNames,
+                                                                // TODO will there be one candidate per brand synonym or one per brand? 
                                                                 KnownBrand = brandSynonym,
                                                                 KnownCompanyBrandRelationship = relation,
                                                                 DomainOrPageTitleContainsOwner = domainOrTitleContainsOwner,
