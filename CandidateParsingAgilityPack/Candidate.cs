@@ -28,12 +28,12 @@ namespace CandidateParsingAgilityPack
 
         public bool IsTableSegment { get; set; }
 
-        public bool IsTextSegment { get; set; }
+        public bool IsParagraphSegment { get; set; }
 
         public List<String> NamedEntities { get; set; }
 
         public string Uri { get; set; }
 
-        public bool TitleContainsOwner { get; set; }
+        public bool DomainOrPageTitleContainsOwner { get; set; }
     }
 }
