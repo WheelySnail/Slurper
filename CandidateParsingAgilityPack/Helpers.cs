@@ -1,8 +1,13 @@
 ﻿namespace CandidateParsingAgilityPack
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+
+    using CandidateParsingAgilityPack.Model;
+
+    using Google.Apis.Freebase.v1;
 
     using HtmlAgilityPack;
 
@@ -157,6 +162,18 @@
 
         internal static List<CompanyBrandRelationship> GetKnownCompanyBrandRelationships()
         {
+            // TODO must sanitise this data, as it's user generated
+
+//            string API_KEY = "your-api-key-here";
+//            FreebaseService service = new FreebaseService{ Key = API_KEY };
+//String query = "[{\"id\":null,\"name\":null,\"type\":\"/astronomy/planet\"}]";
+//FreebaseService.Version = 1;
+//            FreebaseService..MqlreadRequest request = service.Mqlread(query);
+//string response = request.Fetch();
+//Console.WriteLine (response);
+
+//            var url = "https://www.googleapis.com/freebase/v1/mqlread?query=[{"id": null,"company": null,"brand": null,"type": "/business/company_brand_relationship"}]"
+
             var relationships = new List<CompanyBrandRelationship>();
             relationships.Add(
                               new CompanyBrandRelationship

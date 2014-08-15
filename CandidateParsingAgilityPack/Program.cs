@@ -11,36 +11,22 @@
 
     #endregion
 
-    internal class Program
+    internal static class Program
     {
         private static void Main(string[] args)
         {
-            // When scraping:
-
-            //var doc = new HtmlDocument();
-            //using (var client = new WebClient())
-            //{
-            //    var filename = Path.GetTempFileName();
-            //    client.DownloadFile("http://en.wikipedia.org/wiki/Nestl%C3%A9", filename);
-            //    doc.Load(filename);
-            // Move rest of the method in here
-            //}
-
-            // When using local files: 
-
             GetTrainingCandidates();
 
             GetTestCandidates();
         }
         
-        // Get training examples which contain a known company/ brand relationship
-
         private static void GetTestCandidates()
         {
             // TODO 
             Console.ReadLine();
         }
 
+        // Get training examples which contain a known company/ brand relationship
         private static void GetTrainingCandidates()
         {
             // TODO must sanitise this data, as it's user generated

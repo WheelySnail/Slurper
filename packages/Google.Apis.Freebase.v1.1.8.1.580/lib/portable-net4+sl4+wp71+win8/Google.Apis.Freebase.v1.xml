@@ -1,0 +1,364 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Google.Apis.Freebase.v1</name>
+    </assembly>
+    <members>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileCandidate.Confidence">
+            <summary>Percentage likelihood that this candidate is the unique matching entity. Value will be between 0.0
+            and 1.0</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileCandidate.Lang">
+            <summary>Language code that candidate and notable names are displayed in.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileCandidate.Mid">
+            <summary>Freebase MID of candidate entity.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileCandidate.Name">
+            <summary>Freebase name of matching entity in specified language.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileCandidate.Notable">
+            <summary>Type or profession the candidate is notable for.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileCandidate.ETag">
+            <summary>The ETag of the item.</summary>
+        </member>
+        <member name="T:Google.Apis.Freebase.v1.Data.ReconcileCandidate.NotableData">
+            <summary>Type or profession the candidate is notable for.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileCandidate.NotableData.Id">
+            <summary>MID of notable category.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileCandidate.NotableData.Name">
+            <summary>Name of notable category in specified language.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileGet.Candidate">
+            <summary>If filled, then the listed candidates are potential matches, and such should be evaluated by a more
+            discerning algorithm or human. The matches are ordered by confidence.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileGet.Costs">
+            <summary>Server costs for reconciling.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileGet.Match">
+            <summary>If filled, this entity is guaranteed to match at requested confidence probability (default
+            99%).</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileGet.Warning">
+            <summary>If filled, then there were recoverable problems that affected the request. For example, some of the
+            properties were ignored because they either are not valid Freebase predicates or are not indexed for
+            reconciliation. The candidates returned should be considered valid results, with the caveat that sections of
+            the request were ignored as specified by the warning text.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileGet.ETag">
+            <summary>The ETag of the item.</summary>
+        </member>
+        <member name="T:Google.Apis.Freebase.v1.Data.ReconcileGet.CostsData">
+            <summary>Server costs for reconciling.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileGet.CostsData.Hits">
+            <summary>Total number of hits found.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileGet.CostsData.Ms">
+            <summary>Total milliseconds spent.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileGet.WarningData.Location">
+            <summary>Location of warning in the request e.g. invalid predicate.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileGet.WarningData.Message">
+            <summary>Warning message to display to the user.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.Data.ReconcileGet.WarningData.Reason">
+            <summary>Code for identifying classes of warnings.</summary>
+        </member>
+        <member name="T:Google.Apis.Freebase.v1.FreebaseService">
+            <summary>The Freebase Service.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.Version">
+            <summary>The API version.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.DiscoveryVersionUsed">
+            <summary>The discovery version used to generate this service.</summary>
+        </member>
+        <member name="M:Google.Apis.Freebase.v1.FreebaseService.#ctor">
+            <summary>Constructs a new service.</summary>
+        </member>
+        <member name="M:Google.Apis.Freebase.v1.FreebaseService.#ctor(Google.Apis.Services.BaseClientService.Initializer)">
+            <summary>Constructs a new service.</summary>
+            <param name="initializer">The service initializer.</param>
+        </member>
+        <member name="M:Google.Apis.Freebase.v1.FreebaseService.Reconcile">
+            <summary>Reconcile entities to Freebase open data.</summary>
+        </member>
+        <member name="M:Google.Apis.Freebase.v1.FreebaseService.Search">
+            <summary>Search Freebase open data.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.Features">
+            <summary>Gets the service supported features.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.Name">
+            <summary>Gets the service name.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.BaseUri">
+            <summary>Gets the service base URI.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.BasePath">
+            <summary>Gets the service base path.</summary>
+        </member>
+        <member name="T:Google.Apis.Freebase.v1.FreebaseService.ReconcileRequest">
+            <summary>Reconcile entities to Freebase open data.</summary>
+        </member>
+        <member name="T:Google.Apis.Freebase.v1.FreebaseBaseServiceRequest`1">
+            <summary>A base abstract class for Freebase requests.</summary>
+        </member>
+        <member name="M:Google.Apis.Freebase.v1.FreebaseBaseServiceRequest`1.#ctor(Google.Apis.Services.IClientService)">
+            <summary>Constructs a new FreebaseBaseServiceRequest instance.</summary>
+        </member>
+        <member name="M:Google.Apis.Freebase.v1.FreebaseBaseServiceRequest`1.InitParameters">
+            <summary>Initializes Freebase parameter list.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseBaseServiceRequest`1.Alt">
+            <summary>Data format for the response.</summary>
+            [default: json]
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseBaseServiceRequest`1.Fields">
+            <summary>Selector specifying which fields to include in a partial response.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseBaseServiceRequest`1.Key">
+            <summary>API key. Your API key identifies your project and provides you with API access, quota, and reports.
+            Required unless you provide an OAuth 2.0 token.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseBaseServiceRequest`1.OauthToken">
+            <summary>OAuth 2.0 token for the current user.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseBaseServiceRequest`1.PrettyPrint">
+            <summary>Returns response with indentations and line breaks.</summary>
+            [default: true]
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseBaseServiceRequest`1.QuotaUser">
+            <summary>Available to use for quota purposes for server-side applications. Can be any arbitrary string
+            assigned to a user, but should not exceed 40 characters. Overrides userIp if both are provided.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseBaseServiceRequest`1.UserIp">
+            <summary>IP address of the site where the request originates. Use this if you want to enforce per-user
+            limits.</summary>
+        </member>
+        <member name="T:Google.Apis.Freebase.v1.FreebaseBaseServiceRequest`1.AltEnum">
+            <summary>Data format for the response.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseBaseServiceRequest`1.AltEnum.Json">
+            <summary>Responses with Content-Type of application/json</summary>
+        </member>
+        <member name="M:Google.Apis.Freebase.v1.FreebaseService.ReconcileRequest.#ctor(Google.Apis.Services.IClientService)">
+            <summary>Constructs a new Reconcile request.</summary>
+        </member>
+        <member name="M:Google.Apis.Freebase.v1.FreebaseService.ReconcileRequest.InitParameters">
+            <summary>Initializes Reconcile parameter list.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.ReconcileRequest.Lang">
+            <summary>Languages for names and values. First language is used for display. Default is 'en'.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.ReconcileRequest.Confidence">
+            <summary>Required confidence for a candidate to match. Must be between .5 and 1.0</summary>
+            [default: 0.99]
+            [minimum: 0.0]
+            [maximum: 1.0]
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.ReconcileRequest.Name">
+            <summary>Name of entity.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.ReconcileRequest.Kind">
+            <summary>Classifications of entity e.g. type, category, title.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.ReconcileRequest.Prop">
+            <summary>Property values for entity formatted as :</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.ReconcileRequest.Limit">
+            <summary>Maximum number of candidates to return.</summary>
+            [default: 3]
+            [minimum: 0]
+            [maximum: 25]
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.ReconcileRequest.MethodName">
+            <summary>Gets the method name.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.ReconcileRequest.HttpMethod">
+            <summary>Gets the HTTP method.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.ReconcileRequest.RestPath">
+            <summary>Gets the REST path.</summary>
+        </member>
+        <member name="T:Google.Apis.Freebase.v1.FreebaseService.SearchRequest">
+            <summary>Search Freebase open data.</summary>
+        </member>
+        <member name="M:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.#ctor(Google.Apis.Services.IClientService)">
+            <summary>Constructs a new Search request.</summary>
+        </member>
+        <member name="M:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.InitParameters">
+            <summary>Initializes Search parameter list.</summary>
+        </member>
+        <member name="M:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Download(System.IO.Stream)">
+            <summary>Synchronously download the media into the given stream.</summary>
+        </member>
+        <member name="M:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.DownloadAsync(System.IO.Stream)">
+            <summary>Asynchronously download the media into the given stream.</summary>
+        </member>
+        <member name="M:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.DownloadAsync(System.IO.Stream,System.Threading.CancellationToken)">
+            <summary>Asynchronously download the media into the given stream.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Domain">
+            <summary>Restrict to topics with this Freebase domain id.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Help">
+            <summary>The keyword to request help on.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Query">
+            <summary>Query term to search for.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Scoring">
+            <summary>Relevance scoring algorithm to use.</summary>
+            [default: entity]
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Cursor">
+            <summary>The cursor value to use for the next page of results.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Prefixed">
+            <summary>Prefix match against names and aliases.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Exact">
+            <summary>Query on exact name and keys only.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Mid">
+            <summary>A mid to use instead of a query.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Encode">
+            <summary>The encoding of the response. You can use this parameter to enable html encoding.</summary>
+            [default: off]
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Type">
+            <summary>Restrict to topics with this Freebase type id.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.AsOfTime">
+            <summary>A mql as_of_time value to use with mql_output queries.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Stemmed">
+            <summary>Query on stemmed names and aliases. May not be used with prefixed.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Format">
+            <summary>Structural format of the json response.</summary>
+            [default: entity]
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Spell">
+            <summary>Request 'did you mean' suggestions</summary>
+            [default: no_spelling]
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.With">
+            <summary>A rule to match against.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Lang">
+            <summary>The code of the language to run the query with. Default is 'en'.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Indent">
+            <summary>Whether to indent the json results or not.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Filter">
+            <summary>A filter to apply to the query.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Callback">
+            <summary>JS method name for JSONP callbacks.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Without">
+            <summary>A rule to not match against.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Limit">
+            <summary>Maximum number of results to return.</summary>
+            [default: 20]
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.Output">
+            <summary>An output expression to request data from matches.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.MqlOutput">
+            <summary>The MQL query to run againist the results to extract more data.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.MethodName">
+            <summary>Gets the method name.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.HttpMethod">
+            <summary>Gets the HTTP method.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.RestPath">
+            <summary>Gets the REST path.</summary>
+        </member>
+        <member name="P:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.MediaDownloader">
+            <summary>Gets the media downloader.</summary>
+        </member>
+        <member name="T:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.HelpEnum">
+            <summary>The keyword to request help on.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.HelpEnum.Langs">
+            <summary>The language codes served by the service.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.HelpEnum.Mappings">
+            <summary>The property/path mappings supported by the filter and output request parameters.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.HelpEnum.Predicates">
+            <summary>The predicates and path-terminating properties supported by the filter and output request
+            parameters.</summary>
+        </member>
+        <member name="T:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.ScoringEnum">
+            <summary>Relevance scoring algorithm to use.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.ScoringEnum.Entity">
+            <summary>Use freebase and popularity entity ranking.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.ScoringEnum.Freebase">
+            <summary>Use freebase entity ranking.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.ScoringEnum.Schema">
+            <summary>Use schema ranking for properties and types.</summary>
+        </member>
+        <member name="T:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.EncodeEnum">
+            <summary>The encoding of the response. You can use this parameter to enable html encoding.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.EncodeEnum.Html">
+            <summary>Encode certain characters in the response (such as tags and ambersands) using html
+            encoding.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.EncodeEnum.Off">
+            <summary>No encoding of the response. You should not print the results directly on an web page
+            without html-escaping the content first.</summary>
+        </member>
+        <member name="T:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.FormatEnum">
+            <summary>Structural format of the json response.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.FormatEnum.Ac">
+            <summary>Compact format useful for autocomplete/suggest UIs.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.FormatEnum.Classic">
+            <summary>[DEPRECATED] Same format as was returned by api.freebase.com.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.FormatEnum.Entity">
+            <summary>Basic information about the entities.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.FormatEnum.Guids">
+            <summary>[DEPRECATED] Ordered list of a freebase guids.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.FormatEnum.Ids">
+            <summary>Ordered list of freebase ids.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.FormatEnum.Mids">
+            <summary>Ordered list of freebase mids.</summary>
+        </member>
+        <member name="T:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.SpellEnum">
+            <summary>Request 'did you mean' suggestions</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.SpellEnum.Always">
+            <summary>Request spelling suggestions for any query at least three characters long.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.SpellEnum.NoResults">
+            <summary>Request spelling suggestions if no results were found.</summary>
+        </member>
+        <member name="F:Google.Apis.Freebase.v1.FreebaseService.SearchRequest.SpellEnum.NoSpelling">
+            <summary>Don't request spelling suggestions.</summary>
+        </member>
+    </members>
+</doc>
