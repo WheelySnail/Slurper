@@ -1,9 +1,12 @@
 ﻿namespace CandidateParsingAgilityPack
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Net.Http;
+    using System.Net.Http.Headers;
 
     using CandidateParsingAgilityPack.Model;
 
@@ -164,15 +167,20 @@
         {
             // TODO must sanitise this data, as it's user generated
 
-//            string API_KEY = "your-api-key-here";
-//            FreebaseService service = new FreebaseService{ Key = API_KEY };
-//String query = "[{\"id\":null,\"name\":null,\"type\":\"/astronomy/planet\"}]";
-//FreebaseService.Version = 1;
-//            FreebaseService..MqlreadRequest request = service.Mqlread(query);
-//string response = request.Fetch();
-//Console.WriteLine (response);
+            string API_KEY = "";
 
-//            var url = "https://www.googleapis.com/freebase/v1/mqlread?query=[{"id": null,"company": null,"brand": null,"type": "/business/company_brand_relationship"}]"
+            String url = "https://www.googleapis.com/freebase/v1/mqlread"; // May need ? 
+            String query = "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key=" + API_KEY;
+
+            var client = new HttpClient();
+            client.BaseAddress = new Uri(url);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            HttpResponseMessage reponse = client.GetAsync(query).Result;
+            if (reponse.IsSuccessStatusCode)
+            {
+                var dataObjects = reponse.Content.ReadAsStringAsync().Result;
+                Console.WriteLine(dataObjects);
+            }
 
             var relationships = new List<CompanyBrandRelationship>();
             relationships.Add(
