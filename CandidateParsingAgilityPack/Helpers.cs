@@ -197,6 +197,7 @@
         private static List<CompanyBrandRelationship> GetTestRelationships()
         {
             var relationships = new List<CompanyBrandRelationship>();
+            // TODO get synonyms from Freebase or alter the CompanyBrandRelation class
             //relationships.Add(
             //                  new CompanyBrandRelationship
             //                      {
