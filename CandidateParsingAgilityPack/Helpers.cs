@@ -10,9 +10,10 @@
 
     using CandidateParsingAgilityPack.Model;
 
-    using Google.Apis.Freebase.v1;
-
     using HtmlAgilityPack;
+
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
 
     internal class Helpers
     {
@@ -168,37 +169,40 @@
             // TODO must sanitise this data, as it's user generated
 
             string API_KEY = "";
-
-            String url = "https://www.googleapis.com/freebase/v1/mqlread"; // May need ? 
+            String url = "https://www.googleapis.com/freebase/v1/mqlread";
             String query = "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key=" + API_KEY;
 
             var client = new HttpClient();
             client.BaseAddress = new Uri(url);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             HttpResponseMessage reponse = client.GetAsync(query).Result;
+
             if (reponse.IsSuccessStatusCode)
             {
-                var dataObjects = reponse.Content.ReadAsStringAsync().Result;
-                Console.WriteLine(dataObjects);
+                var responseString = reponse.Content.ReadAsStringAsync().Result;
+                var relationships = JsonConvert.DeserializeObject<RelationshipsResponse>(responseString);
+                return relationships.Relationships;
+            }
+            else
+            {
+                throw new Exception();
             }
 
+            //return GetTestRelationships();
+
+            // https://api.opencorporates.com/companies/search?q=barclays+bank
+            // https://api.opencorporates.com/companies/gb/01320086/network
+        }
+
+        private static List<CompanyBrandRelationship> GetTestRelationships()
+        {
             var relationships = new List<CompanyBrandRelationship>();
             relationships.Add(
                               new CompanyBrandRelationship
                                   {
                                           OwnerId = "1",
                                           OwnerNames = new List<string>() { "Nestle", "Nestlé" },
-                                          BrandNames = new List<string>()
-                                                           {
-                                                                   "Buxton",
-                                                                   //"Kit Kat",
-                                                                   //"Nescafé",
-                                                                   //"Smarties",
-                                                                   //"Nesquik",
-                                                                   //"Stouffer's",
-                                                                   //"Maggi",
-                                                                   //"L'Oreal"
-                                                           }
+                                          BrandNames = new List<string>() { "Buxton", }
                                   });
             relationships.Add(
                               new CompanyBrandRelationship
@@ -207,78 +211,16 @@
                                           OwnerNames = new List<string>() { "Nestle", "Nestlé" },
                                           BrandNames = new List<string>() { "Kitkat" }
                                   });
-            relationships.Add(
-                              new CompanyBrandRelationship
-                                  {
-                                          OwnerId = "1",
-                                          OwnerNames = new List<string>() { "Nestle", "Nestlé" },
-                                          BrandNames = new List<string>() { "Nespresso" }
-                                  });
-
-            relationships.Add(
-                              new CompanyBrandRelationship
-                                  {
-                                          OwnerId = "2",
-                                          OwnerNames = new List<string>() { "Cadbury", "Cadburies" },
-                                          BrandNames = new List<string>()
-                                                           {
-                                                                   "Dairy Milk",
-                                                                   //"Creme Egg",
-                                                                   //"Roses"
-                                                           }
-                                  });
 
             relationships.Add(
                               new CompanyBrandRelationship
                                   {
                                           OwnerId = "3",
-                                          OwnerNames =
-                                                  new List<string>()
-                                                      {
-                                                              "Bayer",
-                                                              "Bayer AG",
-                                                              "Bayer CropScience",
-                                                              "Bayer BioScience",
-                                                              "Bayer Pharma",
-                                                              "Bayer Consumer Care",
-                                                              "Bayer Animal Health",
-                                                      },
-                                          BrandNames = new List<string>()
-                                                           {
-                                                                   //"Miles Laboratories",
-                                                                   //"Miles Canada",
-                                                                   //"Cutter Laboratories",
-                                                                   //"Alka-Seltzer",
-                                                                   //"Flintstones vitamins",
-                                                                   //"One-A-Day vitamins",
-                                                                   //"Cutter insect repellent",
-                                                                   //"Bomac Group",
-                                                                   //"Xofigo",
-                                                                   //"Aventis",
-                                                                   //"Sanofi",
-                                                                   "LibertyLink",
-                                                                   //"Jatropha",
-                                                                   //"Yasmin",
-                                                                   //"Nexavar",
-                                                                   //"Kogenate"
-                                                           }
+                                          OwnerNames = new List<string>() { "Bayer", },
+                                          BrandNames = new List<string>() { "LibertyLink", }
                                   });
 
             return relationships;
-
-            // https://www.googleapis.com/freebase/v1/search?query=bob&key=<YOUR_API_KEY>
-
-            // https://www.googleapis.com/freebase/v1/search?domain=business&type=company_brand_relationship&key=<YOUR_API_KEY> ?
-
-            // id: /business/company_brand_relationship 
-
-            // /query?type=/business/company_brand_relationship
-
-            // http://www.freebase.com/business/company_brand_relationship?instances=
-
-            // https://api.opencorporates.com/companies/search?q=barclays+bank
-
-            // https://api.opencorporates.com/companies/gb/01320086/network
         }
 
         internal static IEnumerable<string> GetPages(string path)
