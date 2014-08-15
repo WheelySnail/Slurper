@@ -197,28 +197,28 @@
         private static List<CompanyBrandRelationship> GetTestRelationships()
         {
             var relationships = new List<CompanyBrandRelationship>();
-            relationships.Add(
-                              new CompanyBrandRelationship
-                                  {
-                                          OwnerId = "1",
-                                          OwnerNames = new List<string>() { "Nestle", "Nestlé" },
-                                          BrandNames = new List<string>() { "Buxton", }
-                                  });
-            relationships.Add(
-                              new CompanyBrandRelationship
-                                  {
-                                          OwnerId = "1",
-                                          OwnerNames = new List<string>() { "Nestle", "Nestlé" },
-                                          BrandNames = new List<string>() { "Kitkat" }
-                                  });
+            //relationships.Add(
+            //                  new CompanyBrandRelationship
+            //                      {
+            //                              OwnerId = "1",
+            //                              OwnerNames = new List<string>() { "Nestle", "Nestlé" },
+            //                              BrandNames = new List<string>() { "Buxton", }
+            //                      });
+            //relationships.Add(
+            //                  new CompanyBrandRelationship
+            //                      {
+            //                              OwnerId = "1",
+            //                              OwnerNames = new List<string>() { "Nestle", "Nestlé" },
+            //                              BrandNames = new List<string>() { "Kitkat" }
+            //                      });
 
-            relationships.Add(
-                              new CompanyBrandRelationship
-                                  {
-                                          OwnerId = "3",
-                                          OwnerNames = new List<string>() { "Bayer", },
-                                          BrandNames = new List<string>() { "LibertyLink", }
-                                  });
+            //relationships.Add(
+            //                  new CompanyBrandRelationship
+            //                      {
+            //                              OwnerId = "3",
+            //                              OwnerNames = new List<string>() { "Bayer", },
+            //                              BrandNames = new List<string>() { "LibertyLink", }
+            //                      });
 
             return relationships;
         }

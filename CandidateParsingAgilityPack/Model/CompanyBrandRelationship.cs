@@ -15,7 +15,14 @@
         public string BrandName { get; set; }
 
         [JsonIgnore]
-        public List<string> BrandNames { get; set; }
+        public List<string> BrandNames
+        {
+            get
+            {
+                return new List<string>() { BrandName };
+            }
+        }
+       
 
         public string OwnerId { get; set; }
 
@@ -23,7 +30,13 @@
         public string OwnerName { get; set; }
 
         [JsonIgnore]
-        public List<string> OwnerNames { get; set; }
+        public List<string> OwnerNames
+        {
+            get
+            {
+                return new List<string>() { OwnerName };
+            }
+        }
 
         public string AsJson()
         {
