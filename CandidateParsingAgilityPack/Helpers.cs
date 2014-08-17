@@ -10,6 +10,8 @@
 
     using CandidateParsingAgilityPack.Model;
 
+    using Html;
+
     using HtmlAgilityPack;
 
     using Newtonsoft.Json;
@@ -24,6 +26,8 @@
             var doc = new HtmlDocument();
 
             var candidates = new List<Candidate>();
+
+            var safey = new HtmlSanitizer();
 
             foreach (var page in pages)
             {
@@ -143,7 +147,7 @@
                                                                 IsParagraphSegment =
                                                                         initialcandidate.Type == "paragraph",
                                                                 //NearestHeading = previousHeading,
-                                                                CandidateHtmlAndText = candidateHtmlAndText,
+                                                                CandidateHtmlAndText = safey.Sanitize(candidateHtmlAndText),
                                                                 KnownCompany = relation.CompanyNames,
                                                                 // TODO will there be one candidate per brand synonym or one per brand? 
                                                                 KnownBrand = brandSynonym,
@@ -168,7 +172,7 @@
         {
             // TODO must sanitise this data, as it's user generated
 
-            string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
+            string API_KEY = "";
             String url = "https://www.googleapis.com/freebase/v1/mqlread";
             String query = "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key=" + API_KEY;
 
