@@ -1,42 +1,24 @@
 ﻿namespace CandidateParsingAgilityPack.Model
 {
+    #region Using Directives
+
     using System.Collections.Generic;
 
     using Newtonsoft.Json;
 
+    #endregion
+
     public class CompanyBrandRelationship
     {
-        [JsonProperty(PropertyName = "id")]
-        public string RelationshipId { get; set; }
-
         public string BrandId { get; set; }
 
-        [JsonProperty(PropertyName = "brand")]
-        public string BrandName { get; set; }
+        public List<string> BrandNames { get; set; }
 
-        [JsonIgnore]
-        public List<string> BrandNames
-        {
-            get
-            {
-                return new List<string>() { BrandName };
-            }
-        }
-       
+        public string CompanyId { get; set; }
 
-        public string OwnerId { get; set; }
+        public List<string> CompanyNames { get; set; }
 
-        [JsonProperty(PropertyName = "company")]
-        public string OwnerName { get; set; }
-
-        [JsonIgnore]
-        public List<string> OwnerNames
-        {
-            get
-            {
-                return new List<string>() { OwnerName };
-            }
-        }
+        public string RelationshipId { get; set; }
 
         public string AsJson()
         {

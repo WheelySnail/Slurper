@@ -41,7 +41,7 @@
                 // Work out later when am retrieving real relations from API
                 foreach (var relation in knownCompanyBrandRelationships)
                 {
-                    foreach (var ownerCompanySynonym in relation.OwnerNames)
+                    foreach (var ownerCompanySynonym in relation.CompanyNames)
                     {
                         if (root.OuterHtml.ToLowerInvariant().Contains(ownerCompanySynonym.ToLowerInvariant())
                             || page.ToLowerInvariant().Contains(ownerCompanySynonym.ToLowerInvariant()))
@@ -107,7 +107,7 @@
                                 var initialCandidateOrPreviousSiblingContainOwner = false;
 
                                 // If the document domain/ filename or title contains the relation name, the presence of the brand name alone in the segment is sufficient
-                                foreach (var ownerSynonym in relation.OwnerNames)
+                                foreach (var ownerSynonym in relation.CompanyNames)
                                 {
                                     if (page.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant())
                                         || title.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant()))
@@ -144,7 +144,7 @@
                                                                         initialcandidate.Type == "paragraph",
                                                                 //NearestHeading = previousHeading,
                                                                 CandidateHtmlAndText = candidateHtmlAndText,
-                                                                KnownCompany = relation.OwnerNames,
+                                                                KnownCompany = relation.CompanyNames,
                                                                 // TODO will there be one candidate per brand synonym or one per brand? 
                                                                 KnownBrand = brandSynonym,
                                                                 KnownCompanyBrandRelationship = relation,
@@ -168,7 +168,7 @@
         {
             // TODO must sanitise this data, as it's user generated
 
-            string API_KEY = "";
+            string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
             String url = "https://www.googleapis.com/freebase/v1/mqlread";
             String query = "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key=" + API_KEY;
 
@@ -180,18 +180,40 @@
             if (reponse.IsSuccessStatusCode)
             {
                 var responseString = reponse.Content.ReadAsStringAsync().Result;
-                var relationships = JsonConvert.DeserializeObject<RelationshipsResponse>(responseString);
-                return relationships.Relationships;
+                var relationships = JsonConvert.DeserializeObject<FreeBaseRelationshipsResponse>(responseString);
+                return MapFreeBaseRelationshipToCompanyBrandRelationship(relationships.Relationships);
             }
             else
             {
                 throw new Exception();
             }
 
-            //return GetTestRelationships();
-
             // https://api.opencorporates.com/companies/search?q=barclays+bank
             // https://api.opencorporates.com/companies/gb/01320086/network
+        }
+
+        private static List<CompanyBrandRelationship> MapFreeBaseRelationshipToCompanyBrandRelationship(List<FreebaseCompanyBrandRelationship> relationships)
+        {
+            var companyBrandRelationships = new List<CompanyBrandRelationship>();
+            foreach (var freebaseCompanyBrandRelationship in relationships)
+            {
+                if (freebaseCompanyBrandRelationship != null)
+                {
+                    companyBrandRelationships.Add(new CompanyBrandRelationship
+                                                      {
+                                                              BrandNames = new List<String>
+                                                                               {
+                                                                                    freebaseCompanyBrandRelationship.Brand
+                                                                               },
+                                                              CompanyNames = new List<String>
+                                                                                 {
+                                                                                     freebaseCompanyBrandRelationship.Company
+                                                                                 },
+                                                                RelationshipId = freebaseCompanyBrandRelationship.RelationshipId
+                                                          });
+                }
+            }
+            return companyBrandRelationships;
         }
 
         private static List<CompanyBrandRelationship> GetTestRelationships()

@@ -1,9 +1,11 @@
-namespace CandidateParsingAgilityPack.Model
+﻿namespace CandidateParsingAgilityPack.Model
 {
-    using System.Collections.Generic;
+    using System;
 
-    internal class Company  
+    public class Company
     {
-        public List<string> names { get; set; }
+        public String Name { get; set; }
+
+        public string Id { get; set; }
     }
 }

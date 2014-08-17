@@ -51,12 +51,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helpers.cs" />
+    <Compile Include="Model\Brand.cs" />
     <Compile Include="Model\Candidate.cs" />
+    <Compile Include="Model\Company.cs" />
     <Compile Include="Model\CompanyBrandRelationship.cs" />
+    <Compile Include="Model\FreebaseCompanyBrandRelationship.cs" />
     <Compile Include="Model\InitialCandidate.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Model\RelationshipsResponse.cs" />
+    <Compile Include="Model\FreeBaseRelationshipsResponse.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
