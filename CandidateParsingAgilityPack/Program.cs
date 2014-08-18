@@ -48,8 +48,6 @@
         // Get training examples which contain a known company/ brand relationship
         private static void GetPositiveTrainingCandidates()
         {
-            // TODO must sanitise this data, as it's user generated
-
             var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationships();
 
             var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");

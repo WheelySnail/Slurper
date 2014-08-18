@@ -1,7 +1,8 @@
 ﻿namespace CandidateParsingAgilityPack
 {
+    #region Using Directives
+
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -15,7 +16,8 @@
     using HtmlAgilityPack;
 
     using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
+
+    #endregion
 
     internal class Helpers
     {
@@ -65,19 +67,29 @@
                 }
 
                 // Gather the page title which is an attribute of all candidates
-                var title = doc.DocumentNode.SelectSingleNode("//head/title").InnerText;
 
-                // Gather all tables, lists and paragraphs. Doesn't seem to be a way to retrieve a node's html element type after it's been stored so add this to an initial candidate object
+                var titleElement = doc.DocumentNode.SelectSingleNode("//head/title");
+                var title = "";
+
+                if (titleElement != null)
+                {
+                    title = titleElement.InnerText;
+                }
+
+                // Gather all tables, lists and paragraphs. Doesn't seem to be a way to retrieve a node's html element type after it's been stored so add this to an initial candidate object! 
+                // Exclude tables and lists which include child lists
 
                 var initialCandidateSegments =
                         root.Descendants("table")
                             .ToList()
+                            .Where(table => !table.OuterHtml.Contains("<ul>"))
                             .Select(table => new InitialCandidate() { Node = table, Type = "table" })
                             .ToList();
 
                 initialCandidateSegments.AddRange(
                                                   root.Descendants("ul")
                                                       .ToList()
+                                                      .Where(list => !list.InnerHtml.Contains("<ul>"))
                                                       .Select(
                                                               list =>
                                                               new InitialCandidate() { Node = list, Type = "list" }));
@@ -92,6 +104,7 @@
                                                                           Node = paragraph,
                                                                           Type = "paragraph"
                                                                   }));
+
 
                 // For each paragraph, list or table in the page
                 foreach (var initialcandidate in initialCandidateSegments)
@@ -147,7 +160,8 @@
                                                                 IsParagraphSegment =
                                                                         initialcandidate.Type == "paragraph",
                                                                 //NearestHeading = previousHeading,
-                                                                CandidateHtmlAndText = safey.Sanitize(candidateHtmlAndText),
+                                                                CandidateHtmlAndText =
+                                                                        safey.Sanitize(candidateHtmlAndText),
                                                                 KnownCompany = relation.CompanyNames,
                                                                 // TODO will there be one candidate per brand synonym or one per brand? 
                                                                 KnownBrand = brandSynonym,
@@ -172,9 +186,11 @@
         {
             // TODO must sanitise this data, as it's user generated
 
-            string API_KEY = "";
+            string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
             String url = "https://www.googleapis.com/freebase/v1/mqlread";
-            String query = "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key=" + API_KEY;
+            String query =
+                    "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key="
+                    + API_KEY;
 
             var client = new HttpClient();
             client.BaseAddress = new Uri(url);
@@ -184,6 +200,8 @@
             if (reponse.IsSuccessStatusCode)
             {
                 var responseString = reponse.Content.ReadAsStringAsync().Result;
+                var safey = new HtmlSanitizer();
+                safey.Sanitize(responseString);
                 var relationships = JsonConvert.DeserializeObject<FreeBaseRelationshipsResponse>(responseString);
                 return MapFreeBaseRelationshipToCompanyBrandRelationship(relationships.Relationships);
             }
@@ -196,28 +214,9 @@
             // https://api.opencorporates.com/companies/gb/01320086/network
         }
 
-        private static List<CompanyBrandRelationship> MapFreeBaseRelationshipToCompanyBrandRelationship(List<FreebaseCompanyBrandRelationship> relationships)
+        internal static IEnumerable<string> GetPages(string path)
         {
-            var companyBrandRelationships = new List<CompanyBrandRelationship>();
-            foreach (var freebaseCompanyBrandRelationship in relationships)
-            {
-                if (freebaseCompanyBrandRelationship != null)
-                {
-                    companyBrandRelationships.Add(new CompanyBrandRelationship
-                                                      {
-                                                              BrandNames = new List<String>
-                                                                               {
-                                                                                    freebaseCompanyBrandRelationship.Brand
-                                                                               },
-                                                              CompanyNames = new List<String>
-                                                                                 {
-                                                                                     freebaseCompanyBrandRelationship.Company
-                                                                                 },
-                                                                RelationshipId = freebaseCompanyBrandRelationship.RelationshipId
-                                                          });
-                }
-            }
-            return companyBrandRelationships;
+            return Directory.GetFiles(path, "*.htm*", SearchOption.AllDirectories);
         }
 
         private static List<CompanyBrandRelationship> GetTestRelationships()
@@ -250,9 +249,36 @@
             return relationships;
         }
 
-        internal static IEnumerable<string> GetPages(string path)
+        private static List<CompanyBrandRelationship> MapFreeBaseRelationshipToCompanyBrandRelationship(
+                List<FreebaseCompanyBrandRelationship> relationships)
         {
-            return Directory.GetFiles(path, "*.htm*", SearchOption.AllDirectories);
+            var companyBrandRelationships = new List<CompanyBrandRelationship>();
+            foreach (var freebaseCompanyBrandRelationship in relationships)
+            {
+                if (freebaseCompanyBrandRelationship != null)
+                {
+                    companyBrandRelationships.Add(
+                                                  new CompanyBrandRelationship
+                                                      {
+                                                              BrandNames =
+                                                                      new List<String>
+                                                                          {
+                                                                                  freebaseCompanyBrandRelationship
+                                                                                          .Brand
+                                                                          },
+                                                              CompanyNames =
+                                                                      new List<String>
+                                                                          {
+                                                                                  freebaseCompanyBrandRelationship
+                                                                                          .Company
+                                                                          },
+                                                              RelationshipId =
+                                                                      freebaseCompanyBrandRelationship
+                                                                      .RelationshipId
+                                                      });
+                }
+            }
+            return companyBrandRelationships;
         }
     }
 }
