@@ -60,12 +60,12 @@
             {
                 file.WriteLine(
                                "Page title: " + candidate.PageTitle + Environment.NewLine + Environment.NewLine
-                               + "Known company: " + candidate.KnownCompany.ToList() + Environment.NewLine
+                               + "Known company: " + candidate.KnownCompany.FirstOrDefault().ToString() + Environment.NewLine
                                + Environment.NewLine + "\r Html & Text: " + candidate.CandidateHtmlAndText
                                + Environment.NewLine + Environment.NewLine);
                 Console.WriteLine(
                                   candidate.PageTitle + Environment.NewLine + ' '
-                                  + candidate.KnownCompany.ToList().ToString() + Environment.NewLine + ' '
+                                  + candidate.KnownCompany.FirstOrDefault().ToString() + Environment.NewLine + ' '
                                   + candidate.CandidateHtmlAndText + Environment.NewLine);
             }
 

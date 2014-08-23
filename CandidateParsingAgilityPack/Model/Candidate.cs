@@ -26,8 +26,6 @@ namespace CandidateParsingAgilityPack.Model
 
         public bool IsTableSegment { get; set; }
 
-        public bool IsParagraphSegment { get; set; }
-
         public List<String> NamedEntities { get; set; }
 
         public string Uri { get; set; }

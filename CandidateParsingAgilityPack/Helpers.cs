@@ -8,8 +8,12 @@
     using System.Linq;
     using System.Net.Http;
     using System.Net.Http.Headers;
+    using System.Web.UI.WebControls;
 
     using CandidateParsingAgilityPack.Model;
+
+    using CsQuery.Engine.PseudoClassSelectors;
+    using CsQuery.ExtensionMethods.Internal;
 
     using Html;
 
@@ -76,7 +80,7 @@
                     title = titleElement.InnerText;
                 }
 
-                // Gather all tables, lists and paragraphs. Doesn't seem to be a way to retrieve a node's html element type after it's been stored so add this to an initial candidate object! 
+                // Gather all tables and lists. Doesn't seem to be a way to retrieve a node's html element type after it's been stored so add this to an initial candidate object! 
                 // Exclude tables and lists which include child lists
 
                 var initialCandidateSegments =
@@ -94,19 +98,7 @@
                                                               list =>
                                                               new InitialCandidate() { Node = list, Type = "list" }));
 
-                initialCandidateSegments.AddRange(
-                                                  root.Descendants("p")
-                                                      .ToList()
-                                                      .Select(
-                                                              paragraph =>
-                                                              new InitialCandidate()
-                                                                  {
-                                                                          Node = paragraph,
-                                                                          Type = "paragraph"
-                                                                  }));
-
-
-                // For each paragraph, list or table in the page
+                // For each list or table in the page
                 foreach (var initialcandidate in initialCandidateSegments)
                 {
                     // For each relation where an owner name is present on this page. Candidates are created at this level as they are a combination of relation + segment.
@@ -144,11 +136,57 @@
                                 if (domainOrTitleContainsOwner || initialCandidateOrPreviousSiblingContainOwner)
                                 {
                                     // The html and text for the candidate should include the preceeding html node if the candidate is a table or list. 
-                                    // TODO limit this to paragraphs only? Or to the previous sentence only? 
-                                    var candidateHtmlAndText = initialcandidate.Type == "paragraph"
-                                                                       ? initialcandidate.Node.OuterHtml
-                                                                       : initialcandidate.Node.PreviousSibling.OuterHtml
-                                                                         + initialcandidate.Node.OuterHtml;
+//                                    // TODO limit this to paragraphs only? Or to the previous sentence only? 
+                                       //GO UP THROUGH ALL PREVIOUS SIBLINGS, FIND ONE WHERE INNER HTML NOT EMPTY OR "\N"
+                                       //IF NONE, CHECK PREVIOUS SIBLINGS OF PARENT ELEMENT
+                                        //... what about case 2 where it's the parent's inner text that's needed? 
+
+
+                                    var previousContent = "";
+                                    var previousSibling = initialcandidate.Node.PreviousSibling;
+                                    var parentNode = initialcandidate.Node.ParentNode;
+                                    // Check the three preceeding previous siblings
+                                    if (!previousSibling.OuterHtml.IsNullOrEmpty() || previousSibling.OuterHtml != Environment.NewLine)
+                                    {
+                                        previousContent = previousSibling.OuterHtml;
+                                    }
+                                    else
+                                    {
+                                        if (!previousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                            || previousSibling.PreviousSibling.OuterHtml != @"""\\n""")
+                                        {
+                                            previousContent = previousSibling.PreviousSibling.OuterHtml;
+                                        }
+                                        else if (!previousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                            || previousSibling.PreviousSibling.PreviousSibling.OuterHtml != @"""\\n""")
+                                        {
+                                            
+                                        }}
+                                    // Check the previous siblings of the parent sibling
+                                    if (previousContent.IsNullOrEmpty())
+                                    {
+                                        if (!parentNode.PreviousSibling.OuterHtml.IsNullOrEmpty() || parentNode.PreviousSibling.OuterHtml != @"""\\n""")
+                                        {
+                                            previousContent = parentNode.PreviousSibling.OuterHtml;
+                                        }
+                                        else
+                                        {
+                                            if (!parentNode.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                                || parentNode.PreviousSibling.PreviousSibling.OuterHtml != @"""\\n""")
+                                            {
+                                                previousContent = previousSibling.PreviousSibling.OuterHtml;
+                                            }
+                                            else if (!parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                                || parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml != @"""\\n""")
+                                            {
+                                                previousContent = parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml;
+
+                                            }
+                                        }
+                                    }
+
+
+                                    var candidateHtmlAndText = previousContent + initialcandidate.Node.OuterHtml;
 
                                     // TODO Find previous sibling which is an h1, h2, h3, h4, h5, or <p><strong>
                                     //var previousHeading = root.Descendants().Where(d => d.InnerText.Contains(company));
@@ -157,8 +195,6 @@
                                                         {
                                                                 IsTableSegment = initialcandidate.Type == "table",
                                                                 IsListSegment = initialcandidate.Type == "list",
-                                                                IsParagraphSegment =
-                                                                        initialcandidate.Type == "paragraph",
                                                                 //NearestHeading = previousHeading,
                                                                 CandidateHtmlAndText =
                                                                         safey.Sanitize(candidateHtmlAndText),
@@ -169,7 +205,7 @@
                                                                 DomainOrPageTitleContainsOwner =
                                                                         domainOrTitleContainsOwner,
                                                                 Uri = page,
-                                                                PageTitle = title.ToString()
+                                                                PageTitle = title
                                                         };
 
                                     candidates.Add(candidate);
@@ -186,7 +222,7 @@
         {
             // TODO must sanitise this data, as it's user generated
 
-            string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
+            string API_KEY = "";
             String url = "https://www.googleapis.com/freebase/v1/mqlread";
             String query =
                     "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key="
