@@ -286,7 +286,7 @@
 
         internal static List<CompanyBrandRelationship> GetKnownCompanyBrandRelationships()
         {
-            string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
+            string API_KEY = "";
             String url = "https://www.googleapis.com/freebase/v1/mqlread";
             String query =
                     "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key="
