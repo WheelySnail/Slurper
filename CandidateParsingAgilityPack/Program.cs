@@ -7,6 +7,8 @@
     using System.IO;
     using System.Linq;
 
+    using CandidateParsingAgilityPack.Model;
+
     using HtmlAgilityPack;
 
     #endregion
@@ -17,9 +19,25 @@
         {
             GetPositiveTrainingCandidates();
 
+            //GetPositiveTrainingCandidatesWithMultipleBrands();
+
             GetNegativeTrainingCandidates();
 
             GetTestCandidates();
+        }
+
+        private static void GetPositiveTrainingCandidatesWithMultipleBrands()
+        {
+            var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationships();
+
+            var knownCompanyBrandRelationshipsWithMultipleBrands =
+                    Helpers.GetKnownCompanyBrandRelationshipsWithMultipleBrands(knownCompanyBrandRelationships);
+
+            var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
+
+            var candidatesWithMultipleBrands = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandRelationshipsWithMultipleBrands);
+
+            Helpers.SaveAndPrintCandidates(candidatesWithMultipleBrands);
         }
 
         private static void GetNegativeTrainingCandidates()
@@ -54,26 +72,7 @@
 
             var candidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandRelationships);
 
-            var file = new StreamWriter("C:/Users/Alice/Desktop/PositiveTrainingCandidates.txt");
-
-            foreach (var candidate in candidates)
-            {
-                file.WriteLine(
-                               "Page title: " + candidate.PageTitle + Environment.NewLine + Environment.NewLine
-                               + "Known company: " + candidate.KnownCompany.FirstOrDefault().ToString() + Environment.NewLine
-                               + Environment.NewLine + "\r Html & Text: " + candidate.CandidateHtml
-                               + Environment.NewLine + Environment.NewLine);
-                Console.WriteLine(
-                                  candidate.PageTitle + Environment.NewLine + ' '
-                                  + candidate.KnownCompany.FirstOrDefault().ToString() + Environment.NewLine + ' '
-                                  + candidate.CandidateHtml + Environment.NewLine);
-            }
-
-            file.Close();
-
-            Console.WriteLine(candidates.Count.ToString());
-
-            Console.ReadLine();
+            Helpers.SaveAndPrintCandidates(candidates);
         }
     }
 }

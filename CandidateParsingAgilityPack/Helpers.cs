@@ -247,9 +247,7 @@
 
         internal static List<CompanyBrandRelationship> GetKnownCompanyBrandRelationships()
         {
-            // TODO must sanitise this data, as it's user generated
-
-            string API_KEY = "";
+            string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
             String url = "https://www.googleapis.com/freebase/v1/mqlread";
             String query =
                     "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key="
@@ -277,6 +275,11 @@
             // https://api.opencorporates.com/companies/gb/01320086/network
         }
 
+        public static List<CompanyBrandRelationship> GetKnownCompanyBrandRelationshipsWithMultipleBrands(List<CompanyBrandRelationship> knownCandidates)
+        {
+            return knownCandidates.Where(r => r.BrandNames.Count() > 1).ToList();
+        }
+
         internal static IEnumerable<string> GetPages(string path)
         {
             return Directory.GetFiles(path, "*.htm*", SearchOption.AllDirectories);
@@ -286,28 +289,6 @@
         {
             var relationships = new List<CompanyBrandRelationship>();
             // TODO get synonyms from Freebase or alter the CompanyBrandRelation class
-            //relationships.Add(
-            //                  new CompanyBrandRelationship
-            //                      {
-            //                              OwnerId = "1",
-            //                              OwnerNames = new List<string>() { "Nestle", "Nestlé" },
-            //                              BrandNames = new List<string>() { "Buxton", }
-            //                      });
-            //relationships.Add(
-            //                  new CompanyBrandRelationship
-            //                      {
-            //                              OwnerId = "1",
-            //                              OwnerNames = new List<string>() { "Nestle", "Nestlé" },
-            //                              BrandNames = new List<string>() { "Kitkat" }
-            //                      });
-
-            //relationships.Add(
-            //                  new CompanyBrandRelationship
-            //                      {
-            //                              OwnerId = "3",
-            //                              OwnerNames = new List<string>() { "Bayer", },
-            //                              BrandNames = new List<string>() { "LibertyLink", }
-            //                      });
 
             return relationships;
         }
@@ -342,6 +323,31 @@
                 }
             }
             return companyBrandRelationships;
+        }
+
+        internal static void SaveAndPrintCandidates(List<Candidate> candidates)
+        {
+            var file = new StreamWriter("C:/Users/Alice/Desktop/PositiveTrainingCandidates.txt");
+
+            foreach (var candidate in candidates)
+            {
+                file.WriteLine(
+                               "Page title: " + candidate.PageTitle + Environment.NewLine + Environment.NewLine
+                               + "Known company: " + candidate.KnownCompany.FirstOrDefault().ToString() + Environment.NewLine
+                               + "Known brand: " + candidate.KnownBrand + Environment.NewLine + Environment.NewLine
+                               + "\r Html: " + candidate.PreviousContent + Environment.NewLine + "\r Html: "
+                               + candidate.CandidateHtml + Environment.NewLine + Environment.NewLine);
+                Console.WriteLine(
+                                  candidate.PageTitle + Environment.NewLine + ' '
+                                  + candidate.KnownCompany.FirstOrDefault().ToString() + Environment.NewLine + ' '
+                                  + candidate.CandidateHtml + Environment.NewLine);
+            }
+
+            file.Close();
+
+            Console.WriteLine(candidates.Count.ToString());
+
+            Console.ReadLine();
         }
     }
 }
