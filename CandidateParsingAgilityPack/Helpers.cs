@@ -314,6 +314,73 @@
             // https://api.opencorporates.com/companies/gb/01320086/network
         }
 
+        internal static List<CompanyBrandRelationship> GetKnownCompanyBrandRelationshipsFromConsumerCompanies()
+        {
+            string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
+            String url = "https://www.googleapis.com/freebase/v1/mqlread";
+
+            string companiesQuery =
+                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"brands\":[{\"brand\": null}],\"products\":[{\"consumer_product\": null}],\"limit\":10}]&key=" + API_KEY;
+
+            var client = new HttpClient();
+            client.BaseAddress = new Uri(url);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            HttpResponseMessage reponse = client.GetAsync(companiesQuery).Result;
+
+            if (reponse.IsSuccessStatusCode)
+            {
+                var responseString = reponse.Content.ReadAsStringAsync().Result;
+                var safey = new HtmlSanitizer();
+                safey.Sanitize(responseString);
+                var brands = JsonConvert.DeserializeObject<FreeBaseConsumerCompanyResponse>(responseString);
+                return MapFreeBaseConsumerCompaniesToCompanyBrandRelationship(brands.Companies);
+            }
+            else
+            {
+                throw new Exception();
+            }
+
+            // https://api.opencorporates.com/companies/search?q=barclays+bank
+            // https://api.opencorporates.com/companies/gb/01320086/network
+        }
+
+        private static List<CompanyBrandRelationship> MapFreeBaseConsumerCompaniesToCompanyBrandRelationship(
+                List<FreebaseConsumerCompany> companies)
+        {
+            var companyBrandRelationships = new List<CompanyBrandRelationship>();
+            foreach (var freebaseConsumerCompany in companies)
+            {
+                if (freebaseConsumerCompany != null)
+                {
+                    var allBrandsAndProducts = new List<string>();
+                    foreach (var brand in freebaseConsumerCompany.Brands)
+                    {
+                        allBrandsAndProducts.Add(brand.Brand);
+                    }
+
+                    foreach (var product in freebaseConsumerCompany.Products)
+                    {
+                        allBrandsAndProducts.Add(product.Product);
+                        
+                    }
+
+                    companyBrandRelationships.Add(
+                                                  new CompanyBrandRelationship
+                                                      {
+                                                              
+                                                              BrandNames = allBrandsAndProducts
+     ,
+                                                              CompanyNames =
+                                                                      new List<String>
+                                                                          {
+                                                                                  freebaseConsumerCompany.Name
+                                                                          }
+                                                      });
+                }
+            }
+            return companyBrandRelationships;
+        }
+
         public static List<CompanyBrandRelationship> GetKnownCompanyBrandRelationshipsWithMultipleBrands(
                 List<CompanyBrandRelationship> knownCandidates)
         {
@@ -336,10 +403,10 @@
         }
 
         private static List<CompanyBrandRelationship> MapFreeBaseRelationshipToCompanyBrandRelationship(
-                List<FreebaseCompanyBrandRelationship> relationships)
+                List<FreebaseCompanyBrandRelationship> companies)
         {
             var companyBrandRelationships = new List<CompanyBrandRelationship>();
-            foreach (var freebaseCompanyBrandRelationship in relationships)
+            foreach (var freebaseCompanyBrandRelationship in companies)
             {
                 if (freebaseCompanyBrandRelationship != null)
                 {
@@ -427,8 +494,6 @@
         {
             // Jumble up the list, creating new relationships where there are none. 
             var nonRelationships = new List<CompanyBrandRelationship>();
-
-            // Easier to do this is combine all relationships with the same company into one... (hopefully the parsing will still work :|)
 
             for (int i = 0; i < knownCompanyBrandRelationships.Count - 1; i++)
             {

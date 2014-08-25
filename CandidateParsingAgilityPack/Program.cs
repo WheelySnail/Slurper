@@ -17,7 +17,7 @@
     {
         private static void Main(string[] args)
         {
-            GetPositiveTrainingCandidates();
+            //GetPositiveTrainingCandidates();
 
             //GetPositiveTrainingCandidatesWithMultipleBrands();
 
@@ -42,7 +42,7 @@
 
         private static void GetNegativeTrainingCandidates()
         {
-            var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationships();
+            var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
 
             var knownCompanyBrandNonRelationships = Helpers.GetKnownCompanyBrandNonRelationships(knownCompanyBrandRelationships);
 

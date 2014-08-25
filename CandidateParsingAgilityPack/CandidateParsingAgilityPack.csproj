@@ -65,6 +65,10 @@
     <Compile Include="Model\Company.cs" />
     <Compile Include="Model\CompanyBrandRelationship.cs" />
     <Compile Include="Model\FreebaseCompanyBrandRelationship.cs" />
+    <Compile Include="Model\FreebaseConsumerCompany.cs" />
+    <Compile Include="Model\FreeBaseConsumerCompanyBrands.cs" />
+    <Compile Include="Model\FreebaseConsumerCompanyProducts.cs" />
+    <Compile Include="Model\FreeBaseConsumerCompanyResponse.cs" />
     <Compile Include="Model\InitialCandidate.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -74,6 +78,7 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="json1.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
