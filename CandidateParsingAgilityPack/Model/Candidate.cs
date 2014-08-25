@@ -20,7 +20,7 @@ namespace CandidateParsingAgilityPack.Model
 
         public String NumberOfTokens { get; set; }
 
-        public String CandidateHtmlAndText { get; set; }
+        public String CandidateHtml { get; set; }
 
         public bool IsListSegment { get; set; }
 
@@ -31,5 +31,7 @@ namespace CandidateParsingAgilityPack.Model
         public string Uri { get; set; }
 
         public bool DomainOrPageTitleContainsOwner { get; set; }
+
+        public string PreviousContent { get; set; }
     }
 }

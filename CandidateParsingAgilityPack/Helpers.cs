@@ -13,6 +13,7 @@
     using CandidateParsingAgilityPack.Model;
 
     using CsQuery.Engine.PseudoClassSelectors;
+    using CsQuery.EquationParser.Implementation;
     using CsQuery.ExtensionMethods.Internal;
 
     using Html;
@@ -145,41 +146,66 @@
                                     var previousContent = "";
                                     var previousSibling = initialcandidate.Node.PreviousSibling;
                                     var parentNode = initialcandidate.Node.ParentNode;
+                                    var grandparentNode = initialcandidate.Node.ParentNode.ParentNode;
+                                    
                                     // Check the three preceeding previous siblings
-                                    if (!previousSibling.OuterHtml.IsNullOrEmpty() || previousSibling.OuterHtml != Environment.NewLine)
+                                    if (!previousSibling.OuterHtml.IsNullOrEmpty() && previousSibling.OuterHtml != "\n")
                                     {
                                         previousContent = previousSibling.OuterHtml;
                                     }
                                     else
                                     {
-                                        if (!previousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                            || previousSibling.PreviousSibling.OuterHtml != @"""\\n""")
+                                        if (previousSibling.PreviousSibling != null && (!previousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                                                                        && previousSibling.PreviousSibling.OuterHtml != "\n"))
                                         {
                                             previousContent = previousSibling.PreviousSibling.OuterHtml;
                                         }
-                                        else if (!previousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                            || previousSibling.PreviousSibling.PreviousSibling.OuterHtml != @"""\\n""")
+                                        else if (previousSibling.PreviousSibling != null && (previousSibling.PreviousSibling.PreviousSibling != null && (!previousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty() && previousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
                                         {
-                                            
+                                            previousContent = previousSibling.PreviousSibling.PreviousSibling.OuterHtml;
                                         }}
-                                    // Check the previous siblings of the parent sibling
+
+                                    // Check the three previous siblings of the parent sibling
                                     if (previousContent.IsNullOrEmpty())
                                     {
-                                        if (!parentNode.PreviousSibling.OuterHtml.IsNullOrEmpty() || parentNode.PreviousSibling.OuterHtml != @"""\\n""")
+                                        if (parentNode.PreviousSibling != null && (!parentNode.PreviousSibling.OuterHtml.IsNullOrEmpty() && parentNode.PreviousSibling.OuterHtml != "\n"))
                                         {
                                             previousContent = parentNode.PreviousSibling.OuterHtml;
                                         }
                                         else
                                         {
-                                            if (!parentNode.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                                || parentNode.PreviousSibling.PreviousSibling.OuterHtml != @"""\\n""")
+                                            if (parentNode.PreviousSibling != null && (parentNode.PreviousSibling.PreviousSibling != null && (!parentNode.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                                                                       && parentNode.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
                                             {
-                                                previousContent = previousSibling.PreviousSibling.OuterHtml;
+                                                previousContent = parentNode.PreviousSibling.PreviousSibling.OuterHtml;
                                             }
-                                            else if (!parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                                || parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml != @"""\\n""")
+                                            else if (parentNode.PreviousSibling != null && (parentNode.PreviousSibling.PreviousSibling != null && (parentNode.PreviousSibling.PreviousSibling.PreviousSibling != null && (!parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                                                                                                                                                                          && parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n"))))
                                             {
                                                 previousContent = parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml;
+
+                                            }
+                                        }
+                                    }
+
+                                    // Check the three previous siblings of the grandparent sibling
+                                    if (previousContent.IsNullOrEmpty())
+                                    {
+                                        if (grandparentNode.PreviousSibling != null && (!grandparentNode.PreviousSibling.OuterHtml.IsNullOrEmpty() && grandparentNode.PreviousSibling.OuterHtml != "\n"))
+                                        {
+                                            previousContent = grandparentNode.PreviousSibling.OuterHtml;
+                                        }
+                                        else
+                                        {
+                                            if (grandparentNode.PreviousSibling != null && (grandparentNode.PreviousSibling.PreviousSibling != null && (!grandparentNode.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                                                                       && grandparentNode.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
+                                            {
+                                                previousContent = grandparentNode.PreviousSibling.PreviousSibling.OuterHtml;
+                                            }
+                                            else if (grandparentNode.PreviousSibling != null && (grandparentNode.PreviousSibling.PreviousSibling != null && (grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling != null && (!grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                                                                                                                                                                          && grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n"))))
+                                            {
+                                                previousContent = grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml;
 
                                             }
                                         }
@@ -196,8 +222,9 @@
                                                                 IsTableSegment = initialcandidate.Type == "table",
                                                                 IsListSegment = initialcandidate.Type == "list",
                                                                 //NearestHeading = previousHeading,
-                                                                CandidateHtmlAndText =
-                                                                        safey.Sanitize(candidateHtmlAndText),
+                                                                PreviousContent = safey.Sanitize(previousContent),
+                                                                CandidateHtml =
+                                                                        safey.Sanitize(initialcandidate.Node.OuterHtml),
                                                                 KnownCompany = relation.CompanyNames,
                                                                 // TODO will there be one candidate per brand synonym or one per brand? 
                                                                 KnownBrand = brandSynonym,
