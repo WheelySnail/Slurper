@@ -42,7 +42,15 @@
 
         private static void GetNegativeTrainingCandidates()
         {
-            // 
+            var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationships();
+
+            var knownCompanyBrandNonRelationships = Helpers.GetKnownCompanyBrandNonRelationships(knownCompanyBrandRelationships);
+
+            var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
+
+            var negativeCandidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandNonRelationships);
+
+            Helpers.SaveAndPrintCandidates(negativeCandidates);
         }
 
         private static void GetTestCandidates()

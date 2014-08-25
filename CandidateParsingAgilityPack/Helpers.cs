@@ -137,17 +137,17 @@
                                 if (domainOrTitleContainsOwner || initialCandidateOrPreviousSiblingContainOwner)
                                 {
                                     // The html and text for the candidate should include the preceeding html node if the candidate is a table or list. 
-//                                    // TODO limit this to paragraphs only? Or to the previous sentence only? 
-                                       //GO UP THROUGH ALL PREVIOUS SIBLINGS, FIND ONE WHERE INNER HTML NOT EMPTY OR "\N"
-                                       //IF NONE, CHECK PREVIOUS SIBLINGS OF PARENT ELEMENT
-                                        //... what about case 2 where it's the parent's inner text that's needed? 
+                                    //                                    // TODO limit this to paragraphs only? Or to the previous sentence only? 
+                                    //GO UP THROUGH ALL PREVIOUS SIBLINGS, FIND ONE WHERE INNER HTML NOT EMPTY OR "\N"
+                                    //IF NONE, CHECK PREVIOUS SIBLINGS OF PARENT ELEMENT
+                                    //... what about case 2 where it's the parent's inner text that's needed? 
 
 
                                     var previousContent = "";
                                     var previousSibling = initialcandidate.Node.PreviousSibling;
                                     var parentNode = initialcandidate.Node.ParentNode;
                                     var grandparentNode = initialcandidate.Node.ParentNode.ParentNode;
-                                    
+
                                     // Check the three preceeding previous siblings
                                     if (!previousSibling.OuterHtml.IsNullOrEmpty() && previousSibling.OuterHtml != "\n")
                                     {
@@ -155,34 +155,55 @@
                                     }
                                     else
                                     {
-                                        if (previousSibling.PreviousSibling != null && (!previousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                                                                        && previousSibling.PreviousSibling.OuterHtml != "\n"))
+                                        if (previousSibling.PreviousSibling != null
+                                            && (!previousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                                && previousSibling.PreviousSibling.OuterHtml != "\n"))
                                         {
                                             previousContent = previousSibling.PreviousSibling.OuterHtml;
                                         }
-                                        else if (previousSibling.PreviousSibling != null && (previousSibling.PreviousSibling.PreviousSibling != null && (!previousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty() && previousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
+                                        else if (previousSibling.PreviousSibling != null
+                                                 && (previousSibling.PreviousSibling.PreviousSibling != null
+                                                     && (!previousSibling.PreviousSibling.PreviousSibling.OuterHtml
+                                                                         .IsNullOrEmpty()
+                                                         && previousSibling.PreviousSibling.PreviousSibling.OuterHtml
+                                                         != "\n")))
                                         {
-                                            previousContent = previousSibling.PreviousSibling.PreviousSibling.OuterHtml;
-                                        }}
+                                            previousContent =
+                                                    previousSibling.PreviousSibling.PreviousSibling.OuterHtml;
+                                        }
+                                    }
 
                                     // Check the three previous siblings of the parent sibling
                                     if (previousContent.IsNullOrEmpty())
                                     {
-                                        if (parentNode.PreviousSibling != null && (!parentNode.PreviousSibling.OuterHtml.IsNullOrEmpty() && parentNode.PreviousSibling.OuterHtml != "\n"))
+                                        if (parentNode.PreviousSibling != null
+                                            && (!parentNode.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                                && parentNode.PreviousSibling.OuterHtml != "\n"))
                                         {
                                             previousContent = parentNode.PreviousSibling.OuterHtml;
                                         }
                                         else
                                         {
-                                            if (parentNode.PreviousSibling != null && (parentNode.PreviousSibling.PreviousSibling != null && (!parentNode.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                                                                       && parentNode.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
+                                            if (parentNode.PreviousSibling != null
+                                                && (parentNode.PreviousSibling.PreviousSibling != null
+                                                    && (!parentNode.PreviousSibling.PreviousSibling.OuterHtml
+                                                                   .IsNullOrEmpty()
+                                                        && parentNode.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
                                             {
                                                 previousContent = parentNode.PreviousSibling.PreviousSibling.OuterHtml;
                                             }
-                                            else if (parentNode.PreviousSibling != null && (parentNode.PreviousSibling.PreviousSibling != null && (parentNode.PreviousSibling.PreviousSibling.PreviousSibling != null && (!parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                                                                                                                                                                          && parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n"))))
+                                            else if (parentNode.PreviousSibling != null
+                                                     && (parentNode.PreviousSibling.PreviousSibling != null
+                                                         && (parentNode.PreviousSibling.PreviousSibling.PreviousSibling
+                                                             != null
+                                                             && (!parentNode.PreviousSibling.PreviousSibling
+                                                                            .PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                                                 && parentNode.PreviousSibling.PreviousSibling
+                                                                              .PreviousSibling.OuterHtml != "\n"))))
                                             {
-                                                previousContent = parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml;
+                                                previousContent =
+                                                        parentNode.PreviousSibling.PreviousSibling.PreviousSibling
+                                                                  .OuterHtml;
 
                                             }
                                         }
@@ -191,21 +212,37 @@
                                     // Check the three previous siblings of the grandparent sibling
                                     if (previousContent.IsNullOrEmpty())
                                     {
-                                        if (grandparentNode.PreviousSibling != null && (!grandparentNode.PreviousSibling.OuterHtml.IsNullOrEmpty() && grandparentNode.PreviousSibling.OuterHtml != "\n"))
+                                        if (grandparentNode.PreviousSibling != null
+                                            && (!grandparentNode.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                                && grandparentNode.PreviousSibling.OuterHtml != "\n"))
                                         {
                                             previousContent = grandparentNode.PreviousSibling.OuterHtml;
                                         }
                                         else
                                         {
-                                            if (grandparentNode.PreviousSibling != null && (grandparentNode.PreviousSibling.PreviousSibling != null && (!grandparentNode.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                                                                       && grandparentNode.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
+                                            if (grandparentNode.PreviousSibling != null
+                                                && (grandparentNode.PreviousSibling.PreviousSibling != null
+                                                    && (!grandparentNode.PreviousSibling.PreviousSibling.OuterHtml
+                                                                        .IsNullOrEmpty()
+                                                        && grandparentNode.PreviousSibling.PreviousSibling.OuterHtml
+                                                        != "\n")))
                                             {
-                                                previousContent = grandparentNode.PreviousSibling.PreviousSibling.OuterHtml;
+                                                previousContent =
+                                                        grandparentNode.PreviousSibling.PreviousSibling.OuterHtml;
                                             }
-                                            else if (grandparentNode.PreviousSibling != null && (grandparentNode.PreviousSibling.PreviousSibling != null && (grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling != null && (!grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                                                                                                                                                                          && grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n"))))
+                                            else if (grandparentNode.PreviousSibling != null
+                                                     && (grandparentNode.PreviousSibling.PreviousSibling != null
+                                                         && (grandparentNode.PreviousSibling.PreviousSibling
+                                                                            .PreviousSibling != null
+                                                             && (!grandparentNode.PreviousSibling.PreviousSibling
+                                                                                 .PreviousSibling.OuterHtml.IsNullOrEmpty
+                                                                          ()
+                                                                 && grandparentNode.PreviousSibling.PreviousSibling
+                                                                                   .PreviousSibling.OuterHtml != "\n"))))
                                             {
-                                                previousContent = grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml;
+                                                previousContent =
+                                                        grandparentNode.PreviousSibling.PreviousSibling
+                                                                       .PreviousSibling.OuterHtml;
 
                                             }
                                         }
@@ -224,7 +261,9 @@
                                                                 //NearestHeading = previousHeading,
                                                                 PreviousContent = safey.Sanitize(previousContent),
                                                                 CandidateHtml =
-                                                                        safey.Sanitize(initialcandidate.Node.OuterHtml),
+                                                                        safey.Sanitize(
+                                                                                       initialcandidate.Node
+                                                                                                       .OuterHtml),
                                                                 KnownCompany = relation.CompanyNames,
                                                                 // TODO will there be one candidate per brand synonym or one per brand? 
                                                                 KnownBrand = brandSynonym,
@@ -275,8 +314,11 @@
             // https://api.opencorporates.com/companies/gb/01320086/network
         }
 
-        public static List<CompanyBrandRelationship> GetKnownCompanyBrandRelationshipsWithMultipleBrands(List<CompanyBrandRelationship> knownCandidates)
+        public static List<CompanyBrandRelationship> GetKnownCompanyBrandRelationshipsWithMultipleBrands(
+                List<CompanyBrandRelationship> knownCandidates)
         {
+            // TODO combine candidates where the company name is the same
+            // Loop through, add to dictionary string/ list? 
             return knownCandidates.Where(r => r.BrandNames.Count() > 1).ToList();
         }
 
@@ -333,10 +375,10 @@
             {
                 file.WriteLine(
                                "Page title: " + candidate.PageTitle + Environment.NewLine + Environment.NewLine
-                               + "Known company: " + candidate.KnownCompany.FirstOrDefault().ToString() + Environment.NewLine
-                               + "Known brand: " + candidate.KnownBrand + Environment.NewLine + Environment.NewLine
-                               + "\r Html: " + candidate.PreviousContent + Environment.NewLine + "\r Html: "
-                               + candidate.CandidateHtml + Environment.NewLine + Environment.NewLine);
+                               + "Known company: " + candidate.KnownCompany.FirstOrDefault().ToString()
+                               + Environment.NewLine + "Known brand: " + candidate.KnownBrand + Environment.NewLine
+                               + Environment.NewLine + "\r Html: " + candidate.PreviousContent + Environment.NewLine
+                               + "\r Html: " + candidate.CandidateHtml + Environment.NewLine + Environment.NewLine);
                 Console.WriteLine(
                                   candidate.PageTitle + Environment.NewLine + ' '
                                   + candidate.KnownCompany.FirstOrDefault().ToString() + Environment.NewLine + ' '
@@ -348,6 +390,62 @@
             Console.WriteLine(candidates.Count.ToString());
 
             Console.ReadLine();
+        }
+
+        public static List<CompanyBrandRelationship> GetKnownCompanyBrandNonRelationships()
+        {
+            string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
+            String url = "https://www.googleapis.com/freebase/v1/mqlread";
+            String query =
+                    "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key="
+                    + API_KEY;
+
+            var client = new HttpClient();
+            client.BaseAddress = new Uri(url);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            HttpResponseMessage reponse = client.GetAsync(query).Result;
+
+            if (reponse.IsSuccessStatusCode)
+            {
+                var responseString = reponse.Content.ReadAsStringAsync().Result;
+                var safey = new HtmlSanitizer();
+                safey.Sanitize(responseString);
+                var relationships = JsonConvert.DeserializeObject<FreeBaseRelationshipsResponse>(responseString);
+                return MapFreeBaseRelationshipToCompanyBrandRelationship(relationships.Relationships);
+            }
+            else
+            {
+                throw new Exception();
+            }
+
+            // https://api.opencorporates.com/companies/search?q=barclays+bank
+            // https://api.opencorporates.com/companies/gb/01320086/network
+        }
+
+        public static List<CompanyBrandRelationship> GetKnownCompanyBrandNonRelationships(
+                List<CompanyBrandRelationship> knownCompanyBrandRelationships)
+        {
+            // Jumble up the list, creating new relationships where there are none. 
+            var nonRelationships = new List<CompanyBrandRelationship>();
+
+            // Easier to do this is combine all relationships with the same company into one... (hopefully the parsing will still work :|)
+
+            for (int i = 0; i < knownCompanyBrandRelationships.Count - 1; i++)
+            {
+                nonRelationships.Add(
+                                     new CompanyBrandRelationship
+                                         {
+                                                 CompanyNames =
+                                                         knownCompanyBrandRelationships[i]
+                                                         .CompanyNames,
+                                                                              BrandNames =
+                                                                              knownCompanyBrandRelationships
+                                                                              [i+1].BrandNames
+                                         });
+            }
+
+            return nonRelationships;
+
         }
     }
 }
