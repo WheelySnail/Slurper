@@ -54,8 +54,8 @@
                 {
                     foreach (var ownerCompanySynonym in relation.CompanyNames)
                     {
-                        if (root.OuterHtml.ToLowerInvariant().Contains(ownerCompanySynonym.ToLowerInvariant())
-                            || page.ToLowerInvariant().Contains(ownerCompanySynonym.ToLowerInvariant()))
+                        if (root.OuterHtml.ToLowerInvariant().Contains(ownerCompanySynonym.ToLowerInvariant() + " ")
+                            || page.ToLowerInvariant().Contains(ownerCompanySynonym.ToLowerInvariant() + " "))
                         {
                             containsKnownRelationship = true;
                             relationsWhereOwnerMentionedOnPage.Add(relation);
@@ -111,7 +111,7 @@
                             // Check if a brand synonym is present in the initial candidate. This is a necessary but not sufficient condition for creating a candidate
                             if (
                                     initialcandidate.Node.OuterHtml.ToLowerInvariant()
-                                                    .Contains(brandSynonym.ToLowerInvariant()))
+                                                    .Contains(brandSynonym.ToLowerInvariant() + " "))
                             {
                                 var domainOrTitleContainsOwner = false;
                                 var initialCandidateOrPreviousSiblingContainOwner = false;
@@ -119,16 +119,16 @@
                                 // If the document domain/ filename or title contains the relation name, the presence of the brand name alone in the segment is sufficient
                                 foreach (var ownerSynonym in relation.CompanyNames)
                                 {
-                                    if (page.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant())
-                                        || title.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant()))
+                                    if (page.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant() + " ")
+                                        || title.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant() + " "))
                                     {
                                         domainOrTitleContainsOwner = true;
                                     }
                                     if (
                                             initialcandidate.Node.OuterHtml.ToLowerInvariant()
-                                                            .Contains(ownerSynonym.ToLowerInvariant())
+                                                            .Contains(ownerSynonym.ToLowerInvariant() + " ")
                                             || initialcandidate.Node.PreviousSibling.OuterHtml.ToLowerInvariant()
-                                                               .Contains(ownerSynonym.ToLowerInvariant()))
+                                                               .Contains(ownerSynonym.ToLowerInvariant() + " "))
                                     {
                                         initialCandidateOrPreviousSiblingContainOwner = true;
                                     }
