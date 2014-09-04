@@ -35,9 +35,7 @@
         //             foreach: Company name synonym 
         //                 IF the company name is present in the list or table segment, or the page title
         //                 Make a candidate!! 
-        internal static List<Candidate> GetCandidatesFromPages(
-                IEnumerable<string> pages,
-                List<CompanyAndBrands> knownCompanyAndBrandsRelationships)
+        internal static List<Candidate> GetCandidatesFromPages(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships, bool requireMultipleBrands = false)
         {
             var doc = new HtmlDocument();
 
@@ -207,7 +205,14 @@
                     }
                 }
             }
-            return candidates;
+            if (requireMultipleBrands)
+            {
+                return candidates.Where(candidate => candidate.containsMultipleBrands == true).ToList();
+            }
+            else
+            {
+                return candidates;
+            }
         }
 
         // The html and text for the candidate should include the preceeding html node if the candidate is a table or list. 

@@ -17,7 +17,7 @@
     {
         private static void Main(string[] args)
         {
-            GetPositiveTrainingCandidates(false);
+            GetPositiveTrainingCandidates(true);
 
             //GetNegativeTrainingCandidates();
 
@@ -34,14 +34,15 @@
 
             if (requireMultipleBrands)
             {
+                // First, narrow down the company/ brands entries processed to only those containing multiple brands
                 var knownCompanyBrandRelationshipsWithMultipleBrands =
         Helpers.GetKnownCompanyBrandRelationshipsWithMultipleBrands(knownCompanyBrandRelationships);
-                var candidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandRelationshipsWithMultipleBrands);
+                var candidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandRelationshipsWithMultipleBrands, true);
                 Helpers.SaveAndPrintCandidates(candidates);
             }
             else
             {
-                var candidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandRelationships);
+                var candidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandRelationships, false);
                 Helpers.SaveAndPrintCandidates(candidates);
             }
         }
@@ -71,7 +72,7 @@
 
             var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
 
-            var negativeCandidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandNonRelationships);
+            var negativeCandidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandNonRelationships, false);
 
             Helpers.SaveAndPrintCandidates(negativeCandidates);
         }
