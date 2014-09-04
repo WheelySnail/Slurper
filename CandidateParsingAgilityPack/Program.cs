@@ -17,10 +17,13 @@
     {
         private static void Main(string[] args)
         {
+            // Get candidates representing a single confirmed company/ brand relationship
             //GetPositiveTrainingCandidates();
 
+            // Get candidates representing confirmed company/ brand relationships between one company and several of its brands
             //GetPositiveTrainingCandidatesWithMultipleBrands();
 
+            // Get candidates containing a company and a brand which do not have a confirmed company/ brand relationship
             GetNegativeTrainingCandidates();
 
             GetTestCandidates();
