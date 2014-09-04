@@ -5,14 +5,18 @@ namespace CandidateParsingAgilityPack.Model
 
     public class Candidate
     {
+        public bool containsMultipleBrands { get; set; }
+
         public String PageTitle { get; set; }
 
         public List<string> KnownCompany { get; set; }
 
         public string KnownBrand { get; set; }
 
+        public bool BrandNameIsSimilarToCompanyName { get; set; }
+
         // Does it make sense to have this here? 
-        public CompanyBrandRelationship KnownCompanyBrandRelationship { get; set; }
+        public CompanyAndBrands KnownCompanyAndBrands { get; set; }
 
         public String DomainName { get; set; }
 

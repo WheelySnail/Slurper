@@ -26,13 +26,24 @@
 
     internal class Helpers
     {
+
+        //foreach: Page
+        //  foreach: List and table segment on the page
+        //     foreach: Relation where company present anywhere on page
+        //         foreach: Brand name in this relation
+        //             IF the brand name is present in the list or table segment	
+        //             foreach: Company name synonym 
+        //                 IF the company name is present in the list or table segment, or the page title
+        //                 Make a candidate!! 
         internal static List<Candidate> GetCandidatesFromPages(
                 IEnumerable<string> pages,
-                List<CompanyBrandRelationship> knownCompanyBrandRelationships)
+                List<CompanyAndBrands> knownCompanyAndBrandsRelationships)
         {
             var doc = new HtmlDocument();
 
             var candidates = new List<Candidate>();
+
+            var candidatesWithMultipleBrandsPresent = new List<Candidate>();
 
             var safey = new HtmlSanitizer();
 
@@ -42,22 +53,21 @@
 
                 var root = doc.DocumentNode;
 
-                bool containsKnownRelationship = false;
+                bool pageContainsKnownRelationship = false;
 
                 // The relations containing an owner company mentioned in this page
-                var relationsWhereOwnerMentionedOnPage = new List<CompanyBrandRelationship>();
+                var relationsWhereOwnerMentionedOnPage = new List<CompanyAndBrands>();
 
                 // Check if the page or filename contains any known seed company names
-                // There will be some duplication of effort here as the same company can be present in multiple relations...
-                // Work out later when am retrieving real relations from API
-                foreach (var relation in knownCompanyBrandRelationships)
+                // TODO There will be some duplication of effort here as the same company can be present in multiple relations? 
+                foreach (var relation in knownCompanyAndBrandsRelationships)
                 {
                     foreach (var ownerCompanySynonym in relation.CompanyNames)
                     {
                         if (root.OuterHtml.ToLowerInvariant().Contains(ownerCompanySynonym.ToLowerInvariant() + " ")
                             || page.ToLowerInvariant().Contains(ownerCompanySynonym.ToLowerInvariant() + " "))
                         {
-                            containsKnownRelationship = true;
+                            pageContainsKnownRelationship = true;
                             relationsWhereOwnerMentionedOnPage.Add(relation);
                             // stop checking for synonym mentions once one synonym for a relation has been identified - move to the next iteration of the outer loop
                             break;
@@ -66,13 +76,12 @@
                 }
 
                 // Skip to next page if the current page doesn't contain a seed company name
-                if (!containsKnownRelationship)
+                if (!pageContainsKnownRelationship)
                 {
                     continue;
                 }
 
                 // Gather the page title which is an attribute of all candidates
-
                 var titleElement = doc.DocumentNode.SelectSingleNode("//head/title");
                 var title = "";
 
@@ -105,178 +114,95 @@
                     // For each relation where an owner name is present on this page. Candidates are created at this level as they are a combination of relation + segment.
                     foreach (var relation in relationsWhereOwnerMentionedOnPage)
                     {
-                        // For each variation of the brand name in this relation
-                        foreach (var brandSynonym in relation.BrandNames)
+                        var domainOrTitleContainsOwner = false;
+
+                        var initialCandidateOrPreviousSiblingContainOwner = false;
+
+                        var previousContent = GetPreviousRelevantNode(initialcandidate);
+
+                        // Check that the owner name for the relation is present in the title, domain, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
+                        // Only use one company name at the moment so a loop isn't necessary
+                        foreach (var ownerSynonym in relation.CompanyNames)
                         {
-                            // Check if a brand synonym is present in the initial candidate. This is a necessary but not sufficient condition for creating a candidate
+                            if (page.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant() + " ")
+                                || title.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant() + " "))
+                            {
+                                domainOrTitleContainsOwner = true;
+                            }
                             if (
                                     initialcandidate.Node.OuterHtml.ToLowerInvariant()
-                                                    .Contains(brandSynonym.ToLowerInvariant() + " "))
+                                                    .Contains(ownerSynonym.ToLowerInvariant() + " ")
+                                    || previousContent.ToLowerInvariant()
+                                                       .Contains(ownerSynonym.ToLowerInvariant() + " "))
                             {
-                                var domainOrTitleContainsOwner = false;
-                                var initialCandidateOrPreviousSiblingContainOwner = false;
+                                initialCandidateOrPreviousSiblingContainOwner = true;
+                            }
+                        }
 
-                                // If the document domain/ filename or title contains the relation name, the presence of the brand name alone in the segment is sufficient
-                                foreach (var ownerSynonym in relation.CompanyNames)
+                        // If the company name for the relation is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
+                        if (domainOrTitleContainsOwner || initialCandidateOrPreviousSiblingContainOwner)
+                        {
+                            var candidatesForCompany = new List<Candidate>();
+
+                            var numberOfBrandsfromRelationshipPresentInSegment = 0;
+
+                            // For each brand owned by the company
+                            foreach (var brand in relation.BrandNames)
+                            {
+                                    // Get any tr or li element in the initial candidate containing the brand name
+                                    string brandName = brand;
+
+                                    var innerSegments = new List<HtmlNode>();
+
+                                    if (initialcandidate.Type == "list")
+                                    {
+                                        innerSegments.AddRange(initialcandidate.Node.Descendants("li")
+                                                    .ToList()
+                                                    .Where(listItem => listItem.OuterHtml.ToLowerInvariant().Contains(brandName.ToLowerInvariant()))); 
+                                    }
+                                    else if (initialcandidate.Type == "table")
+                                    {
+                                        innerSegments.AddRange(initialcandidate.Node.Descendants("tr")
+                                                    .ToList()
+                                                    .Where(listItem => listItem.OuterHtml.ToLowerInvariant().Contains(brandName.ToLowerInvariant()))); 
+                                    }
+
+                                    foreach (var innerSegment in innerSegments)
+                                    {
+                                        numberOfBrandsfromRelationshipPresentInSegment++;
+
+                                        var candidate = new Candidate
+                                                            {
+                                                                    IsTableSegment =
+                                                                            initialcandidate.Type == "table",
+                                                                    IsListSegment =
+                                                                            initialcandidate.Type == "list",
+                                                                    PreviousContent =
+                                                                            safey.Sanitize(previousContent),
+                                                                    CandidateHtml =
+                                                                            safey.Sanitize(
+                                                                                           innerSegment.OuterHtml),
+                                                                    KnownCompany = relation.CompanyNames,
+                                                                    KnownBrand = brand,
+                                                                    KnownCompanyAndBrands = relation,
+                                                                    DomainOrPageTitleContainsOwner =
+                                                                            domainOrTitleContainsOwner,
+                                                                    Uri = page,
+                                                                    PageTitle = title
+                                                            };
+
+                                        candidatesForCompany.Add(candidate);
+                                    }
+                            }
+
+                            if (numberOfBrandsfromRelationshipPresentInSegment > 1)
+                            {
+                                foreach (var candidate in candidatesForCompany)
                                 {
-                                    if (page.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant() + " ")
-                                        || title.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant() + " "))
-                                    {
-                                        domainOrTitleContainsOwner = true;
-                                    }
-                                    if (
-                                            initialcandidate.Node.OuterHtml.ToLowerInvariant()
-                                                            .Contains(ownerSynonym.ToLowerInvariant() + " ")
-                                            || initialcandidate.Node.PreviousSibling.OuterHtml.ToLowerInvariant()
-                                                               .Contains(ownerSynonym.ToLowerInvariant() + " "))
-                                    {
-                                        initialCandidateOrPreviousSiblingContainOwner = true;
-                                    }
-                                }
-
-                                if (domainOrTitleContainsOwner || initialCandidateOrPreviousSiblingContainOwner)
-                                {
-                                    // The html and text for the candidate should include the preceeding html node if the candidate is a table or list. 
-                                    //                                    // TODO limit this to paragraphs only? Or to the previous sentence only? 
-                                    //GO UP THROUGH ALL PREVIOUS SIBLINGS, FIND ONE WHERE INNER HTML NOT EMPTY OR "\N"
-                                    //IF NONE, CHECK PREVIOUS SIBLINGS OF PARENT ELEMENT
-                                    //... what about case 2 where it's the parent's inner text that's needed? 
-
-
-                                    var previousContent = "";
-                                    var previousSibling = initialcandidate.Node.PreviousSibling;
-                                    var parentNode = initialcandidate.Node.ParentNode;
-                                    var grandparentNode = initialcandidate.Node.ParentNode.ParentNode;
-
-                                    // Check the three preceeding previous siblings
-                                    if (!previousSibling.OuterHtml.IsNullOrEmpty() && previousSibling.OuterHtml != "\n")
-                                    {
-                                        previousContent = previousSibling.OuterHtml;
-                                    }
-                                    else
-                                    {
-                                        if (previousSibling.PreviousSibling != null
-                                            && (!previousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                                && previousSibling.PreviousSibling.OuterHtml != "\n"))
-                                        {
-                                            previousContent = previousSibling.PreviousSibling.OuterHtml;
-                                        }
-                                        else if (previousSibling.PreviousSibling != null
-                                                 && (previousSibling.PreviousSibling.PreviousSibling != null
-                                                     && (!previousSibling.PreviousSibling.PreviousSibling.OuterHtml
-                                                                         .IsNullOrEmpty()
-                                                         && previousSibling.PreviousSibling.PreviousSibling.OuterHtml
-                                                         != "\n")))
-                                        {
-                                            previousContent =
-                                                    previousSibling.PreviousSibling.PreviousSibling.OuterHtml;
-                                        }
-                                    }
-
-                                    // Check the three previous siblings of the parent sibling
-                                    if (previousContent.IsNullOrEmpty())
-                                    {
-                                        if (parentNode.PreviousSibling != null
-                                            && (!parentNode.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                                && parentNode.PreviousSibling.OuterHtml != "\n"))
-                                        {
-                                            previousContent = parentNode.PreviousSibling.OuterHtml;
-                                        }
-                                        else
-                                        {
-                                            if (parentNode.PreviousSibling != null
-                                                && (parentNode.PreviousSibling.PreviousSibling != null
-                                                    && (!parentNode.PreviousSibling.PreviousSibling.OuterHtml
-                                                                   .IsNullOrEmpty()
-                                                        && parentNode.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
-                                            {
-                                                previousContent = parentNode.PreviousSibling.PreviousSibling.OuterHtml;
-                                            }
-                                            else if (parentNode.PreviousSibling != null
-                                                     && (parentNode.PreviousSibling.PreviousSibling != null
-                                                         && (parentNode.PreviousSibling.PreviousSibling.PreviousSibling
-                                                             != null
-                                                             && (!parentNode.PreviousSibling.PreviousSibling
-                                                                            .PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                                                 && parentNode.PreviousSibling.PreviousSibling
-                                                                              .PreviousSibling.OuterHtml != "\n"))))
-                                            {
-                                                previousContent =
-                                                        parentNode.PreviousSibling.PreviousSibling.PreviousSibling
-                                                                  .OuterHtml;
-
-                                            }
-                                        }
-                                    }
-
-                                    // Check the three previous siblings of the grandparent sibling
-                                    if (previousContent.IsNullOrEmpty())
-                                    {
-                                        if (grandparentNode.PreviousSibling != null
-                                            && (!grandparentNode.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                                && grandparentNode.PreviousSibling.OuterHtml != "\n"))
-                                        {
-                                            previousContent = grandparentNode.PreviousSibling.OuterHtml;
-                                        }
-                                        else
-                                        {
-                                            if (grandparentNode.PreviousSibling != null
-                                                && (grandparentNode.PreviousSibling.PreviousSibling != null
-                                                    && (!grandparentNode.PreviousSibling.PreviousSibling.OuterHtml
-                                                                        .IsNullOrEmpty()
-                                                        && grandparentNode.PreviousSibling.PreviousSibling.OuterHtml
-                                                        != "\n")))
-                                            {
-                                                previousContent =
-                                                        grandparentNode.PreviousSibling.PreviousSibling.OuterHtml;
-                                            }
-                                            else if (grandparentNode.PreviousSibling != null
-                                                     && (grandparentNode.PreviousSibling.PreviousSibling != null
-                                                         && (grandparentNode.PreviousSibling.PreviousSibling
-                                                                            .PreviousSibling != null
-                                                             && (!grandparentNode.PreviousSibling.PreviousSibling
-                                                                                 .PreviousSibling.OuterHtml.IsNullOrEmpty
-                                                                          ()
-                                                                 && grandparentNode.PreviousSibling.PreviousSibling
-                                                                                   .PreviousSibling.OuterHtml != "\n"))))
-                                            {
-                                                previousContent =
-                                                        grandparentNode.PreviousSibling.PreviousSibling
-                                                                       .PreviousSibling.OuterHtml;
-
-                                            }
-                                        }
-                                    }
-
-
-                                    var candidateHtmlAndText = previousContent + initialcandidate.Node.OuterHtml;
-
-                                    // TODO Find previous sibling which is an h1, h2, h3, h4, h5, or <p><strong>
-                                    //var previousHeading = root.Descendants().Where(d => d.InnerText.Contains(company));
-
-                                    var candidate = new Candidate
-                                                        {
-                                                                IsTableSegment = initialcandidate.Type == "table",
-                                                                IsListSegment = initialcandidate.Type == "list",
-                                                                //NearestHeading = previousHeading,
-                                                                PreviousContent = safey.Sanitize(previousContent),
-                                                                CandidateHtml =
-                                                                        safey.Sanitize(
-                                                                                       initialcandidate.Node
-                                                                                                       .OuterHtml),
-                                                                KnownCompany = relation.CompanyNames,
-                                                                // TODO will there be one candidate per brand synonym or one per brand? 
-                                                                KnownBrand = brandSynonym,
-                                                                KnownCompanyBrandRelationship = relation,
-                                                                DomainOrPageTitleContainsOwner =
-                                                                        domainOrTitleContainsOwner,
-                                                                Uri = page,
-                                                                PageTitle = title
-                                                        };
-
-                                    candidates.Add(candidate);
+                                    candidate.containsMultipleBrands = true;
                                 }
                             }
+                            candidates.AddRange(candidatesForCompany);
                         }
                     }
                 }
@@ -284,9 +210,118 @@
             return candidates;
         }
 
-        internal static List<CompanyBrandRelationship> GetKnownCompanyBrandRelationships()
+        // The html and text for the candidate should include the preceeding html node if the candidate is a table or list. 
+        // GO UP THROUGH ALL PREVIOUS SIBLINGS, FIND ONE WHERE INNER HTML NOT EMPTY OR "\N"
+        // IF NONE, CHECK PREVIOUS SIBLINGS OF PARENT ELEMENT
+        private static string GetPreviousRelevantNode(InitialCandidate initialcandidate)
         {
-            string API_KEY = "";
+            var previousContent = "";
+            var previousSibling = initialcandidate.Node.PreviousSibling;
+            var parentNode = initialcandidate.Node.ParentNode;
+            var grandparentNode = initialcandidate.Node.ParentNode.ParentNode;
+
+            // Check the three preceeding previous siblings
+            if (!previousSibling.OuterHtml.IsNullOrEmpty() && previousSibling.OuterHtml != "\n")
+            {
+                previousContent = previousSibling.OuterHtml;
+            }
+            else
+            {
+                if (previousSibling.PreviousSibling != null
+                    && (!previousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                        && previousSibling.PreviousSibling.OuterHtml != "\n"))
+                {
+                    previousContent = previousSibling.PreviousSibling.OuterHtml;
+                }
+                else if (previousSibling.PreviousSibling != null
+                         && (previousSibling.PreviousSibling.PreviousSibling != null
+                             && (!previousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                 && previousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
+                {
+                    previousContent = previousSibling.PreviousSibling.PreviousSibling.OuterHtml;
+                }
+            }
+
+            // Check the three previous siblings of the parent sibling
+            if (previousContent.IsNullOrEmpty())
+            {
+                if (parentNode.PreviousSibling != null
+                    && (!parentNode.PreviousSibling.OuterHtml.IsNullOrEmpty() && parentNode.PreviousSibling.OuterHtml != "\n"))
+                {
+                    previousContent = parentNode.PreviousSibling.OuterHtml;
+                }
+                else
+                {
+                    if (parentNode.PreviousSibling != null
+                        && (parentNode.PreviousSibling.PreviousSibling != null
+                            && (!parentNode.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                && parentNode.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
+                    {
+                        previousContent = parentNode.PreviousSibling.PreviousSibling.OuterHtml;
+                    }
+                    else if (parentNode.PreviousSibling != null
+                             && (parentNode.PreviousSibling.PreviousSibling != null
+                                 && (parentNode.PreviousSibling.PreviousSibling.PreviousSibling != null
+                                     && (!parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                         && parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n"))))
+                    {
+                        previousContent = parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml;
+                    }
+                }
+            }
+
+            // Check the three previous siblings of the grandparent sibling
+            if (previousContent.IsNullOrEmpty())
+            {
+                if (grandparentNode.PreviousSibling != null
+                    && (!grandparentNode.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                        && grandparentNode.PreviousSibling.OuterHtml != "\n"))
+                {
+                    previousContent = grandparentNode.PreviousSibling.OuterHtml;
+                }
+                else
+                {
+                    if (grandparentNode.PreviousSibling != null
+                        && (grandparentNode.PreviousSibling.PreviousSibling != null
+                            && (!grandparentNode.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                && grandparentNode.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
+                    {
+                        previousContent = grandparentNode.PreviousSibling.PreviousSibling.OuterHtml;
+                    }
+                    else if (grandparentNode.PreviousSibling != null
+                             && (grandparentNode.PreviousSibling.PreviousSibling != null
+                                 && (grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling != null
+                                     && (!grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty
+                                                  ()
+                                         && grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n"))))
+                    {
+                        previousContent = grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml;
+                    }
+                }
+            }
+            return previousContent;
+        }
+
+        //foreach: Page
+        //  foreach: List and table segment on the page
+        //     foreach: Relation where company present anywhere on page
+        //         int brandsPresent = 0;
+        //         foreach: Brand name in this relation
+        //             IF the brand name is present in the list or table segment	
+        //             foreach: Company name synonym 
+        //                 IF the company name is present in the list or table segment, or the page title
+        //                      brandsPresent ++
+        //                          If brandsPresent > 1 Make a candidate!! & skip to next relation? Will mean fewer candidates
+
+        // Return lists/ tables + company + a list of brand names for the company present in the list/ table
+        public static List<Candidate> GetCandidatesWithMultipleBrandsFromPages(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyBrandRelationshipsWithMultipleBrands)
+        {
+            throw new Exception();
+        }
+
+        internal static List<CompanyAndBrands> GetKnownCompanyBrandRelationships()
+        {
+            string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
             String url = "https://www.googleapis.com/freebase/v1/mqlread";
             String query =
                     "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key="
@@ -314,7 +349,7 @@
             // https://api.opencorporates.com/companies/gb/01320086/network
         }
 
-        internal static List<CompanyBrandRelationship> GetKnownCompanyBrandRelationshipsFromConsumerCompanies()
+        internal static List<CompanyAndBrands> GetKnownCompanyBrandRelationshipsFromConsumerCompanies()
         {
             string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
             String url = "https://www.googleapis.com/freebase/v1/mqlread";
@@ -344,10 +379,10 @@
             // https://api.opencorporates.com/companies/gb/01320086/network
         }
 
-        private static List<CompanyBrandRelationship> MapFreeBaseConsumerCompaniesToCompanyBrandRelationship(
+        private static List<CompanyAndBrands> MapFreeBaseConsumerCompaniesToCompanyBrandRelationship(
                 List<FreebaseConsumerCompany> companies)
         {
-            var companyBrandRelationships = new List<CompanyBrandRelationship>();
+            var companyBrandRelationships = new List<CompanyAndBrands>();
             foreach (var freebaseConsumerCompany in companies)
             {
                 if (freebaseConsumerCompany != null)
@@ -365,7 +400,7 @@
                     }
 
                     companyBrandRelationships.Add(
-                                                  new CompanyBrandRelationship
+                                                  new CompanyAndBrands
                                                       {
                                                               
                                                               BrandNames = allBrandsAndProducts
@@ -381,8 +416,8 @@
             return companyBrandRelationships;
         }
 
-        public static List<CompanyBrandRelationship> GetKnownCompanyBrandRelationshipsWithMultipleBrands(
-                List<CompanyBrandRelationship> knownCandidates)
+        public static List<CompanyAndBrands> GetKnownCompanyBrandRelationshipsWithMultipleBrands(
+                List<CompanyAndBrands> knownCandidates)
         {
             // TODO combine candidates where the company name is the same
             // Loop through, add to dictionary string/ list? 
@@ -394,24 +429,24 @@
             return Directory.GetFiles(path, "*.htm*", SearchOption.AllDirectories);
         }
 
-        private static List<CompanyBrandRelationship> GetTestRelationships()
+        private static List<CompanyAndBrands> GetTestRelationships()
         {
-            var relationships = new List<CompanyBrandRelationship>();
+            var relationships = new List<CompanyAndBrands>();
             // TODO get synonyms from Freebase or alter the CompanyBrandRelation class
 
             return relationships;
         }
 
-        private static List<CompanyBrandRelationship> MapFreeBaseRelationshipToCompanyBrandRelationship(
+        private static List<CompanyAndBrands> MapFreeBaseRelationshipToCompanyBrandRelationship(
                 List<FreebaseCompanyBrandRelationship> companies)
         {
-            var companyBrandRelationships = new List<CompanyBrandRelationship>();
+            var companyBrandRelationships = new List<CompanyAndBrands>();
             foreach (var freebaseCompanyBrandRelationship in companies)
             {
                 if (freebaseCompanyBrandRelationship != null)
                 {
                     companyBrandRelationships.Add(
-                                                  new CompanyBrandRelationship
+                                                  new CompanyAndBrands
                                                       {
                                                               BrandNames =
                                                                       new List<String>
@@ -444,7 +479,8 @@
                                "Page title: " + candidate.PageTitle + Environment.NewLine + Environment.NewLine
                                + "Known company: " + candidate.KnownCompany.FirstOrDefault().ToString()
                                + Environment.NewLine + "Known brand: " + candidate.KnownBrand + Environment.NewLine
-                               + Environment.NewLine + "\r Html: " + candidate.PreviousContent + Environment.NewLine
+                               + Environment.NewLine + "Multiple brands present:" + candidate.containsMultipleBrands.ToString()
+                               + Environment.NewLine + "\r Previous Relevant Node: " + candidate.PreviousContent + Environment.NewLine
                                + "\r Html: " + candidate.CandidateHtml + Environment.NewLine + Environment.NewLine);
                 Console.WriteLine(
                                   candidate.PageTitle + Environment.NewLine + ' '
@@ -459,7 +495,7 @@
             Console.ReadLine();
         }
 
-        public static List<CompanyBrandRelationship> GetKnownCompanyBrandNonRelationships()
+        public static List<CompanyAndBrands> GetKnownCompanyBrandNonRelationships()
         {
             string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
             String url = "https://www.googleapis.com/freebase/v1/mqlread";
@@ -489,16 +525,19 @@
             // https://api.opencorporates.com/companies/gb/01320086/network
         }
 
-        public static List<CompanyBrandRelationship> GetKnownCompanyBrandNonRelationships(
-                List<CompanyBrandRelationship> knownCompanyBrandRelationships)
+        public static List<CompanyAndBrands> GetKnownCompanyBrandNonRelationships(
+                List<CompanyAndBrands> knownCompanyBrandRelationships)
         {
             // Jumble up the list, creating new relationships where there are none. 
-            var nonRelationships = new List<CompanyBrandRelationship>();
+            // Should really use all brands not belonging to the company but this would result in huge amounts of processing? 
+            // These ones are going to be hard to find, one way or another
+            // Use a supermarket site? 
+            var nonRelationships = new List<CompanyAndBrands>();
 
             for (int i = 0; i < knownCompanyBrandRelationships.Count - 1; i++)
             {
                 nonRelationships.Add(
-                                     new CompanyBrandRelationship
+                                     new CompanyAndBrands
                                          {
                                                  CompanyNames =
                                                          knownCompanyBrandRelationships[i]

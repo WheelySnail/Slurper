@@ -17,32 +17,52 @@
     {
         private static void Main(string[] args)
         {
-            // Get candidates representing a single confirmed company/ brand relationship
-            //GetPositiveTrainingCandidates();
+            GetPositiveTrainingCandidates(false);
 
-            // Get candidates representing confirmed company/ brand relationships between one company and several of its brands
-            //GetPositiveTrainingCandidatesWithMultipleBrands();
+            //GetNegativeTrainingCandidates();
 
-            // Get candidates containing a company and a brand which do not have a confirmed company/ brand relationship
-            GetNegativeTrainingCandidates();
-
-            GetTestCandidates();
+            //GetTestCandidates();
         }
 
+        // Get candidates representing a single confirmed company/ brand relationship
+        private static void GetPositiveTrainingCandidates(bool requireMultipleBrands)
+        {
+            //var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationships();
+            var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
+
+            var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
+
+            if (requireMultipleBrands)
+            {
+                var knownCompanyBrandRelationshipsWithMultipleBrands =
+        Helpers.GetKnownCompanyBrandRelationshipsWithMultipleBrands(knownCompanyBrandRelationships);
+                var candidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandRelationshipsWithMultipleBrands);
+                Helpers.SaveAndPrintCandidates(candidates);
+            }
+            else
+            {
+                var candidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandRelationships);
+                Helpers.SaveAndPrintCandidates(candidates);
+            }
+        }
+
+        // Get candidates representing confirmed company/ brand relationships between one company and several of its brands
+        // Currently just gets relationships with multiple brands
         private static void GetPositiveTrainingCandidatesWithMultipleBrands()
         {
-            var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationships();
+            var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
 
             var knownCompanyBrandRelationshipsWithMultipleBrands =
                     Helpers.GetKnownCompanyBrandRelationshipsWithMultipleBrands(knownCompanyBrandRelationships);
 
             var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
 
-            var candidatesWithMultipleBrands = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandRelationshipsWithMultipleBrands);
+            var candidatesWithMultipleBrands = Helpers.GetCandidatesWithMultipleBrandsFromPages(pages, knownCompanyBrandRelationshipsWithMultipleBrands);
 
             Helpers.SaveAndPrintCandidates(candidatesWithMultipleBrands);
         }
 
+        // Get candidates containing a company and a brand which do not have a confirmed company/ brand relationship
         private static void GetNegativeTrainingCandidates()
         {
             var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
@@ -72,18 +92,6 @@
             var file = new StreamWriter("C:/Users/Alice/Desktop/TestCandidates.txt");
 
             Console.ReadLine();
-        }
-
-        // Get training examples which contain a known company/ brand relationship
-        private static void GetPositiveTrainingCandidates()
-        {
-            var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationships();
-
-            var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
-
-            var candidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandRelationships);
-
-            Helpers.SaveAndPrintCandidates(candidates);
         }
     }
 }

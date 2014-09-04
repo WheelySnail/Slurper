@@ -8,7 +8,7 @@
 
     #endregion
 
-    public class CompanyBrandRelationship
+    public class CompanyAndBrands
     {
         public string BrandId { get; set; }
 
