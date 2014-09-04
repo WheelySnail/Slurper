@@ -17,15 +17,17 @@
     {
         private static void Main(string[] args)
         {
-            GetPositiveTrainingCandidates(true);
+            //GetListItemOrTableRowPositiveTrainingCandidates(false);
 
-            //GetNegativeTrainingCandidates();
+            //GetTableOrListPositiveTrainingCandidatesWithMultipleBrands();
+
+            GetNegativeTrainingCandidates();
 
             //GetTestCandidates();
         }
 
         // Get candidates representing a single confirmed company/ brand relationship
-        private static void GetPositiveTrainingCandidates(bool requireMultipleBrands)
+        private static void GetListItemOrTableRowPositiveTrainingCandidates(bool requireMultipleBrands)
         {
             //var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationships();
             var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
@@ -49,7 +51,7 @@
 
         // Get candidates representing confirmed company/ brand relationships between one company and several of its brands
         // Currently just gets relationships with multiple brands
-        private static void GetPositiveTrainingCandidatesWithMultipleBrands()
+        private static void GetTableOrListPositiveTrainingCandidatesWithMultipleBrands()
         {
             var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
 

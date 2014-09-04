@@ -37,5 +37,7 @@ namespace CandidateParsingAgilityPack.Model
         public bool DomainOrPageTitleContainsOwner { get; set; }
 
         public string PreviousContent { get; set; }
+
+        public List<String> KnownBrands { get; set; }
     }
 }
