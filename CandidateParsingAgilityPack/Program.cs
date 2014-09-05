@@ -11,6 +11,10 @@
 
     using HtmlAgilityPack;
 
+    using numl.Model;
+    using numl.Supervised;
+    using numl.Supervised.DecisionTree;
+
     #endregion
 
     internal static class Program
@@ -23,9 +27,41 @@
 
             var negativeTrainingCandidates = GetNegativeTrainingCandidates(knownCompanyBrandRelationships, true);
 
+            var trainingCandidates = new List<Candidate>();
+            trainingCandidates.AddRange(positiveTrainingCandidates);
+            trainingCandidates.AddRange(negativeTrainingCandidates);
+
             var testCandidates = GetTestCandidates(knownCompanyBrandRelationships);
 
+            var model = GenerateModel(trainingCandidates);
+
+            Console.WriteLine(model);
+
+            ClassifyTestCandidates(testCandidates, model);
+
+            Helpers.OutputCandidates(testCandidates, "labelledTestCandidates");
+
             Console.ReadLine();
+        }
+
+        private static void ClassifyTestCandidates(List<Candidate> testCandidates, IModel model)
+        {
+            for (int i = 0; i < testCandidates.Count; i++)
+            {
+                testCandidates[i] = model.Predict<Candidate>(testCandidates[i]);
+            }
+        }
+
+        private static IModel GenerateModel(List<Candidate> trainingCandidates)
+        {
+            // description maps the class and it's attributes to the ML algorithm, and back
+            var descriptor = Descriptor.Create<Candidate>();
+
+            var generator = new DecisionTreeGenerator(50);
+
+            var model = generator.Generate(descriptor, trainingCandidates);
+
+            return model;
         }
 
         /// <summary>
@@ -45,7 +81,7 @@
 
             var candidates = Helpers.GetTrainingCandidatesFromPages(pages, knownCompanyBrandRelationshipsWithMultipleBrands, itemBrandLevelCandidates, true);
 
-            Helpers.SaveAndPrintCandidates(candidates, "positivetraining");
+            Helpers.OutputCandidates(candidates, "positivetraining");
 
             return candidates;
         }
@@ -62,7 +98,7 @@
 
             var negativeCandidates = Helpers.GetTrainingCandidatesFromPages(pages, knownCompanyBrandNonRelationships, itemBrandLevelCandidates, false);
 
-            Helpers.SaveAndPrintCandidates(negativeCandidates, "negativetraining");
+            Helpers.OutputCandidates(negativeCandidates, "negativetraining");
 
             return negativeCandidates;
         }
@@ -80,7 +116,7 @@
 
             var testCandidates = GetTestCandidatesFromPages(pages, testCompaniesAndBrands);
 
-            Helpers.SaveAndPrintCandidates(testCandidates, "test");
+            Helpers.OutputCandidates(testCandidates, "test");
 
             return testCandidates;
         }

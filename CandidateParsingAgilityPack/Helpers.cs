@@ -536,7 +536,8 @@
             foreach (var candidate in candidates)
             {
                 file.WriteLine(
-                               "Page title: " + candidate.PageTitle + Environment.NewLine + Environment.NewLine
+                               "Contains company/brand relationship? " + candidate.CompanyBrandRelationship.ToString() + Environment.NewLine + Environment.NewLine
+                               + "Page title: " + candidate.PageTitle + Environment.NewLine + Environment.NewLine
                                + "Known company: " + candidate.KnownCompany.FirstOrDefault().ToString()
                                + Environment.NewLine + "Known brand: " + candidate.KnownBrand + Environment.NewLine
                                + Environment.NewLine + "Multiple brands present:"
