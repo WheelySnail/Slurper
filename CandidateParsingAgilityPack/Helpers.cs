@@ -497,35 +497,35 @@
             return candidates;
         }
 
-        internal static List<CompanyAndBrands> GetKnownCompanyBrandRelationships()
-        {
-            string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
-            String url = "https://www.googleapis.com/freebase/v1/mqlread";
-            String query =
-                    "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key="
-                    + API_KEY;
+        //internal static List<CompanyAndBrands> GetKnownCompanyBrandRelationships()
+        //{
+        //    string API_KEY = "";
+        //    String url = "https://www.googleapis.com/freebase/v1/mqlread";
+        //    String query =
+        //            "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key="
+        //            + API_KEY;
 
-            var client = new HttpClient();
-            client.BaseAddress = new Uri(url);
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            HttpResponseMessage reponse = client.GetAsync(query).Result;
+        //    var client = new HttpClient();
+        //    client.BaseAddress = new Uri(url);
+        //    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        //    HttpResponseMessage reponse = client.GetAsync(query).Result;
 
-            if (reponse.IsSuccessStatusCode)
-            {
-                var responseString = reponse.Content.ReadAsStringAsync().Result;
-                var safey = new HtmlSanitizer();
-                safey.Sanitize(responseString);
-                var relationships = JsonConvert.DeserializeObject<FreeBaseRelationshipsResponse>(responseString);
-                return MapFreeBaseRelationshipToCompanyBrandRelationship(relationships.Relationships);
-            }
-            else
-            {
-                throw new Exception();
-            }
+        //    if (reponse.IsSuccessStatusCode)
+        //    {
+        //        var responseString = reponse.Content.ReadAsStringAsync().Result;
+        //        var safey = new HtmlSanitizer();
+        //        safey.Sanitize(responseString);
+        //        var relationships = JsonConvert.DeserializeObject<FreeBaseRelationshipsResponse>(responseString);
+        //        return MapFreeBaseRelationshipToCompanyBrandRelationship(relationships.Relationships);
+        //    }
+        //    else
+        //    {
+        //        throw new Exception();
+        //    }
 
-            // https://api.opencorporates.com/companies/search?q=barclays+bank
-            // https://api.opencorporates.com/companies/gb/01320086/network
-        }
+        //    // https://api.opencorporates.com/companies/search?q=barclays+bank
+        //    // https://api.opencorporates.com/companies/gb/01320086/network
+        //}
 
         internal static List<CompanyAndBrands> GetKnownCompanyBrandRelationshipsFromConsumerCompanies()
         {
@@ -673,7 +673,7 @@
 
         public static List<CompanyAndBrands> GetKnownCompanyBrandNonRelationships()
         {
-            string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
+            string API_KEY = "";
             String url = "https://www.googleapis.com/freebase/v1/mqlread";
             String query =
                     "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key="
