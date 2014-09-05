@@ -494,6 +494,8 @@
 
         internal static List<String> GetTestBrands(List<CompanyAndBrands> companyBrandRelationships)
         {
+            // TODO get brands from other sources, e.g. supermarket site, Amazon
+            // http://stackoverflow.com/questions/1595624/amazon-products-api-looking-for-basic-overview-and-information
             var knownBrands = FreeBaseHelpers.GetKnownBrands();
 
             var newBrands = new List<String>();
@@ -511,6 +513,7 @@
 
         internal static List<String> GetTestCompanies(List<CompanyAndBrands> companyBrandRelationships)
         {
+            // TODO retrieve all companies from Freebase, OpenCorporates or others, not just consumer companies
             //var knownCompanies = GetKnownCompanies();
 
             var newCompanies = new List<String>();
