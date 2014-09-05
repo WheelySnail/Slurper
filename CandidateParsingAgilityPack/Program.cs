@@ -17,16 +17,17 @@
     {
         private static void Main(string[] args)
         {
-            GetPositiveTrainingCandidates(true);
+            // Just set the label to true for positive & to false for negative?
+            var positiveTrainingCandidates = GetPositiveTrainingCandidates(true);
 
-            //GetNegativeTrainingCandidates();
+            var negativeTrainingCandidates = GetNegativeTrainingCandidates();
 
             //GetTestCandidates();
         }
 
         // Get candidates representing confirmed company/ brand relationships 
         // Param itemLevelCandidates determines whether the candidates returned are entire tables/ lists + all brands they contain, or each individual list item/ table row containing a brand
-        private static void GetPositiveTrainingCandidates(bool itemBrandLevelCandidates)
+        private static List<Candidate> GetPositiveTrainingCandidates(bool itemBrandLevelCandidates)
         {
             var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
 
@@ -35,13 +36,15 @@
 
             var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
 
-            var candidatesWithMultipleBrands = Helpers.GetPositiveCandidatesFromPages(pages, knownCompanyBrandRelationshipsWithMultipleBrands, itemBrandLevelCandidates);
+            var candidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandRelationshipsWithMultipleBrands, itemBrandLevelCandidates);
 
-            Helpers.SaveAndPrintCandidates(candidatesWithMultipleBrands);
+            Helpers.SaveAndPrintCandidates(candidates);
+
+            return candidates;
         }
 
         // Get candidates containing a company and a brand which do not have a confirmed company/ brand relationship
-        private static void GetNegativeTrainingCandidates()
+        private static List<Candidate> GetNegativeTrainingCandidates()
         {
             var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
 
@@ -49,9 +52,11 @@
 
             var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
 
-            var negativeCandidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandNonRelationships, false);
+            var negativeCandidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandNonRelationships, true);
 
             Helpers.SaveAndPrintCandidates(negativeCandidates);
+
+            return negativeCandidates;
         }
 
         private static void GetTestCandidates()

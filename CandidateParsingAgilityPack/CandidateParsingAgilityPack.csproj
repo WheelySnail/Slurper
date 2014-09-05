@@ -131,6 +131,9 @@
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.5.0.5\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="numl">
+      <HintPath>..\packages\numl.0.7.13\lib\net40\numl.dll</HintPath>
+    </Reference>
     <Reference Include="stanford-corenlp-3.4">
       <HintPath>..\packages\Stanford.NLP.CoreNLP.3.4.0.0\lib\stanford-corenlp-3.4.dll</HintPath>
     </Reference>

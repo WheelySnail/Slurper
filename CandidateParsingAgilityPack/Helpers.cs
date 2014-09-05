@@ -8,12 +8,9 @@
     using System.Linq;
     using System.Net.Http;
     using System.Net.Http.Headers;
-    using System.Web.UI.WebControls;
 
     using CandidateParsingAgilityPack.Model;
 
-    using CsQuery.Engine.PseudoClassSelectors;
-    using CsQuery.EquationParser.Implementation;
     using CsQuery.ExtensionMethods.Internal;
 
     using Html;
@@ -35,7 +32,7 @@
         //             foreach: Company name synonym 
         //                 IF the company name is present in the list or table segment, or the page title
         //                 Make a candidate!! 
-        internal static List<Candidate> GetCandidatesFromPages(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships, bool requireMultipleBrands = false)
+        internal static List<Candidate> GetCandidatesFromPagesOld(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships, bool requireMultipleBrands = false)
         {
             var doc = new HtmlDocument();
 
@@ -315,7 +312,7 @@
         }
 
         // Return lists/ tables + company + a list of brand names for the company present in the list/ table
-        public static List<Candidate> GetPositiveCandidatesFromPages(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships, bool itemBrandLevelCandidates)
+        public static List<Candidate> GetCandidatesFromPages(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships, bool itemBrandLevelCandidates)
         {
             var doc = new HtmlDocument();
 
@@ -404,8 +401,9 @@
                             // For each brand owned by the company
                             foreach (var brand in relation.BrandNames)
                             {
+                                // The space at the end helps to stop token fragments from being picked up as brand name instances
                                 if (initialcandidate.Node.OuterHtml.ToLowerInvariant()
-                                                    .Contains(brand.ToLowerInvariant()))
+                                                    .Contains(brand.ToLowerInvariant() + " "))
                                 {
                                     knownBrandsPresent.Add(brand);
                                     // Create a candidate here if want item level candidates? But now to check 'multiple'? 
@@ -651,7 +649,7 @@
 
         internal static void SaveAndPrintCandidates(List<Candidate> candidates)
         {
-            var file = new StreamWriter("C:/Users/Alice/Desktop/PositiveTrainingCandidates.txt");
+            var file = new StreamWriter("C:/Users/Alice/Desktop/TrainingCandidates.txt");
 
             foreach (var candidate in candidates)
             {
@@ -671,8 +669,6 @@
             file.Close();
 
             Console.WriteLine(candidates.Count.ToString());
-
-            Console.ReadLine();
         }
 
         public static List<CompanyAndBrands> GetKnownCompanyBrandNonRelationships()
