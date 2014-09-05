@@ -11,7 +11,7 @@ namespace CandidateParsingAgilityPack.Model
         public bool CompanyBrandRelationship { get; set; }
 
         [Feature]
-        public bool containsMultipleBrands { get; set; }
+        public bool ContainsMultipleBrands { get; set; }
 
         [Feature]
         public String PageTitle { get; set; }

@@ -17,64 +17,91 @@
     {
         private static void Main(string[] args)
         {
-            // Just set the label to true for positive & to false for negative?
-            //var positiveTrainingCandidates = GetPositiveTrainingCandidates(true);
-
-            var negativeTrainingCandidates = GetNegativeTrainingCandidates();
-
-            //GetTestCandidates();
-        }
-
-        // Get candidates representing confirmed company/ brand relationships 
-        // Param itemLevelCandidates determines whether the candidates returned are entire tables/ lists + all brands they contain, or each individual list item/ table row containing a brand
-        private static List<Candidate> GetPositiveTrainingCandidates(bool itemBrandLevelCandidates)
-        {
             var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
 
+            var positiveTrainingCandidates = GetPositiveTrainingCandidates(knownCompanyBrandRelationships, true);
+
+            var negativeTrainingCandidates = GetNegativeTrainingCandidates(knownCompanyBrandRelationships, true);
+
+            var testCandidates = GetTestCandidates(knownCompanyBrandRelationships);
+
+            Console.ReadLine();
+        }
+
+        /// <summary>
+        /// Get candidates representing confirmed company/ brand relationships 
+        /// </summary>
+        /// <param name="companyBrandRelationships"></param>
+        /// <param name="itemBrandLevelCandidates">If true, candidates returned will represent an individual list item/ table row containing a brand. If false, candidates returned will represent entire tables/ lists + all brands they contain</param>
+        /// <returns>Candidates representing a known company brand relationship</returns>
+        private static List<Candidate> GetPositiveTrainingCandidates(List<CompanyAndBrands> companyBrandRelationships, bool itemBrandLevelCandidates)
+        {
+            // Only use seed data where the company owns more than one brand
+            // TODO should I remove this step as it's not matched in the negative examples? 
             var knownCompanyBrandRelationshipsWithMultipleBrands =
-                    Helpers.GetKnownCompanyBrandRelationshipsWithMultipleBrands(knownCompanyBrandRelationships);
+                    Helpers.GetKnownCompanyBrandRelationshipsWithMultipleBrands(companyBrandRelationships);
 
             var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
 
-            var candidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandRelationshipsWithMultipleBrands, itemBrandLevelCandidates);
+            var candidates = Helpers.GetTrainingCandidatesFromPages(pages, knownCompanyBrandRelationshipsWithMultipleBrands, itemBrandLevelCandidates, true);
 
-            Helpers.SaveAndPrintCandidates(candidates);
+            Helpers.SaveAndPrintCandidates(candidates, "positivetraining");
 
             return candidates;
         }
 
-        // Get candidates containing a company and a brand which do not have a confirmed company/ brand relationship
-        private static List<Candidate> GetNegativeTrainingCandidates()
+        /// <summary>
+        /// Get candidates containing a company and a brand which do not have a confirmed company/ brand relationship
+        /// </summary>
+        /// <returns>Candidates which are known not to contain a company brand relationship</returns>
+        private static List<Candidate> GetNegativeTrainingCandidates(List<CompanyAndBrands> companyBrandRelationships, bool itemBrandLevelCandidates)
         {
-            var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
-
-            var knownCompanyBrandNonRelationships = Helpers.GetKnownCompanyBrandNonRelationships(knownCompanyBrandRelationships);
+            var knownCompanyBrandNonRelationships = Helpers.GetKnownCompanyBrandNonRelationships(companyBrandRelationships);
 
             var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
 
-            var negativeCandidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandNonRelationships, true);
+            var negativeCandidates = Helpers.GetTrainingCandidatesFromPages(pages, knownCompanyBrandNonRelationships, itemBrandLevelCandidates, false);
 
-            Helpers.SaveAndPrintCandidates(negativeCandidates);
+            Helpers.SaveAndPrintCandidates(negativeCandidates, "negativetraining");
 
             return negativeCandidates;
         }
 
-        private static void GetTestCandidates()
+        /// <summary>
+        /// Get candidate segments containing a company and brand not yet known to have a relationship
+        /// </summary>
+        /// <param name="companyBrandRelationships"></param>
+        /// <returns></returns>
+        private static List<Candidate> GetTestCandidates(List<CompanyAndBrands> companyBrandRelationships)
         {
-            // TODO 
+            var testCompaniesAndBrands = GetTestCompaniesAndBrands(companyBrandRelationships);
 
-            // Get synonyms
-            //var allCompanies = getAllCompanies();
+            var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments"); // ENDNAS01/Personal/Alice/Wikipedia/a/a/a
 
-            //var allBrands = getAllBrands();
+            var testCandidates = GetTestCandidatesFromPages(pages, testCompaniesAndBrands);
 
-            var pages = Helpers.GetPages(""); // ENDNAS01/Personal/Alice/Wikipedia/a/a/a
+            Helpers.SaveAndPrintCandidates(testCandidates, "test");
 
-            //var testCandidates = Helpers.GetTestCandidatesFromPages();
-
-            var file = new StreamWriter("C:/Users/Alice/Desktop/TestCandidates.txt");
-
-            Console.ReadLine();
+            return testCandidates;
         }
+
+        private static TestCompaniesAndBrands GetTestCompaniesAndBrands(List<CompanyAndBrands> companyBrandRelationships)
+        {
+            var testCompaniesAndBrands = new TestCompaniesAndBrands();
+            return testCompaniesAndBrands;
+        }
+
+        private static List<Candidate> GetTestCandidatesFromPages(IEnumerable<string> pages, object testCompaniesAndBrands)
+        {
+            var testCandidates = new List<Candidate>();
+            return testCandidates;
+        }
+    }
+
+    internal class TestCompaniesAndBrands
+    {
+        public List<String> companies { get; set; }
+
+        public List<String> brands { get; set; }
     }
 }

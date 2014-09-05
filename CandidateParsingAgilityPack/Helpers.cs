@@ -23,20 +23,16 @@
 
     internal class Helpers
     {
-        //foreach: Page
-        //  foreach: List and table segment on the page
-        //     foreach: Relation where company present anywhere on page
-        //         foreach: Brand name in this relation
-        //             IF the brand name is present in the list or table segment	
-        //             foreach: Company name synonym 
-        //                 IF the company name is present in the list or table segment, or the page title
-        //                 Make a candidate!! 
-
         // Return lists/ tables + company + a list of brand names for the company present in the list/ table
-        public static List<Candidate> GetCandidatesFromPages(
-                IEnumerable<string> pages,
-                List<CompanyAndBrands> knownCompanyAndBrandsRelationships,
-                bool itemBrandLevelCandidates)
+        /// <summary>
+        /// Searches pages for html segments representing a known company brand relationship 
+        /// </summary>
+        /// <param name="pages">The pages to extract the candidates from</param>
+        /// <param name="knownCompanyAndBrandsRelationships">A set of known relationships to look for in these pages</param>
+        /// <param name="itemBrandLevelCandidates">If true, candidates returned will represent an individual list item/ table row containing a brand. If false, candiates returned will represent entire tables/ lists + all brands they contain</param>
+        /// <param name="positiveCandidates">If true, candidates returned will be labelled as positive candidates. If false, candidates returned will be labelled as negative candidates</param>
+        /// <returns></returns>
+        public static List<Candidate> GetTrainingCandidatesFromPages(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships, bool itemBrandLevelCandidates, bool positiveCandidates)
         {
             var doc = new HtmlDocument();
 
@@ -199,8 +195,9 @@
                                                                                 domainOrTitleContainsOwner,
                                                                         Uri = page,
                                                                         PageTitle = title,
-                                                                        containsMultipleBrands =
-                                                                                knownBrandsPresent.Count > 1
+                                                                        ContainsMultipleBrands =
+                                                                                knownBrandsPresent.Count > 1,
+                                                                        CompanyBrandRelationship = positiveCandidates
                                                                 };
                                             candidates.Add(candidate);
                                         }
@@ -227,8 +224,9 @@
                                                                         domainOrTitleContainsOwner,
                                                                 Uri = page,
                                                                 PageTitle = title,
-                                                                containsMultipleBrands =
-                                                                        knownBrandsPresent.Count > 1
+                                                                ContainsMultipleBrands =
+                                                                        knownBrandsPresent.Count > 1,
+                                                                CompanyBrandRelationship = positiveCandidates
                                                         };
                                     candidates.Add(candidate);
                                 }
@@ -477,7 +475,7 @@
                             {
                                 foreach (var candidate in candidatesForCompany)
                                 {
-                                    candidate.containsMultipleBrands = true;
+                                    candidate.ContainsMultipleBrands = true;
                                 }
                             }
                             candidates.AddRange(candidatesForCompany);
@@ -487,7 +485,7 @@
             }
             if (requireMultipleBrands)
             {
-                return candidates.Where(candidate => candidate.containsMultipleBrands).ToList();
+                return candidates.Where(candidate => candidate.ContainsMultipleBrands).ToList();
             }
             else
             {
@@ -531,9 +529,9 @@
             return Directory.GetFiles(path, "*.htm*", SearchOption.AllDirectories);
         }
 
-        internal static void SaveAndPrintCandidates(List<Candidate> candidates)
+        internal static void SaveAndPrintCandidates(List<Candidate> candidates, string type)
         {
-            var file = new StreamWriter("C:/Users/Alice/Desktop/TrainingCandidates.txt");
+            var file = new StreamWriter("C:/Users/Alice/Desktop/" + type + ".txt");
 
             foreach (var candidate in candidates)
             {
@@ -542,7 +540,7 @@
                                + "Known company: " + candidate.KnownCompany.FirstOrDefault().ToString()
                                + Environment.NewLine + "Known brand: " + candidate.KnownBrand + Environment.NewLine
                                + Environment.NewLine + "Multiple brands present:"
-                               + candidate.containsMultipleBrands.ToString() + Environment.NewLine
+                               + candidate.ContainsMultipleBrands.ToString() + Environment.NewLine
                                + "\r Previous Relevant Node: " + candidate.PreviousContent + Environment.NewLine
                                + "\r Html: " + candidate.CandidateHtml + Environment.NewLine + Environment.NewLine);
                 Console.WriteLine(
@@ -558,7 +556,7 @@
 
         protected static List<Candidate> FilterCandidatesForMultipleBrandPresence(List<Candidate> allCandidates)
         {
-            return allCandidates.Where(candidate => candidate.containsMultipleBrands).ToList();
+            return allCandidates.Where(candidate => candidate.ContainsMultipleBrands).ToList();
         }
 
         private static string GetPreviousRelevantNode(InitialCandidate initialcandidate)
