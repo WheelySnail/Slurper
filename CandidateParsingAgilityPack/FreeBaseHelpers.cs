@@ -11,7 +11,7 @@ namespace CandidateParsingAgilityPack
 
     internal class FreeBaseHelpers
     {
-        private const string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
+        private const string API_KEY = "";
 
         private const String url = "https://www.googleapis.com/freebase/v1/mqlread";
 
