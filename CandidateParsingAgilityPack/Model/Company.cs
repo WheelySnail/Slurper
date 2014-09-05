@@ -1,11 +1,15 @@
 ﻿namespace CandidateParsingAgilityPack.Model
 {
+    #region Using Directives
+
     using System;
+
+    #endregion
 
     public class Company
     {
-        public String Name { get; set; }
-
         public string Id { get; set; }
+
+        public String Name { get; set; }
     }
 }

@@ -1,6 +1,10 @@
 namespace CandidateParsingAgilityPack.Model
 {
+    #region Using Directives
+
     using Newtonsoft.Json;
+
+    #endregion
 
     internal class FreeBaseConsumerCompanyBrands
     {

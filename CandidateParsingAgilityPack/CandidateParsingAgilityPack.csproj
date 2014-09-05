@@ -154,7 +154,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FreeBaseHelpers.cs" />
+    <Compile Include="Model\FreebaseBrand.cs" />
+    <Compile Include="Model\FreeBaseBrandResponse.cs" />
     <Compile Include="Helpers.cs" />
+    <Compile Include="HtmlEncodeStringPropertiesConverter.cs" />
     <Compile Include="HtmlUtility.cs" />
     <Compile Include="Model\Brand.cs" />
     <Compile Include="Model\Candidate.cs" />
@@ -169,6 +173,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Model\FreeBaseRelationshipsResponse.cs" />
+    <Compile Include="Model\TestCompaniesAndBrands.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">

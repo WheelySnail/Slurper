@@ -8,9 +8,9 @@ namespace CandidateParsingAgilityPack.Model
 
     #endregion
 
-    internal class FreeBaseRelationshipsResponse
+    internal class FreeBaseBrandResponse
     {
         [JsonProperty(PropertyName = "result")]
-        public List<FreebaseCompanyBrandRelationship> Relationships { get; set; }
+        public List<FreebaseBrand> Brands { get; set; }
     }
 }

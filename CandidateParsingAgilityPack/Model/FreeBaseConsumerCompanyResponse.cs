@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CandidateParsingAgilityPack.Model
+﻿namespace CandidateParsingAgilityPack.Model
 {
+    #region Using Directives
+
+    using System.Collections.Generic;
+
     using Newtonsoft.Json;
+
+    #endregion
 
     internal class FreeBaseConsumerCompanyResponse
     {

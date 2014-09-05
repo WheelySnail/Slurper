@@ -1,6 +1,10 @@
 ﻿namespace CandidateParsingAgilityPack.Model
 {
+    #region Using Directives
+
     using HtmlAgilityPack;
+
+    #endregion
 
     internal class InitialCandidate
     {
