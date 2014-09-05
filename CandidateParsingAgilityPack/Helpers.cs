@@ -186,13 +186,18 @@
             }
             if (requireMultipleBrands)
             {
-                return candidates.Where(candidate => candidate.containsMultipleBrands == true).ToList();
+                return candidates.Where(candidate => candidate.containsMultipleBrands).ToList();
             }
             else
             {
                 return candidates;
             }
         }
+
+        protected static List<Candidate> FilterCandidatesForMultipleBrandPresence(List<Candidate> allCandidates)
+        {
+            return allCandidates.Where(candidate => candidate.containsMultipleBrands).ToList();
+        } 
 
         private static List<CompanyAndBrands> KnownRelationsWhereCompanyIsPresentOnPage(
                 List<CompanyAndBrands> knownCompanyAndBrandsRelationships,
@@ -310,7 +315,7 @@
         }
 
         // Return lists/ tables + company + a list of brand names for the company present in the list/ table
-        public static List<Candidate> GetPositiveCandidatesFromPages(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships, bool itemLevelCandidates)
+        public static List<Candidate> GetPositiveCandidatesFromPages(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships, bool itemBrandLevelCandidates)
         {
             var doc = new HtmlDocument();
 
@@ -410,7 +415,7 @@
                             if (knownBrandsPresent.Count > 0)
                             {
                                 // Process to create a candidate for each individual list item or table row containing a brand for the relation
-                                if (itemLevelCandidates)
+                                if (itemBrandLevelCandidates)
                                 {
                                     foreach (var brand in knownBrandsPresent)
                                     {
