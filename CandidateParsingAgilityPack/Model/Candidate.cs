@@ -39,5 +39,7 @@ namespace CandidateParsingAgilityPack.Model
         public string PreviousContent { get; set; }
 
         public List<String> KnownBrands { get; set; }
+
+        public bool IsItemLevelCandidate  { get; set; }
     }
 }

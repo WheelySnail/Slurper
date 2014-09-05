@@ -309,19 +309,8 @@
             return previousContent;
         }
 
-        //foreach: Page
-        //  foreach: List and table segment on the page
-        //     foreach: Relation where company present anywhere on page
-        //         int brandsPresent = 0;
-        //         foreach: Brand name in this relation
-        //             IF the brand name is present in the list or table segment	
-        //             foreach: Company name synonym 
-        //                 IF the company name is present in the list or table segment, or the page title
-        //                      brandsPresent ++
-        //                          If brandsPresent > 1 Make a candidate!! & skip to next relation? Will mean fewer candidates
-
         // Return lists/ tables + company + a list of brand names for the company present in the list/ table
-        public static List<Candidate> GetCandidatesWithMultipleBrandsFromPages(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships)
+        public static List<Candidate> GetPositiveCandidatesFromPages(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships, bool itemLevelCandidates)
         {
             var doc = new HtmlDocument();
 
@@ -405,10 +394,7 @@
                         // If the company name for the relation is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
                         if (domainOrTitleContainsOwner || initialCandidateOrPreviousSiblingContainOwner)
                         {
-                            var candidatesForCompany = new List<Candidate>();
-
                             var knownBrandsPresent = new List<String>();
-                            var numberOfBrandsfromRelationshipPresentInSegment = 0;
 
                             // For each brand owned by the company
                             foreach (var brand in relation.BrandNames)
@@ -417,18 +403,72 @@
                                                     .Contains(brand.ToLowerInvariant()))
                                 {
                                     knownBrandsPresent.Add(brand);
-                                    numberOfBrandsfromRelationshipPresentInSegment ++;
+                                    // Create a candidate here if want item level candidates? But now to check 'multiple'? 
                                 }
                             }
 
                             if (knownBrandsPresent.Count > 0)
                             {
-                                var candidate = new Candidate
+                                // Process to create a candidate for each individual list item or table row containing a brand for the relation
+                                if (itemLevelCandidates)
+                                {
+                                    foreach (var brand in knownBrandsPresent)
+                                    {
+
+
+                                        var innerSegments = new List<HtmlNode>();
+
+                                        if (initialcandidate.Type == "list")
+                                        {
+                                            innerSegments.AddRange(initialcandidate.Node.Descendants("li")
+                                                        .ToList()
+                                                        .Where(listItem => listItem.OuterHtml.ToLowerInvariant().Contains(brand.ToLowerInvariant())));
+                                        }
+                                        else if (initialcandidate.Type == "table")
+                                        {
+                                            innerSegments.AddRange(initialcandidate.Node.Descendants("tr")
+                                                        .ToList()
+                                                        .Where(listItem => listItem.OuterHtml.ToLowerInvariant().Contains(brand.ToLowerInvariant())));
+                                        }
+
+                                        foreach (var innerSegment in innerSegments)
+                                        {
+                                            var candidate = new Candidate
+                                            {
+                                                IsTableSegment =
+                                                        initialcandidate.Type == "table",
+                                                IsListSegment =
+                                                        initialcandidate.Type == "list",
+                                                IsItemLevelCandidate = true,
+                                                PreviousContent =
+                                                        safey.Sanitize(previousContent),
+                                                CandidateHtml =
+                                                        safey.Sanitize(
+                                                                       innerSegment.OuterHtml),
+                                                KnownCompany = relation.CompanyNames,
+                                                KnownBrands = knownBrandsPresent,
+                                                KnownCompanyAndBrands = relation,
+                                                DomainOrPageTitleContainsOwner =
+                                                        domainOrTitleContainsOwner,
+                                                Uri = page,
+                                                PageTitle = title,
+                                                containsMultipleBrands = knownBrandsPresent.Count > 1
+                                            };
+                                            candidates.Add(candidate);
+                                        }
+                                    }
+                                }
+
+                                // Process to create a candidate for each whole list or table and all its brands
+                                else
+                                {
+                                    var candidate = new Candidate
                                     {
                                         IsTableSegment =
                                                 initialcandidate.Type == "table",
                                         IsListSegment =
                                                 initialcandidate.Type == "list",
+                                        IsItemLevelCandidate = false,
                                         PreviousContent =
                                                 safey.Sanitize(previousContent),
                                         CandidateHtml =
@@ -441,9 +481,11 @@
                                                 domainOrTitleContainsOwner,
                                         Uri = page,
                                         PageTitle = title,
-                                        containsMultipleBrands = true
+                                        containsMultipleBrands = knownBrandsPresent.Count > 1
                                     };
-                                candidates.Add(candidate);
+                                    candidates.Add(candidate);
+                                }
+
                             }
                         }
                     }

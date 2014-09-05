@@ -17,41 +17,16 @@
     {
         private static void Main(string[] args)
         {
-            //GetListItemOrTableRowPositiveTrainingCandidates(false);
+            GetPositiveTrainingCandidates(true);
 
-            //GetTableOrListPositiveTrainingCandidatesWithMultipleBrands();
-
-            GetNegativeTrainingCandidates();
+            //GetNegativeTrainingCandidates();
 
             //GetTestCandidates();
         }
 
-        // Get candidates representing a single confirmed company/ brand relationship
-        private static void GetListItemOrTableRowPositiveTrainingCandidates(bool requireMultipleBrands)
-        {
-            //var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationships();
-            var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
-
-            var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
-
-            if (requireMultipleBrands)
-            {
-                // First, narrow down the company/ brands entries processed to only those containing multiple brands
-                var knownCompanyBrandRelationshipsWithMultipleBrands =
-        Helpers.GetKnownCompanyBrandRelationshipsWithMultipleBrands(knownCompanyBrandRelationships);
-                var candidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandRelationshipsWithMultipleBrands, true);
-                Helpers.SaveAndPrintCandidates(candidates);
-            }
-            else
-            {
-                var candidates = Helpers.GetCandidatesFromPages(pages, knownCompanyBrandRelationships, false);
-                Helpers.SaveAndPrintCandidates(candidates);
-            }
-        }
-
-        // Get candidates representing confirmed company/ brand relationships between one company and several of its brands
-        // Currently just gets relationships with multiple brands
-        private static void GetTableOrListPositiveTrainingCandidatesWithMultipleBrands()
+        // Get candidates representing confirmed company/ brand relationships 
+        // Param itemLevelCandidates determines whether the candidates returned are entire tables/ lists + all brands they contain, or each individual list item/ table row containing a brand
+        private static void GetPositiveTrainingCandidates(bool itemLevelCandidates)
         {
             var knownCompanyBrandRelationships = Helpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
 
@@ -60,7 +35,7 @@
 
             var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
 
-            var candidatesWithMultipleBrands = Helpers.GetCandidatesWithMultipleBrandsFromPages(pages, knownCompanyBrandRelationshipsWithMultipleBrands);
+            var candidatesWithMultipleBrands = Helpers.GetPositiveCandidatesFromPages(pages, knownCompanyBrandRelationshipsWithMultipleBrands, itemLevelCandidates);
 
             Helpers.SaveAndPrintCandidates(candidatesWithMultipleBrands);
         }
