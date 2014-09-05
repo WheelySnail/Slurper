@@ -18,7 +18,7 @@
         private static void Main(string[] args)
         {
             // Just set the label to true for positive & to false for negative?
-            var positiveTrainingCandidates = GetPositiveTrainingCandidates(true);
+            //var positiveTrainingCandidates = GetPositiveTrainingCandidates(true);
 
             var negativeTrainingCandidates = GetNegativeTrainingCandidates();
 

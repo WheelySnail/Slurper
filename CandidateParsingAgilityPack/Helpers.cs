@@ -23,7 +23,6 @@
 
     internal class Helpers
     {
-
         //foreach: Page
         //  foreach: List and table segment on the page
         //     foreach: Relation where company present anywhere on page
@@ -32,7 +31,12 @@
         //             foreach: Company name synonym 
         //                 IF the company name is present in the list or table segment, or the page title
         //                 Make a candidate!! 
-        internal static List<Candidate> GetCandidatesFromPagesOld(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships, bool requireMultipleBrands = false)
+
+        // Return lists/ tables + company + a list of brand names for the company present in the list/ table
+        public static List<Candidate> GetCandidatesFromPages(
+                IEnumerable<string> pages,
+                List<CompanyAndBrands> knownCompanyAndBrandsRelationships,
+                bool itemBrandLevelCandidates)
         {
             var doc = new HtmlDocument();
 
@@ -47,7 +51,8 @@
                 var root = doc.DocumentNode;
 
                 // The relations containing an owner company mentioned in this page
-                var relationsWhereOwnerMentionedOnPage = KnownRelationsWhereCompanyIsPresentOnPage(knownCompanyAndBrandsRelationships, root, page);
+                var relationsWhereOwnerMentionedOnPage =
+                        KnownRelationsWhereCompanyIsPresentOnPage(knownCompanyAndBrandsRelationships, root, page);
 
                 // Skip to next page if the current page doesn't contain a seed company name
                 if (relationsWhereOwnerMentionedOnPage.Count == 0)
@@ -107,7 +112,296 @@
                                     initialcandidate.Node.OuterHtml.ToLowerInvariant()
                                                     .Contains(ownerSynonym.ToLowerInvariant() + " ")
                                     || previousContent.ToLowerInvariant()
-                                                       .Contains(ownerSynonym.ToLowerInvariant() + " "))
+                                                      .Contains(ownerSynonym.ToLowerInvariant() + " "))
+                            {
+                                initialCandidateOrPreviousSiblingContainOwner = true;
+                            }
+                        }
+
+                        // If the company name for the relation is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
+                        if (domainOrTitleContainsOwner || initialCandidateOrPreviousSiblingContainOwner)
+                        {
+                            var knownBrandsPresent = new List<String>();
+
+                            // For each brand owned by the company
+                            foreach (var brand in relation.BrandNames)
+                            {
+                                // The space at the end helps to stop token fragments from being picked up as brand name instances
+                                if (
+                                        initialcandidate.Node.OuterHtml.ToLowerInvariant()
+                                                        .Contains(brand.ToLowerInvariant() + " "))
+                                {
+                                    knownBrandsPresent.Add(brand);
+                                    // Create a candidate here if want item level candidates? But now to check 'multiple'? 
+                                }
+                            }
+
+                            if (knownBrandsPresent.Count > 0)
+                            {
+                                // Process to create a candidate for each individual list item or table row containing a brand for the relation
+                                if (itemBrandLevelCandidates)
+                                {
+                                    foreach (var brand in knownBrandsPresent)
+                                    {
+                                        var innerSegments = new List<HtmlNode>();
+
+                                        if (initialcandidate.Type == "list")
+                                        {
+                                            innerSegments.AddRange(
+                                                                   initialcandidate.Node.Descendants("li")
+                                                                                   .ToList()
+                                                                                   .Where(
+                                                                                          listItem =>
+                                                                                          listItem.OuterHtml
+                                                                                                  .ToLowerInvariant()
+                                                                                                  .Contains(
+                                                                                                            brand
+                                                                                                                    .ToLowerInvariant
+                                                                                                                    ())));
+                                        }
+                                        else if (initialcandidate.Type == "table")
+                                        {
+                                            innerSegments.AddRange(
+                                                                   initialcandidate.Node.Descendants("tr")
+                                                                                   .ToList()
+                                                                                   .Where(
+                                                                                          listItem =>
+                                                                                          listItem.OuterHtml
+                                                                                                  .ToLowerInvariant()
+                                                                                                  .Contains(
+                                                                                                            brand
+                                                                                                                    .ToLowerInvariant
+                                                                                                                    ())));
+                                        }
+
+                                        foreach (var innerSegment in innerSegments)
+                                        {
+                                            var candidate = new Candidate
+                                                                {
+                                                                        IsTableSegment =
+                                                                                initialcandidate.Type
+                                                                                == "table",
+                                                                        IsListSegment =
+                                                                                initialcandidate.Type
+                                                                                == "list",
+                                                                        IsItemLevelCandidate = true,
+                                                                        PreviousContent =
+                                                                                safey.Sanitize(
+                                                                                               previousContent),
+                                                                        CandidateHtml =
+                                                                                safey.Sanitize(
+                                                                                               innerSegment
+                                                                                                       .OuterHtml),
+                                                                        KnownCompany = relation.CompanyNames,
+                                                                        KnownBrands = knownBrandsPresent,
+                                                                        KnownCompanyAndBrands = relation,
+                                                                        DomainOrPageTitleContainsOwner =
+                                                                                domainOrTitleContainsOwner,
+                                                                        Uri = page,
+                                                                        PageTitle = title,
+                                                                        containsMultipleBrands =
+                                                                                knownBrandsPresent.Count > 1
+                                                                };
+                                            candidates.Add(candidate);
+                                        }
+                                    }
+                                }
+
+                                        // Process to create a candidate for each whole list or table and all its brands
+                                else
+                                {
+                                    var candidate = new Candidate
+                                                        {
+                                                                IsTableSegment = initialcandidate.Type == "table",
+                                                                IsListSegment = initialcandidate.Type == "list",
+                                                                IsItemLevelCandidate = false,
+                                                                PreviousContent = safey.Sanitize(previousContent),
+                                                                CandidateHtml =
+                                                                        safey.Sanitize(
+                                                                                       initialcandidate.Node
+                                                                                                       .OuterHtml),
+                                                                KnownCompany = relation.CompanyNames,
+                                                                KnownBrands = knownBrandsPresent,
+                                                                KnownCompanyAndBrands = relation,
+                                                                DomainOrPageTitleContainsOwner =
+                                                                        domainOrTitleContainsOwner,
+                                                                Uri = page,
+                                                                PageTitle = title,
+                                                                containsMultipleBrands =
+                                                                        knownBrandsPresent.Count > 1
+                                                        };
+                                    candidates.Add(candidate);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return candidates;
+        }
+
+        public static List<CompanyAndBrands> GetKnownCompanyBrandNonRelationships()
+        {
+            string API_KEY = "";
+            String url = "https://www.googleapis.com/freebase/v1/mqlread";
+            String query =
+                    "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key="
+                    + API_KEY;
+
+            var client = new HttpClient();
+            client.BaseAddress = new Uri(url);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            HttpResponseMessage reponse = client.GetAsync(query).Result;
+
+            if (reponse.IsSuccessStatusCode)
+            {
+                var responseString = reponse.Content.ReadAsStringAsync().Result;
+                var safey = new HtmlSanitizer();
+                safey.Sanitize(responseString);
+                var relationships = JsonConvert.DeserializeObject<FreeBaseRelationshipsResponse>(responseString);
+                return MapFreeBaseRelationshipToCompanyBrandRelationship(relationships.Relationships);
+            }
+            else
+            {
+                throw new Exception();
+            }
+
+            // https://api.opencorporates.com/companies/search?q=barclays+bank
+            // https://api.opencorporates.com/companies/gb/01320086/network
+        }
+
+        // Jumble up the list, creating new relationships where there are none. 
+        // Should use all brands not belonging to the company but this may mean lots of processing? 
+        // These ones are going to be hard to find, one way or another
+        // Use a supermarket site? 
+        public static List<CompanyAndBrands> GetKnownCompanyBrandNonRelationships(
+                List<CompanyAndBrands> knownCompanyBrandRelationships)
+        {
+            var nonRelationships = new List<CompanyAndBrands>();
+
+            // Create giant list of all brand names
+            var allBrands = new List<String>();
+
+            foreach (var knownCompanyBrandRelationship in knownCompanyBrandRelationships)
+            {
+                allBrands.AddRange(knownCompanyBrandRelationship.BrandNames);
+            }
+
+            // For each entry, make new local copy of giant list
+            // Remove items which are associated with the brand
+            for (int i = 0; i < knownCompanyBrandRelationships.Count - 1; i++)
+            {
+                var allTheBrandsExceptYoursI = new List<string>();
+                allTheBrandsExceptYoursI.AddRange(allBrands);
+
+                foreach (var brand in allBrands)
+                {
+                    if (knownCompanyBrandRelationships[i].BrandNames.Contains(brand))
+                    {
+                        allTheBrandsExceptYoursI.Remove(brand);
+                    }
+                }
+
+                nonRelationships.Add(
+                                     new CompanyAndBrands
+                                         {
+                                                 CompanyNames =
+                                                         knownCompanyBrandRelationships[i].CompanyNames,
+                                                 BrandNames = allTheBrandsExceptYoursI
+                                         });
+            }
+
+            return nonRelationships;
+        }
+
+        public static List<CompanyAndBrands> GetKnownCompanyBrandRelationshipsWithMultipleBrands(
+                List<CompanyAndBrands> knownCandidates)
+        {
+            // TODO combine candidates where the company name is the same
+            // Loop through, add to dictionary string/ list? 
+            return knownCandidates.Where(r => r.BrandNames.Count() > 1).ToList();
+        }
+
+        internal static List<Candidate> GetCandidatesFromPagesOld(
+                IEnumerable<string> pages,
+                List<CompanyAndBrands> knownCompanyAndBrandsRelationships,
+                bool requireMultipleBrands = false)
+        {
+            var doc = new HtmlDocument();
+
+            var candidates = new List<Candidate>();
+
+            var safey = new HtmlSanitizer();
+
+            foreach (var page in pages)
+            {
+                doc.Load(page);
+
+                var root = doc.DocumentNode;
+
+                // The relations containing an owner company mentioned in this page
+                var relationsWhereOwnerMentionedOnPage =
+                        KnownRelationsWhereCompanyIsPresentOnPage(knownCompanyAndBrandsRelationships, root, page);
+
+                // Skip to next page if the current page doesn't contain a seed company name
+                if (relationsWhereOwnerMentionedOnPage.Count == 0)
+                {
+                    continue;
+                }
+
+                // Gather the page title, which is an attribute of all candidates
+                var titleElement = doc.DocumentNode.SelectSingleNode("//head/title");
+                var title = "";
+
+                if (titleElement != null)
+                {
+                    title = titleElement.InnerText;
+                }
+
+                // Gather all tables and lists. Doesn't seem to be a way to retrieve a node's html element type after it's been stored so add this to an initial candidate object! 
+                // Exclude tables and lists which include child lists
+
+                var initialCandidateSegments =
+                        root.Descendants("table")
+                            .ToList()
+                            .Where(table => !table.OuterHtml.Contains("<ul>"))
+                            .Select(table => new InitialCandidate() { Node = table, Type = "table" })
+                            .ToList();
+
+                initialCandidateSegments.AddRange(
+                                                  root.Descendants("ul")
+                                                      .ToList()
+                                                      .Where(list => !list.InnerHtml.Contains("<ul>"))
+                                                      .Select(
+                                                              list =>
+                                                              new InitialCandidate() { Node = list, Type = "list" }));
+
+                // For each list or table in the page
+                foreach (var initialcandidate in initialCandidateSegments)
+                {
+                    // For each relation where an owner name is present on this page. Candidates are created at this level as they are a combination of relation + segment.
+                    foreach (var relation in relationsWhereOwnerMentionedOnPage)
+                    {
+                        var domainOrTitleContainsOwner = false;
+
+                        var initialCandidateOrPreviousSiblingContainOwner = false;
+
+                        var previousContent = GetPreviousRelevantNode(initialcandidate);
+
+                        // Check that the owner name for the relation is present in the title, domain, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
+                        // Only use one company name at the moment so a loop isn't necessary
+                        foreach (var ownerSynonym in relation.CompanyNames)
+                        {
+                            if (page.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant() + " ")
+                                || title.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant() + " "))
+                            {
+                                domainOrTitleContainsOwner = true;
+                            }
+                            if (
+                                    initialcandidate.Node.OuterHtml.ToLowerInvariant()
+                                                    .Contains(ownerSynonym.ToLowerInvariant() + " ")
+                                    || previousContent.ToLowerInvariant()
+                                                      .Contains(ownerSynonym.ToLowerInvariant() + " "))
                             {
                                 initialCandidateOrPreviousSiblingContainOwner = true;
                             }
@@ -123,50 +417,60 @@
                             // For each brand owned by the company
                             foreach (var brand in relation.BrandNames)
                             {
-                                    // Get any tr or li element in the initial candidate containing the brand name
-                                    string brandName = brand;
+                                // Get any tr or li element in the initial candidate containing the brand name
+                                string brandName = brand;
 
-                                    var innerSegments = new List<HtmlNode>();
+                                var innerSegments = new List<HtmlNode>();
 
-                                    if (initialcandidate.Type == "list")
-                                    {
-                                        innerSegments.AddRange(initialcandidate.Node.Descendants("li")
-                                                    .ToList()
-                                                    .Where(listItem => listItem.OuterHtml.ToLowerInvariant().Contains(brandName.ToLowerInvariant()))); 
-                                    }
-                                    else if (initialcandidate.Type == "table")
-                                    {
-                                        innerSegments.AddRange(initialcandidate.Node.Descendants("tr")
-                                                    .ToList()
-                                                    .Where(listItem => listItem.OuterHtml.ToLowerInvariant().Contains(brandName.ToLowerInvariant()))); 
-                                    }
+                                if (initialcandidate.Type == "list")
+                                {
+                                    innerSegments.AddRange(
+                                                           initialcandidate.Node.Descendants("li")
+                                                                           .ToList()
+                                                                           .Where(
+                                                                                  listItem =>
+                                                                                  listItem.OuterHtml.ToLowerInvariant()
+                                                                                          .Contains(
+                                                                                                    brandName
+                                                                                                            .ToLowerInvariant
+                                                                                                            ())));
+                                }
+                                else if (initialcandidate.Type == "table")
+                                {
+                                    innerSegments.AddRange(
+                                                           initialcandidate.Node.Descendants("tr")
+                                                                           .ToList()
+                                                                           .Where(
+                                                                                  listItem =>
+                                                                                  listItem.OuterHtml.ToLowerInvariant()
+                                                                                          .Contains(
+                                                                                                    brandName
+                                                                                                            .ToLowerInvariant
+                                                                                                            ())));
+                                }
 
-                                    foreach (var innerSegment in innerSegments)
-                                    {
-                                        numberOfBrandsfromRelationshipPresentInSegment++;
+                                foreach (var innerSegment in innerSegments)
+                                {
+                                    numberOfBrandsfromRelationshipPresentInSegment++;
 
-                                        var candidate = new Candidate
-                                                            {
-                                                                    IsTableSegment =
-                                                                            initialcandidate.Type == "table",
-                                                                    IsListSegment =
-                                                                            initialcandidate.Type == "list",
-                                                                    PreviousContent =
-                                                                            safey.Sanitize(previousContent),
-                                                                    CandidateHtml =
-                                                                            safey.Sanitize(
-                                                                                           innerSegment.OuterHtml),
-                                                                    KnownCompany = relation.CompanyNames,
-                                                                    KnownBrand = brand,
-                                                                    KnownCompanyAndBrands = relation,
-                                                                    DomainOrPageTitleContainsOwner =
-                                                                            domainOrTitleContainsOwner,
-                                                                    Uri = page,
-                                                                    PageTitle = title
-                                                            };
+                                    var candidate = new Candidate
+                                                        {
+                                                                IsTableSegment = initialcandidate.Type == "table",
+                                                                IsListSegment = initialcandidate.Type == "list",
+                                                                PreviousContent = safey.Sanitize(previousContent),
+                                                                CandidateHtml =
+                                                                        safey.Sanitize(innerSegment.OuterHtml),
+                                                                KnownCompany = relation.CompanyNames,
+                                                                KnownBrand = brand,
+                                                                KnownCompanyAndBrands = relation,
+                                                                DomainOrPageTitleContainsOwner =
+                                                                        domainOrTitleContainsOwner,
+                                                                Uri = page,
+                                                                PageTitle = title
+                                                        };
 
-                                        candidatesForCompany.Add(candidate);
-                                    }
+                                    candidatesForCompany.Add(candidate);
+                                }
                             }
 
                             if (numberOfBrandsfromRelationshipPresentInSegment > 1)
@@ -191,37 +495,72 @@
             }
         }
 
+        internal static List<CompanyAndBrands> GetKnownCompanyBrandRelationshipsFromConsumerCompanies()
+        {
+            string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
+            String url = "https://www.googleapis.com/freebase/v1/mqlread";
+
+            string companiesQuery =
+                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"brands\":[{\"brand\": null}],\"products\":[{\"consumer_product\": null}],\"limit\":10}]&key="
+                    + API_KEY;
+
+            var client = new HttpClient();
+            client.BaseAddress = new Uri(url);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            HttpResponseMessage reponse = client.GetAsync(companiesQuery).Result;
+
+            if (reponse.IsSuccessStatusCode)
+            {
+                var responseString = reponse.Content.ReadAsStringAsync().Result;
+                var safey = new HtmlSanitizer();
+                safey.Sanitize(responseString);
+                var brands = JsonConvert.DeserializeObject<FreeBaseConsumerCompanyResponse>(responseString);
+                return MapFreeBaseConsumerCompaniesToCompanyBrandRelationship(brands.Companies);
+            }
+            else
+            {
+                throw new Exception();
+            }
+
+            // https://api.opencorporates.com/companies/search?q=barclays+bank
+            // https://api.opencorporates.com/companies/gb/01320086/network
+        }
+
+        internal static IEnumerable<string> GetPages(string path)
+        {
+            return Directory.GetFiles(path, "*.htm*", SearchOption.AllDirectories);
+        }
+
+        internal static void SaveAndPrintCandidates(List<Candidate> candidates)
+        {
+            var file = new StreamWriter("C:/Users/Alice/Desktop/TrainingCandidates.txt");
+
+            foreach (var candidate in candidates)
+            {
+                file.WriteLine(
+                               "Page title: " + candidate.PageTitle + Environment.NewLine + Environment.NewLine
+                               + "Known company: " + candidate.KnownCompany.FirstOrDefault().ToString()
+                               + Environment.NewLine + "Known brand: " + candidate.KnownBrand + Environment.NewLine
+                               + Environment.NewLine + "Multiple brands present:"
+                               + candidate.containsMultipleBrands.ToString() + Environment.NewLine
+                               + "\r Previous Relevant Node: " + candidate.PreviousContent + Environment.NewLine
+                               + "\r Html: " + candidate.CandidateHtml + Environment.NewLine + Environment.NewLine);
+                Console.WriteLine(
+                                  candidate.PageTitle + Environment.NewLine + ' '
+                                  + candidate.KnownCompany.FirstOrDefault().ToString() + Environment.NewLine + ' '
+                                  + candidate.CandidateHtml + Environment.NewLine);
+            }
+
+            file.Close();
+
+            Console.WriteLine(candidates.Count.ToString());
+        }
+
         protected static List<Candidate> FilterCandidatesForMultipleBrandPresence(List<Candidate> allCandidates)
         {
             return allCandidates.Where(candidate => candidate.containsMultipleBrands).ToList();
-        } 
-
-        private static List<CompanyAndBrands> KnownRelationsWhereCompanyIsPresentOnPage(
-                List<CompanyAndBrands> knownCompanyAndBrandsRelationships,
-                HtmlNode root,
-                string page)
-        {
-            var relationsWhereOwnerMentionedOnPage = new List<CompanyAndBrands>();
-            // Check if the page or filename contains any known seed company names 
-            foreach (var relation in knownCompanyAndBrandsRelationships)
-            {
-                foreach (var ownerCompanySynonym in relation.CompanyNames)
-                {
-                    if (root.OuterHtml.ToLowerInvariant().Contains(ownerCompanySynonym.ToLowerInvariant() + " ")
-                        || page.ToLowerInvariant().Contains(ownerCompanySynonym.ToLowerInvariant() + " "))
-                    {
-                        relationsWhereOwnerMentionedOnPage.Add(relation);
-                        // stop checking for synonym mentions once one synonym for a company has been identified 
-                        break;
-                    }
-                }
-            }
-            return relationsWhereOwnerMentionedOnPage;
         }
 
-        // The html and text for the candidate should include the preceeding html node if the candidate is a table or list. 
-        // GO UP THROUGH ALL PREVIOUS SIBLINGS, FIND ONE WHERE INNER HTML NOT EMPTY OR "\N"
-        // IF NONE, CHECK PREVIOUS SIBLINGS OF PARENT ELEMENT
         private static string GetPreviousRelevantNode(InitialCandidate initialcandidate)
         {
             var previousContent = "";
@@ -255,7 +594,8 @@
             if (previousContent.IsNullOrEmpty())
             {
                 if (parentNode.PreviousSibling != null
-                    && (!parentNode.PreviousSibling.OuterHtml.IsNullOrEmpty() && parentNode.PreviousSibling.OuterHtml != "\n"))
+                    && (!parentNode.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                        && parentNode.PreviousSibling.OuterHtml != "\n"))
                 {
                     previousContent = parentNode.PreviousSibling.OuterHtml;
                 }
@@ -271,7 +611,8 @@
                     else if (parentNode.PreviousSibling != null
                              && (parentNode.PreviousSibling.PreviousSibling != null
                                  && (parentNode.PreviousSibling.PreviousSibling.PreviousSibling != null
-                                     && (!parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
+                                     && (!parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml
+                                                    .IsNullOrEmpty()
                                          && parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n"))))
                     {
                         previousContent = parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml;
@@ -300,9 +641,10 @@
                     else if (grandparentNode.PreviousSibling != null
                              && (grandparentNode.PreviousSibling.PreviousSibling != null
                                  && (grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling != null
-                                     && (!grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty
-                                                  ()
-                                         && grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n"))))
+                                     && (!grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml
+                                                         .IsNullOrEmpty()
+                                         && grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml
+                                         != "\n"))))
                     {
                         previousContent = grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml;
                     }
@@ -311,250 +653,35 @@
             return previousContent;
         }
 
-        // Return lists/ tables + company + a list of brand names for the company present in the list/ table
-        public static List<Candidate> GetCandidatesFromPages(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships, bool itemBrandLevelCandidates)
+        private static List<CompanyAndBrands> GetTestRelationships()
         {
-            var doc = new HtmlDocument();
+            var relationships = new List<CompanyAndBrands>();
+            // TODO get synonyms from Freebase or alter the CompanyBrandRelation class
 
-            var candidates = new List<Candidate>();
+            return relationships;
+        }
 
-            var safey = new HtmlSanitizer();
-
-            foreach (var page in pages)
+        private static List<CompanyAndBrands> KnownRelationsWhereCompanyIsPresentOnPage(
+                List<CompanyAndBrands> knownCompanyAndBrandsRelationships,
+                HtmlNode root,
+                string page)
+        {
+            var relationsWhereOwnerMentionedOnPage = new List<CompanyAndBrands>();
+            // Check if the page or filename contains any known seed company names 
+            foreach (var relation in knownCompanyAndBrandsRelationships)
             {
-                doc.Load(page);
-
-                var root = doc.DocumentNode;
-
-                // The relations containing an owner company mentioned in this page
-                var relationsWhereOwnerMentionedOnPage = KnownRelationsWhereCompanyIsPresentOnPage(knownCompanyAndBrandsRelationships, root, page);
-
-                // Skip to next page if the current page doesn't contain a seed company name
-                if (relationsWhereOwnerMentionedOnPage.Count == 0)
+                foreach (var ownerCompanySynonym in relation.CompanyNames)
                 {
-                    continue;
-                }
-
-                // Gather the page title, which is an attribute of all candidates
-                var titleElement = doc.DocumentNode.SelectSingleNode("//head/title");
-                var title = "";
-
-                if (titleElement != null)
-                {
-                    title = titleElement.InnerText;
-                }
-
-                // Gather all tables and lists. Doesn't seem to be a way to retrieve a node's html element type after it's been stored so add this to an initial candidate object! 
-                // Exclude tables and lists which include child lists
-
-                var initialCandidateSegments =
-                        root.Descendants("table")
-                            .ToList()
-                            .Where(table => !table.OuterHtml.Contains("<ul>"))
-                            .Select(table => new InitialCandidate() { Node = table, Type = "table" })
-                            .ToList();
-
-                initialCandidateSegments.AddRange(
-                                                  root.Descendants("ul")
-                                                      .ToList()
-                                                      .Where(list => !list.InnerHtml.Contains("<ul>"))
-                                                      .Select(
-                                                              list =>
-                                                              new InitialCandidate() { Node = list, Type = "list" }));
-
-                // For each list or table in the page
-                foreach (var initialcandidate in initialCandidateSegments)
-                {
-                    // For each relation where an owner name is present on this page. Candidates are created at this level as they are a combination of relation + segment.
-                    foreach (var relation in relationsWhereOwnerMentionedOnPage)
+                    if (root.OuterHtml.ToLowerInvariant().Contains(ownerCompanySynonym.ToLowerInvariant() + " ")
+                        || page.ToLowerInvariant().Contains(ownerCompanySynonym.ToLowerInvariant() + " "))
                     {
-                        var domainOrTitleContainsOwner = false;
-
-                        var initialCandidateOrPreviousSiblingContainOwner = false;
-
-                        var previousContent = GetPreviousRelevantNode(initialcandidate);
-
-                        // Check that the owner name for the relation is present in the title, domain, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
-                        // Only use one company name at the moment so a loop isn't necessary
-                        foreach (var ownerSynonym in relation.CompanyNames)
-                        {
-                            if (page.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant() + " ")
-                                || title.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant() + " "))
-                            {
-                                domainOrTitleContainsOwner = true;
-                            }
-                            if (
-                                    initialcandidate.Node.OuterHtml.ToLowerInvariant()
-                                                    .Contains(ownerSynonym.ToLowerInvariant() + " ")
-                                    || previousContent.ToLowerInvariant()
-                                                       .Contains(ownerSynonym.ToLowerInvariant() + " "))
-                            {
-                                initialCandidateOrPreviousSiblingContainOwner = true;
-                            }
-                        }
-
-                        // If the company name for the relation is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
-                        if (domainOrTitleContainsOwner || initialCandidateOrPreviousSiblingContainOwner)
-                        {
-                            var knownBrandsPresent = new List<String>();
-
-                            // For each brand owned by the company
-                            foreach (var brand in relation.BrandNames)
-                            {
-                                // The space at the end helps to stop token fragments from being picked up as brand name instances
-                                if (initialcandidate.Node.OuterHtml.ToLowerInvariant()
-                                                    .Contains(brand.ToLowerInvariant() + " "))
-                                {
-                                    knownBrandsPresent.Add(brand);
-                                    // Create a candidate here if want item level candidates? But now to check 'multiple'? 
-                                }
-                            }
-
-                            if (knownBrandsPresent.Count > 0)
-                            {
-                                // Process to create a candidate for each individual list item or table row containing a brand for the relation
-                                if (itemBrandLevelCandidates)
-                                {
-                                    foreach (var brand in knownBrandsPresent)
-                                    {
-
-
-                                        var innerSegments = new List<HtmlNode>();
-
-                                        if (initialcandidate.Type == "list")
-                                        {
-                                            innerSegments.AddRange(initialcandidate.Node.Descendants("li")
-                                                        .ToList()
-                                                        .Where(listItem => listItem.OuterHtml.ToLowerInvariant().Contains(brand.ToLowerInvariant())));
-                                        }
-                                        else if (initialcandidate.Type == "table")
-                                        {
-                                            innerSegments.AddRange(initialcandidate.Node.Descendants("tr")
-                                                        .ToList()
-                                                        .Where(listItem => listItem.OuterHtml.ToLowerInvariant().Contains(brand.ToLowerInvariant())));
-                                        }
-
-                                        foreach (var innerSegment in innerSegments)
-                                        {
-                                            var candidate = new Candidate
-                                            {
-                                                IsTableSegment =
-                                                        initialcandidate.Type == "table",
-                                                IsListSegment =
-                                                        initialcandidate.Type == "list",
-                                                IsItemLevelCandidate = true,
-                                                PreviousContent =
-                                                        safey.Sanitize(previousContent),
-                                                CandidateHtml =
-                                                        safey.Sanitize(
-                                                                       innerSegment.OuterHtml),
-                                                KnownCompany = relation.CompanyNames,
-                                                KnownBrands = knownBrandsPresent,
-                                                KnownCompanyAndBrands = relation,
-                                                DomainOrPageTitleContainsOwner =
-                                                        domainOrTitleContainsOwner,
-                                                Uri = page,
-                                                PageTitle = title,
-                                                containsMultipleBrands = knownBrandsPresent.Count > 1
-                                            };
-                                            candidates.Add(candidate);
-                                        }
-                                    }
-                                }
-
-                                // Process to create a candidate for each whole list or table and all its brands
-                                else
-                                {
-                                    var candidate = new Candidate
-                                    {
-                                        IsTableSegment =
-                                                initialcandidate.Type == "table",
-                                        IsListSegment =
-                                                initialcandidate.Type == "list",
-                                        IsItemLevelCandidate = false,
-                                        PreviousContent =
-                                                safey.Sanitize(previousContent),
-                                        CandidateHtml =
-                                                safey.Sanitize(
-                                                               initialcandidate.Node.OuterHtml),
-                                        KnownCompany = relation.CompanyNames,
-                                        KnownBrands = knownBrandsPresent,
-                                        KnownCompanyAndBrands = relation,
-                                        DomainOrPageTitleContainsOwner =
-                                                domainOrTitleContainsOwner,
-                                        Uri = page,
-                                        PageTitle = title,
-                                        containsMultipleBrands = knownBrandsPresent.Count > 1
-                                    };
-                                    candidates.Add(candidate);
-                                }
-
-                            }
-                        }
+                        relationsWhereOwnerMentionedOnPage.Add(relation);
+                        // stop checking for synonym mentions once one synonym for a company has been identified 
+                        break;
                     }
                 }
             }
-            return candidates;
-        }
-
-        //internal static List<CompanyAndBrands> GetKnownCompanyBrandRelationships()
-        //{
-        //    string API_KEY = "";
-        //    String url = "https://www.googleapis.com/freebase/v1/mqlread";
-        //    String query =
-        //            "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key="
-        //            + API_KEY;
-
-        //    var client = new HttpClient();
-        //    client.BaseAddress = new Uri(url);
-        //    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        //    HttpResponseMessage reponse = client.GetAsync(query).Result;
-
-        //    if (reponse.IsSuccessStatusCode)
-        //    {
-        //        var responseString = reponse.Content.ReadAsStringAsync().Result;
-        //        var safey = new HtmlSanitizer();
-        //        safey.Sanitize(responseString);
-        //        var relationships = JsonConvert.DeserializeObject<FreeBaseRelationshipsResponse>(responseString);
-        //        return MapFreeBaseRelationshipToCompanyBrandRelationship(relationships.Relationships);
-        //    }
-        //    else
-        //    {
-        //        throw new Exception();
-        //    }
-
-        //    // https://api.opencorporates.com/companies/search?q=barclays+bank
-        //    // https://api.opencorporates.com/companies/gb/01320086/network
-        //}
-
-        internal static List<CompanyAndBrands> GetKnownCompanyBrandRelationshipsFromConsumerCompanies()
-        {
-            string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
-            String url = "https://www.googleapis.com/freebase/v1/mqlread";
-
-            string companiesQuery =
-                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"brands\":[{\"brand\": null}],\"products\":[{\"consumer_product\": null}],\"limit\":10}]&key=" + API_KEY;
-
-            var client = new HttpClient();
-            client.BaseAddress = new Uri(url);
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            HttpResponseMessage reponse = client.GetAsync(companiesQuery).Result;
-
-            if (reponse.IsSuccessStatusCode)
-            {
-                var responseString = reponse.Content.ReadAsStringAsync().Result;
-                var safey = new HtmlSanitizer();
-                safey.Sanitize(responseString);
-                var brands = JsonConvert.DeserializeObject<FreeBaseConsumerCompanyResponse>(responseString);
-                return MapFreeBaseConsumerCompaniesToCompanyBrandRelationship(brands.Companies);
-            }
-            else
-            {
-                throw new Exception();
-            }
-
-            // https://api.opencorporates.com/companies/search?q=barclays+bank
-            // https://api.opencorporates.com/companies/gb/01320086/network
+            return relationsWhereOwnerMentionedOnPage;
         }
 
         private static List<CompanyAndBrands> MapFreeBaseConsumerCompaniesToCompanyBrandRelationship(
@@ -574,45 +701,22 @@
                     foreach (var product in freebaseConsumerCompany.Products)
                     {
                         allBrandsAndProducts.Add(product.Product);
-                        
                     }
 
                     companyBrandRelationships.Add(
                                                   new CompanyAndBrands
                                                       {
-                                                              
-                                                              BrandNames = allBrandsAndProducts
-     ,
+                                                              BrandNames = allBrandsAndProducts,
                                                               CompanyNames =
                                                                       new List<String>
                                                                           {
-                                                                                  freebaseConsumerCompany.Name
+                                                                                  freebaseConsumerCompany
+                                                                                          .Name
                                                                           }
                                                       });
                 }
             }
             return companyBrandRelationships;
-        }
-
-        public static List<CompanyAndBrands> GetKnownCompanyBrandRelationshipsWithMultipleBrands(
-                List<CompanyAndBrands> knownCandidates)
-        {
-            // TODO combine candidates where the company name is the same
-            // Loop through, add to dictionary string/ list? 
-            return knownCandidates.Where(r => r.BrandNames.Count() > 1).ToList();
-        }
-
-        internal static IEnumerable<string> GetPages(string path)
-        {
-            return Directory.GetFiles(path, "*.htm*", SearchOption.AllDirectories);
-        }
-
-        private static List<CompanyAndBrands> GetTestRelationships()
-        {
-            var relationships = new List<CompanyAndBrands>();
-            // TODO get synonyms from Freebase or alter the CompanyBrandRelation class
-
-            return relationships;
         }
 
         private static List<CompanyAndBrands> MapFreeBaseRelationshipToCompanyBrandRelationship(
@@ -645,87 +749,6 @@
                 }
             }
             return companyBrandRelationships;
-        }
-
-        internal static void SaveAndPrintCandidates(List<Candidate> candidates)
-        {
-            var file = new StreamWriter("C:/Users/Alice/Desktop/TrainingCandidates.txt");
-
-            foreach (var candidate in candidates)
-            {
-                file.WriteLine(
-                               "Page title: " + candidate.PageTitle + Environment.NewLine + Environment.NewLine
-                               + "Known company: " + candidate.KnownCompany.FirstOrDefault().ToString()
-                               + Environment.NewLine + "Known brand: " + candidate.KnownBrand + Environment.NewLine
-                               + Environment.NewLine + "Multiple brands present:" + candidate.containsMultipleBrands.ToString()
-                               + Environment.NewLine + "\r Previous Relevant Node: " + candidate.PreviousContent + Environment.NewLine
-                               + "\r Html: " + candidate.CandidateHtml + Environment.NewLine + Environment.NewLine);
-                Console.WriteLine(
-                                  candidate.PageTitle + Environment.NewLine + ' '
-                                  + candidate.KnownCompany.FirstOrDefault().ToString() + Environment.NewLine + ' '
-                                  + candidate.CandidateHtml + Environment.NewLine);
-            }
-
-            file.Close();
-
-            Console.WriteLine(candidates.Count.ToString());
-        }
-
-        public static List<CompanyAndBrands> GetKnownCompanyBrandNonRelationships()
-        {
-            string API_KEY = "";
-            String url = "https://www.googleapis.com/freebase/v1/mqlread";
-            String query =
-                    "?query=[{\"id\":null,\"company\":null,\"brand\":null,\"type\":\"/business/company_brand_relationship\",\"limit\":2}]&key="
-                    + API_KEY;
-
-            var client = new HttpClient();
-            client.BaseAddress = new Uri(url);
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            HttpResponseMessage reponse = client.GetAsync(query).Result;
-
-            if (reponse.IsSuccessStatusCode)
-            {
-                var responseString = reponse.Content.ReadAsStringAsync().Result;
-                var safey = new HtmlSanitizer();
-                safey.Sanitize(responseString);
-                var relationships = JsonConvert.DeserializeObject<FreeBaseRelationshipsResponse>(responseString);
-                return MapFreeBaseRelationshipToCompanyBrandRelationship(relationships.Relationships);
-            }
-            else
-            {
-                throw new Exception();
-            }
-
-            // https://api.opencorporates.com/companies/search?q=barclays+bank
-            // https://api.opencorporates.com/companies/gb/01320086/network
-        }
-
-        public static List<CompanyAndBrands> GetKnownCompanyBrandNonRelationships(
-                List<CompanyAndBrands> knownCompanyBrandRelationships)
-        {
-            // Jumble up the list, creating new relationships where there are none. 
-            // Should really use all brands not belonging to the company but this would result in huge amounts of processing? 
-            // These ones are going to be hard to find, one way or another
-            // Use a supermarket site? 
-            var nonRelationships = new List<CompanyAndBrands>();
-
-            for (int i = 0; i < knownCompanyBrandRelationships.Count - 1; i++)
-            {
-                nonRelationships.Add(
-                                     new CompanyAndBrands
-                                         {
-                                                 CompanyNames =
-                                                         knownCompanyBrandRelationships[i]
-                                                         .CompanyNames,
-                                                                              BrandNames =
-                                                                              knownCompanyBrandRelationships
-                                                                              [i+1].BrandNames
-                                         });
-            }
-
-            return nonRelationships;
-
         }
     }
 }
