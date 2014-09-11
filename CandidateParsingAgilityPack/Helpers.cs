@@ -6,8 +6,7 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Net.Http;
-    using System.Net.Http.Headers;
+    using System.Text.RegularExpressions;
 
     using CandidateParsingAgilityPack.Model;
 
@@ -16,8 +15,6 @@
     using Html;
 
     using HtmlAgilityPack;
-
-    using Newtonsoft.Json;
 
     #endregion
 
@@ -224,7 +221,7 @@
                                                                                 safey.Sanitize(
                                                                                                innerSegment
                                                                                                        .OuterHtml),
-                                                                        KnownCompany = company,
+                                                                        KnownCompanyNames = new List<string>(),
                                                                         KnownBrands =
                                                                                 brandsPresentInInitialCandidate,
                                                                         KnownBrand = brand,
@@ -236,6 +233,7 @@
                                                                                 brandsPresentInInitialCandidate
                                                                                         .Count > 1
                                                                 };
+                                            candidate.KnownCompanyNames.Add(company);
                                             testCandidates.Add(candidate);
                                         }
                                     }
@@ -368,10 +366,12 @@
                             // For each brand owned by the company
                             foreach (var brand in relation.BrandNames)
                             {
+                                var letter = new Regex(@"[a-zA-Z]");
                                 // The space at the end helps to stop token fragments from being picked up as brand name instances
                                 if (
                                         initialcandidate.Node.OuterHtml.ToLowerInvariant()
-                                                        .Contains(brand.ToLowerInvariant() + " "))
+                                                        .Contains(brand.ToLowerInvariant() + " ") && !initialcandidate.Node.OuterHtml.ToLowerInvariant()
+                                                        .Contains(letter + brand.ToLowerInvariant()))
                                 {
                                     knownBrandsPresent.Add(brand);
                                     // Create a candidate here if want item level candidates? But now to check 'multiple'? 
@@ -494,18 +494,38 @@
 
         internal static List<String> GetTestBrands(List<CompanyAndBrands> companyBrandRelationships)
         {
-            // TODO get brands from other sources, e.g. supermarket site, Amazon
-            // http://stackoverflow.com/questions/1595624/amazon-products-api-looking-for-basic-overview-and-information
-            var knownBrands = FreeBaseHelpers.GetKnownBrands();
+            var amazonBrands = new List<String>();
+
+            // TODO get brands from API http://stackoverflow.com/questions/1595624/amazon-products-api-looking-for-basic-overview-and-information
+            var directory = new DirectoryInfo("C:/Users/Alice/Desktop/AmazonBrands");
+
+            foreach (var file in directory.GetFiles())
+            {
+                amazonBrands.AddRange(File.ReadLines(file.FullName));
+            }
 
             var newBrands = new List<String>();
 
-            foreach (var brand in knownBrands.Brands)
+            foreach (var brand in amazonBrands)
             {
-                if (!companyBrandRelationships.Any(rel => rel.BrandNames.Contains(brand.Name)))
+                var trimmedBrand = brand.Trim();
+
+                if ((!companyBrandRelationships.Any(rel => rel.BrandNames.Contains(trimmedBrand))) && trimmedBrand.Length > 2)
                 {
-                    newBrands.Add(brand.Name);
+                    newBrands.Add(trimmedBrand.ToLowerInvariant());
                 }
+                else
+                {
+                    var i = 0;
+                }
+            }
+
+            var troublesomeBrands = new List<String> { "ee", "bury", "et", "ion", "ist", "ngs", "ry", "ss", "ting", "up", "ls", "oe", "may", "div", "se", "od", "tr", "ns", "ge", "ms", "ic", "am", "chocolate", "fruit", "green", "mini", "his", "ge", "ns", "pa", "ams", "none", "sen", "ips", "premium", "ps", "ub", "at" };
+            var brandStopList = new List<String> { "bury", "ting", "may", "div", "chocolate", "fruit", "green", "mini", "his", "none", "sen", "ips", "premium", "ion", "ist", "ngs", "ams", "none", "ist", "rts", "book", "official"};
+
+            foreach (var stopListBrand in brandStopList)
+            {
+                newBrands.RemoveAll(nb => nb.Equals(stopListBrand));
             }
 
             return newBrands;
@@ -514,19 +534,33 @@
         internal static List<String> GetTestCompanies(List<CompanyAndBrands> companyBrandRelationships)
         {
             // TODO retrieve all companies from Freebase, OpenCorporates or others, not just consumer companies
-            //var knownCompanies = GetKnownCompanies();
+
+            var companiesHouseCompanies = new List<String>();
+
+            var directory = new DirectoryInfo("C:/Users/Alice/Desktop/Companies");
+
+            foreach (var file in directory.GetFiles())
+            {
+                companiesHouseCompanies.AddRange(File.ReadLines(file.FullName));
+            }
 
             var newCompanies = new List<String>();
 
-            //foreach (var company in knownCompanies)
-            //{
-            //    if (!companyBrandRelationships.Any(rel => rel.Contains(company.Name)))
-            //    {
-            //        newCompanies.Add(company.Name);
-            //    }
-            //}
+            foreach (var company in companiesHouseCompanies)
+            {
+                if (!companyBrandRelationships.Any(rel => rel.CompanyNames.Contains(company)))
+                {
+                    newCompanies.Add(company.Trim().ToLowerInvariant());
+                }
+            }
 
-            return newCompanies;
+            var shorterList = new List<string>();
+
+            shorterList.AddRange(newCompanies.Take(1000));
+
+            shorterList.Add("Cadbury");
+
+            return shorterList;
         }
 
         internal static void OutputCandidates(List<Candidate> candidates, string type)

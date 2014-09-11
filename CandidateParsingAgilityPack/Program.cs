@@ -31,15 +31,15 @@
             //                                                               knownCompanyBrandRelationships,
             //                                                               ItemLevelCandidates);
 
-            var negativeTrainingCandidates = GetNegativeTrainingCandidates(
-                                                                           knownCompanyBrandRelationships,
-                                                                           ItemLevelCandidates);
+            //var negativeTrainingCandidates = GetNegativeTrainingCandidates(
+            //                                                               knownCompanyBrandRelationships,
+            //                                                               ItemLevelCandidates);
 
             //var trainingCandidates = new List<Candidate>();
             //trainingCandidates.AddRange(positiveTrainingCandidates);
             //trainingCandidates.AddRange(negativeTrainingCandidates);
 
-            //var testCandidates = GetTestCandidates(knownCompanyBrandRelationships, ItemLevelCandidates);
+            var testCandidates = GetTestCandidates(knownCompanyBrandRelationships, ItemLevelCandidates);
 
             //var model = GenerateModel(trainingCandidates);
 

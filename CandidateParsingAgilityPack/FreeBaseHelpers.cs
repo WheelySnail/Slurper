@@ -2,7 +2,6 @@ namespace CandidateParsingAgilityPack
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Linq;
     using System.Net.Http;
     using System.Net.Http.Headers;
@@ -11,11 +10,9 @@ namespace CandidateParsingAgilityPack
 
     using Newtonsoft.Json;
 
-    using sun.net.www.content.image;
-
     internal class FreeBaseHelpers
     {
-        private const string API_KEY = "AIzaSyAnlfYJbox67a_jRXUv_9SbGHcfvG0ldbU";
+        private const string API_KEY = "";
 
         private const String url = "https://www.googleapis.com/freebase/v1/mqlread";
 
