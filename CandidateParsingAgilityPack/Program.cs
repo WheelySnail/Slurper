@@ -27,27 +27,27 @@
 
             var knownCompanyBrandRelationships = FreeBaseHelpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
 
-            //var positiveTrainingCandidates = GetPositiveTrainingCandidates(
-            //                                                               knownCompanyBrandRelationships,
-            //                                                               ItemLevelCandidates);
+            var positiveTrainingCandidates = GetPositiveTrainingCandidates(
+                                                                           knownCompanyBrandRelationships,
+                                                                           ItemLevelCandidates);
 
-            //var negativeTrainingCandidates = GetNegativeTrainingCandidates(
-            //                                                               knownCompanyBrandRelationships,
-            //                                                               ItemLevelCandidates);
+            var negativeTrainingCandidates = GetNegativeTrainingCandidates(
+                                                                           knownCompanyBrandRelationships,
+                                                                           ItemLevelCandidates);
 
-            //var trainingCandidates = new List<Candidate>();
-            //trainingCandidates.AddRange(positiveTrainingCandidates);
-            //trainingCandidates.AddRange(negativeTrainingCandidates);
+            var trainingCandidates = new List<Candidate>();
+            trainingCandidates.AddRange(positiveTrainingCandidates);
+            trainingCandidates.AddRange(negativeTrainingCandidates);
 
             var testCandidates = GetTestCandidates(knownCompanyBrandRelationships, ItemLevelCandidates);
 
-            //var model = GenerateModel(trainingCandidates);
+            var model = GenerateModel(trainingCandidates);
 
-            //Console.WriteLine(model);
+            Console.WriteLine(model);
 
-            //ClassifyTestCandidates(testCandidates, model);
+            ClassifyTestCandidates(testCandidates, model);
 
-            //Helpers.OutputCandidates(testCandidates, "labelledTestCandidates");
+            Helpers.OutputCandidates(testCandidates, "labelledTestCandidates");
 
             Console.ReadLine();
         }

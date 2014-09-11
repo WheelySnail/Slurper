@@ -11,8 +11,8 @@ namespace CandidateParsingAgilityPack.Model
 
     public class Candidate
     {
-        [Feature]
-        public bool BrandNameIsSimilarToCompanyName { get; set; }
+        //[Feature]
+        //public bool BrandNameIsSimilarToCompanyName { get; set; }
 
         [Feature]
         public String CandidateHtml { get; set; }
@@ -23,8 +23,8 @@ namespace CandidateParsingAgilityPack.Model
         [Feature]
         public bool ContainsMultipleBrands { get; set; }
 
-        [Feature]
-        public String DomainName { get; set; }
+        //[Feature]
+        //public String DomainName { get; set; }
 
         [Feature]
         public bool DomainOrPageTitleContainsOwner { get; set; }
@@ -41,16 +41,14 @@ namespace CandidateParsingAgilityPack.Model
 
         public List<String> KnownBrands { get; set; }
 
-        public string KnownCompany { get; set; }
-
         public CompanyAndBrands KnownCompanyAndBrands { get; set; }
 
         public List<string> KnownCompanyNames { get; set; }
 
-        public List<String> NamedEntities { get; set; }
+        //public List<String> NamedEntities { get; set; }
 
-        [Feature]
-        public String NumberOfTokens { get; set; }
+        //[Feature]
+        //public String NumberOfTokens { get; set; }
 
         [Feature]
         public String PageTitle { get; set; }
@@ -60,6 +58,6 @@ namespace CandidateParsingAgilityPack.Model
 
         public string Uri { get; set; }
 
-        public List<String> UriSegments { get; set; }
+        //public List<String> UriSegments { get; set; }
     }
 }

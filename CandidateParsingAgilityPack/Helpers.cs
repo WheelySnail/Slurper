@@ -10,6 +10,8 @@
 
     using CandidateParsingAgilityPack.Model;
 
+    using com.sun.tools.javac.util;
+
     using CsQuery.ExtensionMethods.Internal;
 
     using Html;
@@ -156,7 +158,7 @@
                             // For each brand 
                             foreach (var brand in brands)
                             {
-                                // TODO why does this regex return more!! results???
+                                // TODO why does this regex return more!! results??? Because there are e.g.s that geniunely don't have a space after them? 
                                 //var brandOnItsOwn = new Regex( @"\b" + brand.ToLowerInvariant() + @"\b");
                                 //if (
                                 //        brandOnItsOwn.IsMatch(initialcandidate.Node.OuterHtml.ToLowerInvariant()))
@@ -257,7 +259,7 @@
                                                                         safey.Sanitize(
                                                                                        initialcandidate.Node
                                                                                                        .OuterHtml),
-                                                                KnownCompany = company,
+                                                                KnownCompanyNames = new List<String>(),
                                                                 KnownBrands = brandsPresentInInitialCandidate,
                                                                 DomainOrPageTitleContainsOwner =
                                                                         domainOrTitleContainsPotentialOwner,
@@ -266,6 +268,7 @@
                                                                 ContainsMultipleBrands =
                                                                         brandsPresentInInitialCandidate.Count > 1,
                                                         };
+                                    candidate.KnownCompanyNames.Add(company);
                                     testCandidates.Add(candidate);
                                 }
                             }
@@ -529,7 +532,7 @@
             }
 
             var troublesomeBrands = new List<String> { "ee", "bury", "et", "ion", "ist", "ngs", "ry", "ss", "ting", "up", "ls", "oe", "may", "div", "se", "od", "tr", "ns", "ge", "ms", "ic", "am", "chocolate", "fruit", "green", "mini", "his", "ge", "ns", "pa", "ams", "none", "sen", "ips", "premium", "ps", "ub", "at" };
-            var brandStopList = new List<String> { "bury", "ting", "may", "div", "chocolate", "fruit", "green", "mini", "his", "none", "sen", "ips", "premium", "ion", "ist", "ngs", "ams", "none", "ist", "rts", "book", "official"};
+            var brandStopList = new List<String> { "bury", "ting", "may", "div", "chocolate", "fruit", "green", "mini", "his", "none", "sen", "ips", "premium", "ion", "ist", "ngs", "ams", "none", "ist", "rts", "book", "official", "entity", "ref", "image", "border" };
 
             foreach (var stopListBrand in brandStopList)
             {
