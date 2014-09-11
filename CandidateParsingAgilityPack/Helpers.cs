@@ -156,10 +156,15 @@
                             // For each brand 
                             foreach (var brand in brands)
                             {
-                                // The space at the end helps to stop token fragments from being picked up as brand name instances
-                                if (
-                                        initialcandidate.Node.OuterHtml.ToLowerInvariant()
-                                                        .Contains(brand.ToLowerInvariant() + " "))
+                                // TODO why does this regex return more!! results???
+                                //var brandOnItsOwn = new Regex( @"\b" + brand.ToLowerInvariant() + @"\b");
+                                //if (
+                                //        brandOnItsOwn.IsMatch(initialcandidate.Node.OuterHtml.ToLowerInvariant()))
+                                //{
+                                //    brandsPresentInInitialCandidate.Add(brand);
+                                //}
+
+                                if (initialcandidate.Node.OuterHtml.ToLowerInvariant().Contains(brand.ToLowerInvariant() + " "))
                                 {
                                     brandsPresentInInitialCandidate.Add(brand);
                                 }
@@ -366,12 +371,15 @@
                             // For each brand owned by the company
                             foreach (var brand in relation.BrandNames)
                             {
-                                var letter = new Regex(@"[a-zA-Z]");
-                                // The space at the end helps to stop token fragments from being picked up as brand name instances
-                                if (
-                                        initialcandidate.Node.OuterHtml.ToLowerInvariant()
-                                                        .Contains(brand.ToLowerInvariant() + " ") && !initialcandidate.Node.OuterHtml.ToLowerInvariant()
-                                                        .Contains(letter + brand.ToLowerInvariant()))
+                                // TODO why does this regex return more!! results???
+                                //var brandOnItsOwn = new Regex( @"\b" + brand.ToLowerInvariant() + @"\b");
+                                //if (
+                                //        brandOnItsOwn.IsMatch(initialcandidate.Node.OuterHtml.ToLowerInvariant()))
+                                //{
+                                //    knownBrandsPresent.Add(brand);
+                                //}
+
+                                if (initialcandidate.Node.OuterHtml.ToLowerInvariant().Contains(brand.ToLowerInvariant() + " "))
                                 {
                                     knownBrandsPresent.Add(brand);
                                     // Create a candidate here if want item level candidates? But now to check 'multiple'? 
