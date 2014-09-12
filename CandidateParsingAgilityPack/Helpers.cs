@@ -158,18 +158,13 @@
                             // For each brand 
                             foreach (var brand in brands)
                             {
-                                // TODO why does this regex return more!! results??? Because there are e.g.s that geniunely don't have a space after them? 
-                                //var brandOnItsOwn = new Regex( @"\b" + brand.ToLowerInvariant() + @"\b");
-                                //if (
-                                //        brandOnItsOwn.IsMatch(initialcandidate.Node.OuterHtml.ToLowerInvariant()))
-                                //{
-                                //    brandsPresentInInitialCandidate.Add(brand);
-                                //}
-
-                                if (initialcandidate.Node.OuterHtml.ToLowerInvariant().Contains(brand.ToLowerInvariant() + " "))
+                                var brandOnItsOwn = new Regex(@"\b" + brand.ToLowerInvariant() + @"\b");
+                                if (
+                                        brandOnItsOwn.IsMatch(initialcandidate.Node.OuterHtml.ToLowerInvariant()))
                                 {
                                     brandsPresentInInitialCandidate.Add(brand);
                                 }
+
                             }
 
                             if (brandsPresentInInitialCandidate.Count > 0)
@@ -374,15 +369,9 @@
                             // For each brand owned by the company
                             foreach (var brand in relation.BrandNames)
                             {
-                                // TODO why does this regex return more!! results???
-                                //var brandOnItsOwn = new Regex( @"\b" + brand.ToLowerInvariant() + @"\b");
-                                //if (
-                                //        brandOnItsOwn.IsMatch(initialcandidate.Node.OuterHtml.ToLowerInvariant()))
-                                //{
-                                //    knownBrandsPresent.Add(brand);
-                                //}
-
-                                if (initialcandidate.Node.OuterHtml.ToLowerInvariant().Contains(brand.ToLowerInvariant() + " "))
+                                var brandOnItsOwn = new Regex(@"\b" + brand.ToLowerInvariant() + @"\b");
+                                if (
+                                        brandOnItsOwn.IsMatch(initialcandidate.Node.OuterHtml.ToLowerInvariant()))
                                 {
                                     knownBrandsPresent.Add(brand);
                                     // Create a candidate here if want item level candidates? But now to check 'multiple'? 
