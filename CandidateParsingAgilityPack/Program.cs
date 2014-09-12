@@ -63,9 +63,11 @@
         private static IModel GenerateModel(List<Candidate> trainingCandidates)
         {
             // description maps the class and it's attributes to the ML algorithm, and back
-            var descriptor = Descriptor.Create<Candidate>();
+            var descriptor = Descriptor.Create < Candidate>();
 
-            var generator = new DecisionTreeGenerator(50);
+            var generator = new DecisionTreeGenerator(200, 2, null, null, 0.5);
+
+            //generator.SetHint(true);
 
             var model = generator.Generate(descriptor, trainingCandidates);
 
