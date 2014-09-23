@@ -676,33 +676,33 @@
             var grandparentNode = initialcandidate.Node.ParentNode.ParentNode;
 
             // Check the three preceeding previous siblings
-            if (!previousSibling.OuterHtml.IsNullOrEmpty() && previousSibling.OuterHtml != "\n")
+            if (previousSibling != null && !previousSibling.InnerText.IsNullOrEmpty() && previousSibling.InnerText != "\n")
             {
                 previousContent = previousSibling;
             }
             else
             {
-                if (previousSibling.PreviousSibling != null
-                    && (!previousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                        && previousSibling.PreviousSibling.OuterHtml != "\n"))
+                if (previousSibling != null && (previousSibling.PreviousSibling != null
+                                                && (!previousSibling.PreviousSibling.InnerText.IsNullOrEmpty()
+                                                    && previousSibling.PreviousSibling.InnerText != "\n")))
                 {
                     previousContent = previousSibling.PreviousSibling;
                 }
-                else if (previousSibling.PreviousSibling != null
-                         && (previousSibling.PreviousSibling.PreviousSibling != null
-                             && (!previousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                 && previousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
+                else if (previousSibling != null && (previousSibling.PreviousSibling != null
+                                                     && (previousSibling.PreviousSibling.PreviousSibling != null
+                                                         && (!previousSibling.PreviousSibling.PreviousSibling.InnerText.IsNullOrEmpty()
+                                                             && previousSibling.PreviousSibling.PreviousSibling.InnerText != "\n"))))
                 {
                     previousContent = previousSibling.PreviousSibling.PreviousSibling;
                 }
             }
 
             // Check the three previous siblings of the parent sibling
-            if (previousContent == null || previousContent.OuterHtml.IsNullOrEmpty())
+            if (previousContent == null)
             {
                 if (parentNode.PreviousSibling != null
-                    && (!parentNode.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                        && parentNode.PreviousSibling.OuterHtml != "\n"))
+                    && (!parentNode.PreviousSibling.InnerText.IsNullOrEmpty()
+                        && parentNode.PreviousSibling.InnerText != "\n"))
                 {
                     previousContent = parentNode.PreviousSibling;
                 }
@@ -710,17 +710,17 @@
                 {
                     if (parentNode.PreviousSibling != null
                         && (parentNode.PreviousSibling.PreviousSibling != null
-                            && (!parentNode.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                && parentNode.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
+                            && (!parentNode.PreviousSibling.PreviousSibling.InnerText.IsNullOrEmpty()
+                                && parentNode.PreviousSibling.PreviousSibling.InnerText != "\n")))
                     {
                         previousContent = parentNode.PreviousSibling.PreviousSibling;
                     }
                     else if (parentNode.PreviousSibling != null
                              && (parentNode.PreviousSibling.PreviousSibling != null
                                  && (parentNode.PreviousSibling.PreviousSibling.PreviousSibling != null
-                                     && (!parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml
+                                     && (!parentNode.PreviousSibling.PreviousSibling.PreviousSibling.InnerText
                                                     .IsNullOrEmpty()
-                                         && parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n"))))
+                                         && parentNode.PreviousSibling.PreviousSibling.PreviousSibling.InnerText != "\n"))))
                     {
                         previousContent = parentNode.PreviousSibling.PreviousSibling.PreviousSibling;
                     }
@@ -728,11 +728,11 @@
             }
 
             // Check the three previous siblings of the grandparent sibling
-            if (previousContent == null || previousContent.OuterHtml.IsNullOrEmpty())
+            if (previousContent == null)
             {
                 if (grandparentNode.PreviousSibling != null
-                    && (!grandparentNode.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                        && grandparentNode.PreviousSibling.OuterHtml != "\n"))
+                    && (!grandparentNode.PreviousSibling.InnerText.IsNullOrEmpty()
+                        && grandparentNode.PreviousSibling.InnerText != "\n"))
                 {
                     previousContent = grandparentNode.PreviousSibling;
                 }
@@ -740,17 +740,17 @@
                 {
                     if (grandparentNode.PreviousSibling != null
                         && (grandparentNode.PreviousSibling.PreviousSibling != null
-                            && (!grandparentNode.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
-                                && grandparentNode.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
+                            && (!grandparentNode.PreviousSibling.PreviousSibling.InnerText.IsNullOrEmpty()
+                                && grandparentNode.PreviousSibling.PreviousSibling.InnerText != "\n")))
                     {
                         previousContent = grandparentNode.PreviousSibling.PreviousSibling;
                     }
                     else if (grandparentNode.PreviousSibling != null
                              && (grandparentNode.PreviousSibling.PreviousSibling != null
                                  && (grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling != null
-                                     && (!grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml
+                                     && (!grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.InnerText
                                                          .IsNullOrEmpty()
-                                         && grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml
+                                         && grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.InnerText
                                          != "\n"))))
                     {
                         previousContent = grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling;
