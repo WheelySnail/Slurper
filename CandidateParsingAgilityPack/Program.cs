@@ -11,6 +11,8 @@
 
     using HtmlAgilityPack;
 
+    using Newtonsoft.Json;
+
     using numl.Model;
     using numl.Supervised;
     using numl.Supervised.DecisionTree;
@@ -23,24 +25,22 @@
         {
             // ItemLevelCandidates retrieves list item/ table row level candidates representing a relationship between one company and one brand
             // Change to false to retrieve list/ table level candidates representing one company and any of its brands present in that block
-            const bool ItemLevelCandidates = true;
+            const bool ItemLevelCandidates = false;
 
             var knownCompanyBrandRelationships = FreeBaseHelpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
 
-            var positiveTrainingCandidates = GetPositiveTrainingCandidates(
-                                                                           knownCompanyBrandRelationships,
-                                                                           ItemLevelCandidates);
-
-            var negativeTrainingCandidates = GetNegativeTrainingCandidates(
-                                                                           knownCompanyBrandRelationships,
-                                                                           ItemLevelCandidates);
-
             var trainingCandidates = new List<Candidate>();
-            trainingCandidates.AddRange(positiveTrainingCandidates);
-            trainingCandidates.AddRange(negativeTrainingCandidates);
+
+            trainingCandidates.AddRange(GetPositiveTrainingCandidates(
+                                                                           knownCompanyBrandRelationships,
+                                                                           ItemLevelCandidates));
+
+            trainingCandidates.AddRange(GetNegativeTrainingCandidates(
+                                                                           knownCompanyBrandRelationships,
+                                                                           ItemLevelCandidates));
 
             var testCandidates = GetTestCandidates(knownCompanyBrandRelationships, ItemLevelCandidates);
-
+            
             var model = GenerateModel(trainingCandidates);
 
             Console.WriteLine(model);
@@ -123,6 +123,15 @@
             var testBrands = Helpers.GetTestBrands(companyBrandRelationships);
 
             var testCompanies = Helpers.GetTestCompanies(companyBrandRelationships);
+
+            // TODO Remove duplicates between the two lists
+            //for (int i = testBrands.Count; i >= 0; i--)
+            //{
+            //    if (testCompanies.Any(tc => tc.Equals(testBrands[i])))
+            //    {
+            //        testBrands.RemoveAt(i);
+            //    }
+            //}
 
             var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
             // TODO use real data
