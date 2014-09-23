@@ -130,7 +130,9 @@
                     {
                         var domainOrTitleContainsPotentialOwner = false;
 
-                        var initialCandidateOrPreviousSiblingContainsPotentialOwner = false;
+                        var previousContentContainsPotentialOwner = false;
+
+                        var candidateHtmlContainsPotentialOwner = false;
 
                         var previousContent = GetPreviousRelevantNode(initialcandidate);
 
@@ -147,15 +149,18 @@
                             domainOrTitleContainsPotentialOwner = true;
                         }
                         if (initialcandidate.Node.OuterHtml.ToLowerInvariant()
-                                            .Contains(company.ToLowerInvariant() + " ")
-                            || previousContentOuterHtml.ToLowerInvariant().Contains(company.ToLowerInvariant() + " "))
+                                            .Contains(company.ToLowerInvariant() + " "))
                         {
-                            initialCandidateOrPreviousSiblingContainsPotentialOwner = true;
+                            candidateHtmlContainsPotentialOwner = true;
+                        }
+                        if (previousContentOuterHtml.ToLowerInvariant().Contains(company.ToLowerInvariant() + " "))
+                        {
+                            previousContentContainsPotentialOwner = true;
                         }
 
                         // If a company name is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
                         if (domainOrTitleContainsPotentialOwner
-                            || initialCandidateOrPreviousSiblingContainsPotentialOwner)
+                            || candidateHtmlContainsPotentialOwner || previousContentContainsPotentialOwner)
                         {
                             var brandsPresentInInitialCandidate = new List<string>();
 
@@ -233,6 +238,8 @@
                                                                         KnownBrand = brand,
                                                                         DomainOrPageTitleContainsOwner =
                                                                                 domainOrTitleContainsPotentialOwner,
+                                                                        PreviousContentContainsPotentialOwner = previousContentContainsPotentialOwner,
+                                                                        CandidateHtmlContainsPotentialOwner = candidateHtmlContainsPotentialOwner,
                                                                         Uri = page,
                                                                         PageTitle = title,
                                                                         ContainsMultipleBrands =
@@ -275,6 +282,8 @@
                                                                 KnownBrands = brandsPresentInInitialCandidate,
                                                                 DomainOrPageTitleContainsOwner =
                                                                         domainOrTitleContainsPotentialOwner,
+                                                                PreviousContentContainsPotentialOwner = previousContentContainsPotentialOwner,
+                                                                CandidateHtmlContainsPotentialOwner = candidateHtmlContainsPotentialOwner,
                                                                 Uri = page,
                                                                 PageTitle = title,
                                                                 ContainsMultipleBrands =
@@ -355,7 +364,9 @@
                     {
                         var domainOrTitleContainsOwner = false;
 
-                        var initialCandidateOrPreviousSiblingContainOwner = false;
+                        var candidateHtmlContainsPotentialOwner = false;
+
+                        var previousContentContainsPotentialOwner = false;
 
                         var previousContent = GetPreviousRelevantNode(initialcandidate);
 
@@ -374,16 +385,20 @@
                             }
                             if (
                                     initialcandidate.Node.OuterHtml.ToLowerInvariant()
-                                                    .Contains(ownerSynonym.ToLowerInvariant() + " ")
-                                    || previousContentOuterHtml.ToLowerInvariant()
-                                                      .Contains(ownerSynonym.ToLowerInvariant() + " "))
+                                                    .Contains(ownerSynonym.ToLowerInvariant() + " "))
                             {
-                                initialCandidateOrPreviousSiblingContainOwner = true;
+                                candidateHtmlContainsPotentialOwner = true;
+                            }
+                            if (
+                                    previousContentOuterHtml.ToLowerInvariant()
+                                                            .Contains(ownerSynonym.ToLowerInvariant() + " "))
+                            {
+                                previousContentContainsPotentialOwner = true;
                             }
                         }
 
                         // If the company name for the relation is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
-                        if (domainOrTitleContainsOwner || initialCandidateOrPreviousSiblingContainOwner)
+                        if (domainOrTitleContainsOwner || candidateHtmlContainsPotentialOwner || previousContentContainsPotentialOwner)
                         {
                             var knownBrandsPresent = new List<string>();
 
@@ -461,6 +476,8 @@
                                                                         KnownCompanyAndBrands = relation,
                                                                         DomainOrPageTitleContainsOwner =
                                                                                 domainOrTitleContainsOwner,
+                                                                        PreviousContentContainsPotentialOwner = previousContentContainsPotentialOwner,
+                                                                        CandidateHtmlContainsPotentialOwner = candidateHtmlContainsPotentialOwner,
                                                                         Uri = page,
                                                                         PageTitle = title,
                                                                         ContainsMultipleBrands =
@@ -504,6 +521,8 @@
                                                                 KnownCompanyAndBrands = relation,
                                                                 DomainOrPageTitleContainsOwner =
                                                                         domainOrTitleContainsOwner,
+                                                                PreviousContentContainsPotentialOwner = previousContentContainsPotentialOwner,
+                                                                CandidateHtmlContainsPotentialOwner = candidateHtmlContainsPotentialOwner,
                                                                 Uri = page,
                                                                 PageTitle = title,
                                                                 ContainsMultipleBrands =

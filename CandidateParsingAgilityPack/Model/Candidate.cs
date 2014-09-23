@@ -47,9 +47,6 @@ namespace CandidateParsingAgilityPack.Model
 
         //public List<String> NamedEntities { get; set; }
 
-        //[Feature]
-        //public String NumberOfTokens { get; set; }
-
         [Feature]
         public String PageTitle { get; set; }
 
@@ -66,6 +63,8 @@ namespace CandidateParsingAgilityPack.Model
 
         public List<string> WordsInCandidateHtml { get; set; }
 
-        //public List<String> UriSegments { get; set; }
+        public bool PreviousContentContainsPotentialOwner { get; set; }
+
+        public bool CandidateHtmlContainsPotentialOwner { get; set; }
     }
 }
