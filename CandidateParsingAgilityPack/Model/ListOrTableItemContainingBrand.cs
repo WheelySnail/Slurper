@@ -2,7 +2,7 @@ namespace CandidateParsingAgilityPack.Model
 {
     using System.Collections.Generic;
 
-    internal class ListOrTableItemContainingBrand 
+    internal class ListOrTableItem 
     {
         public string ItemHtml { get; set; }
 
@@ -13,5 +13,7 @@ namespace CandidateParsingAgilityPack.Model
         public string KnownBrand { get; set; }
 
         public bool ContainsBrandOnly { get; set; }
+
+        public string ItemInnerText { get; set; }
     }
 }
