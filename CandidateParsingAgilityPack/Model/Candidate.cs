@@ -66,5 +66,7 @@ namespace CandidateParsingAgilityPack.Model
         public bool PreviousContentContainsPotentialOwner { get; set; }
 
         public bool CandidateHtmlContainsPotentialOwner { get; set; }
+
+        public bool ItemsContainBrandOnly { get; set; }
     }
 }

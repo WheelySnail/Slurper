@@ -40,7 +40,7 @@
                                                                            ItemLevelCandidates));
 
             var testCandidates = GetTestCandidates(knownCompanyBrandRelationships, ItemLevelCandidates);
-            
+
             var model = GenerateModel(trainingCandidates);
 
             Console.WriteLine(model);

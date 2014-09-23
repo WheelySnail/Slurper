@@ -178,43 +178,94 @@
 
                             if (brandsPresentInInitialCandidate.Count > 0)
                             {
-                                // Process to create a candidate for each individual list item or table row containing a brand for the relation
-                                if (itemBrandLevelCandidates)
+                                var itemsWithBrandsForWholeCandidate = new List<ListOrTableItemContainingBrand>();
+
+                                var wordsInPreviousContent = new List<string>();
+
+                                if (previousContent != null)
                                 {
-                                    foreach (var brand in brandsPresentInInitialCandidate)
+                                    wordsInPreviousContent = previousContent.InnerText.Split(new char[] { '.', '?', '!', ' ', ';', ':', ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                                }
+
+                                // Get any LI or TD element surrounding each brand mention
+                                foreach (var brand in brandsPresentInInitialCandidate)
+                                {
+                                    var innerSegments = new List<HtmlNode>();
+
+                                    var itemsWithBrand = new List<ListOrTableItemContainingBrand>();
+
+                                    if (initialcandidate.Type == "list")
                                     {
-                                        var innerSegments = new List<HtmlNode>();
+                                        innerSegments.AddRange(
+                                                               initialcandidate.Node.Descendants("li")
+                                                                               .ToList()
+                                                                               .Where(
+                                                                                      listItem =>
+                                                                                      listItem.OuterHtml
+                                                                                              .ToLowerInvariant()
+                                                                                              .Contains(
+                                                                                                        brand
+                                                                                                                .ToLowerInvariant
+                                                                                                                ())));
+                                    }
+                                    else if (initialcandidate.Type == "table")
+                                    {
+                                        innerSegments.AddRange(
+                                                               initialcandidate.Node.Descendants("tr")
+                                                                               .ToList()
+                                                                               .Where(
+                                                                                      listItem =>
+                                                                                      listItem.OuterHtml
+                                                                                              .ToLowerInvariant()
+                                                                                              .Contains(
+                                                                                                        brand
+                                                                                                                .ToLowerInvariant
+                                                                                                                ())));
+                                    }
 
-                                        if (initialcandidate.Type == "list")
-                                        {
-                                            innerSegments.AddRange(
-                                                                   initialcandidate.Node.Descendants("li")
-                                                                                   .ToList()
-                                                                                   .Where(
-                                                                                          listItem =>
-                                                                                          listItem.OuterHtml
-                                                                                                  .ToLowerInvariant()
-                                                                                                  .Contains(
-                                                                                                            brand
-                                                                                                                    .ToLowerInvariant
-                                                                                                                    ())));
-                                        }
-                                        else if (initialcandidate.Type == "table")
-                                        {
-                                            innerSegments.AddRange(
-                                                                   initialcandidate.Node.Descendants("tr")
-                                                                                   .ToList()
-                                                                                   .Where(
-                                                                                          listItem =>
-                                                                                          listItem.OuterHtml
-                                                                                                  .ToLowerInvariant()
-                                                                                                  .Contains(
-                                                                                                            brand
-                                                                                                                    .ToLowerInvariant
-                                                                                                                    ())));
-                                        }
+                                    foreach (var innerSegment in innerSegments)
+                                    {
+                                        var trimmedText = innerSegment.InnerText.Trim();
 
-                                        foreach (var innerSegment in innerSegments)
+                                        const string LineBreaks = "\n";
+
+                                        Regex.Replace(trimmedText, LineBreaks, "");
+
+                                        var wordsInInnerSegment =
+                                                trimmedText.Split(
+                                                                             new char[]
+                                                                                 {
+                                                                                         '.',
+                                                                                         '?',
+                                                                                         '!',
+                                                                                         ' ',
+                                                                                         ';',
+                                                                                         ':',
+                                                                                         ','
+                                                                                 },
+                                                                             StringSplitOptions.RemoveEmptyEntries)
+                                                            .ToList();
+
+                                        var itemWithBrand = new ListOrTableItemContainingBrand
+                                        {
+                                            ItemHtml =
+                                                    safey.Sanitize(
+                                                                   innerSegment
+                                                                           .OuterHtml),
+                                            ItemWordCount = wordsInInnerSegment.Count(),
+                                            WordsInItem = wordsInInnerSegment,
+                                            KnownBrand = brand,
+                                            ContainsBrandOnly = innerSegment.InnerText.ToLowerInvariant().Equals(brand.ToLowerInvariant())
+                                        };
+
+                                        itemsWithBrand.Add(itemWithBrand);
+                                        itemsWithBrandsForWholeCandidate.Add(itemWithBrand);
+                                    }
+
+                                    // Create a candidate for each individual list item or table row containing a brand for the relation 
+                                    if (itemBrandLevelCandidates)
+                                    {
+                                        foreach (var listOrTableItemContainingBrand in itemsWithBrand)
                                         {
                                             var candidate = new Candidate
                                                                 {
@@ -228,10 +279,11 @@
                                                                         PreviousContent =
                                                                                 safey.Sanitize(
                                                                                                previousContentOuterHtml),
-                                                                        CandidateHtml =
-                                                                                safey.Sanitize(
-                                                                                               innerSegment
-                                                                                                       .OuterHtml),
+                                                                        PreviousContentWordCount = wordsInPreviousContent.Count(),
+                                                                        WordsInPreviousContent = wordsInPreviousContent,
+                                                                        CandidateHtml = listOrTableItemContainingBrand.ItemHtml,
+                                                                        CandidateHtmlWordCount = listOrTableItemContainingBrand.ItemWordCount,
+                                                                        WordsInCandidateHtml = listOrTableItemContainingBrand.WordsInItem,
                                                                         KnownCompanyNames = new List<string>(),
                                                                         KnownBrands =
                                                                                 brandsPresentInInitialCandidate,
@@ -252,43 +304,41 @@
                                     }
                                 }
 
-                                        // Process to create a candidate for each whole list or table and all its brands
-                                else
+                                // Process to create a candidate for each whole list or table and all its brands
+                                if (itemBrandLevelCandidates == false)
                                 {
-                                    var wordsInPreviousContent = new List<string>();
-                                    if (previousContent != null)
-                                    {
-                                        wordsInPreviousContent = previousContent.InnerText.Split(new char[] { '.', '?', '!', ' ', ';', ':', ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                                    }
-
                                     var wordsInCandidateHtml = initialcandidate.Node.InnerText.Split(new char[] { '.', '?', '!', ' ', ';', ':', ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
 
+                                    // Check if every item in the candidate found to contain a brand only contains the brand
+                                    bool brandsOnly = itemsWithBrandsForWholeCandidate.TrueForAll(
+                                                                                                  iwb => iwb.ContainsBrandOnly);
                                     var candidate = new Candidate
-                                                        {
-                                                                IsTableSegment = initialcandidate.Type == "table",
-                                                                IsListSegment = initialcandidate.Type == "list",
-                                                                IsItemLevelCandidate = false,
-                                                                PreviousContent = safey.Sanitize(previousContentOuterHtml),
-                                                                PreviousContentWordCount = wordsInPreviousContent.Count(),
-                                                                WordsInPreviousContent = wordsInPreviousContent,
-                                                                CandidateHtml =
-                                                                        safey.Sanitize(
-                                                                                       initialcandidate.Node
-                                                                                                       .OuterHtml),
-                                                                
-                                                                CandidateHtmlWordCount = wordsInCandidateHtml.Count(),
-                                                                WordsInCandidateHtml = wordsInCandidateHtml,
-                                                                KnownCompanyNames = new List<String>(),
-                                                                KnownBrands = brandsPresentInInitialCandidate,
-                                                                DomainOrPageTitleContainsOwner =
-                                                                        domainOrTitleContainsPotentialOwner,
-                                                                PreviousContentContainsPotentialOwner = previousContentContainsPotentialOwner,
-                                                                CandidateHtmlContainsPotentialOwner = candidateHtmlContainsPotentialOwner,
-                                                                Uri = page,
-                                                                PageTitle = title,
-                                                                ContainsMultipleBrands =
-                                                                        brandsPresentInInitialCandidate.Count > 1,
-                                                        };
+                                    {
+                                        IsTableSegment = initialcandidate.Type == "table",
+                                        IsListSegment = initialcandidate.Type == "list",
+                                        IsItemLevelCandidate = false,
+                                        PreviousContent = safey.Sanitize(previousContentOuterHtml),
+                                        PreviousContentWordCount = wordsInPreviousContent.Count(),
+                                        WordsInPreviousContent = wordsInPreviousContent,
+                                        CandidateHtml =
+                                                safey.Sanitize(
+                                                               initialcandidate.Node
+                                                                               .OuterHtml),
+
+                                        CandidateHtmlWordCount = wordsInCandidateHtml.Count(),
+                                        WordsInCandidateHtml = wordsInCandidateHtml,
+                                        KnownCompanyNames = new List<String>(),
+                                        KnownBrands = brandsPresentInInitialCandidate,
+                                        DomainOrPageTitleContainsOwner =
+                                                domainOrTitleContainsPotentialOwner,
+                                        PreviousContentContainsPotentialOwner = previousContentContainsPotentialOwner,
+                                        CandidateHtmlContainsPotentialOwner = candidateHtmlContainsPotentialOwner,
+                                        Uri = page,
+                                        PageTitle = title,
+                                        ContainsMultipleBrands =
+                                                brandsPresentInInitialCandidate.Count > 1,
+                                        ItemsContainBrandOnly = brandsOnly
+                                    };
                                     candidate.KnownCompanyNames.Add(company);
                                     testCandidates.Add(candidate);
                                 }
@@ -415,12 +465,22 @@
 
                             if (knownBrandsPresent.Count > 0)
                             {
-                                // Process to create a candidate for each individual list item or table row containing a brand for the relation
-                                if (itemBrandLevelCandidates)
+                                var itemsWithBrandsForWholeCandidate = new List<ListOrTableItemContainingBrand>();
+
+                                var wordsInPreviousContent = new List<string>();
+
+                                if (previousContent != null)
                                 {
+                                    wordsInPreviousContent = previousContent.InnerText.Split(new char[] { '.', '?', '!', ' ', ';', ':', ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                                }
+
+
+                           // Get any LI or TD element surrounding each brand mention
                                     foreach (var brand in knownBrandsPresent)
                                     {
                                         var innerSegments = new List<HtmlNode>();
+
+                                        var itemsWithBrand = new List<ListOrTableItemContainingBrand>();
 
                                         if (initialcandidate.Type == "list")
                                         {
@@ -451,9 +511,50 @@
                                                                                                                     ())));
                                         }
 
-                                        foreach (var innerSegment in innerSegments)
+                                    foreach (var innerSegment in innerSegments)
+                                    {
+                                        var trimmedText = innerSegment.InnerText.Trim();
+
+                                        const string LineBreaks = "\n";
+
+                                        Regex.Replace(trimmedText, LineBreaks, "");
+
+                                        var wordsInInnerSegment =
+                                                trimmedText.Split(
+                                                                             new char[]
+                                                                                 {
+                                                                                         '.',
+                                                                                         '?',
+                                                                                         '!',
+                                                                                         ' ',
+                                                                                         ';',
+                                                                                         ':',
+                                                                                         ','
+                                                                                 },
+                                                                             StringSplitOptions.RemoveEmptyEntries)
+                                                            .ToList();
+
+                                        var itemWithBrand = new ListOrTableItemContainingBrand
                                         {
-                                            var candidate = new Candidate
+                                            ItemHtml =
+                                                    safey.Sanitize(
+                                                                   innerSegment
+                                                                           .OuterHtml),
+                                            ItemWordCount = wordsInInnerSegment.Count(),
+                                            WordsInItem = wordsInInnerSegment,
+                                            KnownBrand = brand,
+                                            ContainsBrandOnly = innerSegment.InnerText.ToLowerInvariant().Equals(brand.ToLowerInvariant())
+                                        };
+
+                                        itemsWithBrand.Add(itemWithBrand);
+                                        itemsWithBrandsForWholeCandidate.Add(itemWithBrand);
+                                    }
+                                         //Process to create item level candidates
+                                        if (itemBrandLevelCandidates)
+                                        {
+                                            foreach (var listOrTableItemContainingBrand in itemsWithBrand)
+                                            {
+                                                var candidate = new Candidate
                                                                 {
                                                                         IsTableSegment =
                                                                                 initialcandidate.Type
@@ -465,10 +566,7 @@
                                                                         PreviousContent =
                                                                                 safey.Sanitize(
                                                                                                previousContentOuterHtml),
-                                                                        CandidateHtml =
-                                                                                safey.Sanitize(
-                                                                                               innerSegment
-                                                                                                       .OuterHtml),
+                                                                        CandidateHtml = listOrTableItemContainingBrand.ItemHtml,
                                                                         KnownCompanyNames =
                                                                                 relation.CompanyNames,
                                                                         KnownBrands = knownBrandsPresent,
@@ -485,22 +583,19 @@
                                                                         CompanyBrandRelationship =
                                                                                 positiveCandidates
                                                                 };
-                                            candidates.Add(candidate);
+                                                candidates.Add(candidate);
+                                            }
                                         }
                                     }
-                                }
-
-                                        // Process to create a candidate for each whole list or table and all its brands
-                                else
+                                
+                                    // Process to create a candidate for each whole list or table and all its brands
+                                if (itemBrandLevelCandidates == false)
                                 {
-                                    var wordsInPreviousContent = new List<string>();
-
-                                    if (previousContent != null)
-                                    {
-                                        wordsInPreviousContent = previousContent.InnerText.Split(new char[] { '.', '?', '!', ' ', ';', ':', ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                                    }
-
                                     var wordsInCandidateHtml = initialcandidate.Node.InnerText.Split(new char[] { '.', '?', '!', ' ', ';', ':', ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+                                    // Check if every item in the candidate found to contain a brand only contains the brand
+                                    bool brandsOnly = itemsWithBrandsForWholeCandidate.TrueForAll(
+                                                                                                  iwb => iwb.ContainsBrandOnly);
 
                                     var candidate = new Candidate
                                                         {
@@ -527,7 +622,8 @@
                                                                 PageTitle = title,
                                                                 ContainsMultipleBrands =
                                                                         knownBrandsPresent.Count > 1,
-                                                                CompanyBrandRelationship = positiveCandidates
+                                                                CompanyBrandRelationship = positiveCandidates,
+                                                                ItemsContainBrandOnly = brandsOnly,
                                                         };
                                     candidates.Add(candidate);
                                 }
