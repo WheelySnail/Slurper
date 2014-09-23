@@ -169,7 +169,7 @@
                             {
                                 var brandOnItsOwn = new Regex(@"\b" + brand.ToLowerInvariant() + @"\b");
                                 if (
-                                        brandOnItsOwn.IsMatch(initialcandidate.Node.OuterHtml.ToLowerInvariant()))
+                                        brandOnItsOwn.IsMatch(initialcandidate.Node.OuterHtml.ToLowerInvariant()) && company.ToLowerInvariant() != brand.ToLowerInvariant())
                                 {
                                     brandsPresentInInitialCandidate.Add(brand);
                                 }
@@ -407,7 +407,7 @@
                             {
                                 var brandOnItsOwn = new Regex(@"\b" + brand.ToLowerInvariant() + @"\b");
                                 if (
-                                        brandOnItsOwn.IsMatch(initialcandidate.Node.OuterHtml.ToLowerInvariant()))
+                                        brandOnItsOwn.IsMatch(initialcandidate.Node.OuterHtml.ToLowerInvariant()) && relation.CompanyNames.FirstOrDefault().ToLowerInvariant() != brand.ToLowerInvariant())
                                 {
                                     knownBrandsPresent.Add(brand);
                                 }
@@ -574,8 +574,8 @@
                 }
             }
 
-            var troublesomeBrands = new List<String> { "ee", "bury", "et", "ion", "ist", "ngs", "ry", "ss", "ting", "up", "ls", "oe", "may", "div", "se", "od", "tr", "ns", "ge", "ms", "ic", "am", "chocolate", "fruit", "green", "mini", "his", "ge", "ns", "pa", "ams", "none", "sen", "ips", "premium", "ps", "ub", "at" };
-            var brandStopList = new List<String> { "bury", "ting", "may", "div", "chocolate", "fruit", "green", "mini", "his", "none", "food", "sen", "ips", "premium", "ion", "ist", "ngs", "ams", "none", "ist", "rts", "book", "official", "entity", "ref", "image", "border", "icon", "max", "bold", "default", "amp", "august", "rft", "non" };
+            var troublesome2LetterBrands = new List<String> { "ee", "et", "ry", "ss", "up", "ls", "oe", "se", "od", "tr", "ns", "ge", "ms", "ic", "am", "ge", "ns", "pa", "ips", "ps", "ub", "at" };
+            var brandStopList = new List<String> { "bury", "ting", "may", "div", "chocolate", "fruit", "green", "mini", "his", "none", "food", "sen", "ips", "premium", "ion", "ist", "ngs", "ams", "none", "ist", "rts", "book", "official", "entity", "ref", "image", "border", "icon", "max", "bold", "default", "amp", "august", "rft", "non", "various", "ips" };
 
             foreach (var stopListBrand in brandStopList)
             {
