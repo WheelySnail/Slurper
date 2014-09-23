@@ -179,7 +179,6 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="json1.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
