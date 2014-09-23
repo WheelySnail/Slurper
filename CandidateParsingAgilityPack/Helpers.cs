@@ -556,9 +556,11 @@
                 amazonBrands.AddRange(File.ReadLines(file.FullName));
             }
 
+            var uniqueBrands = amazonBrands.Distinct().ToList();
+
             var newBrands = new List<String>();
 
-            foreach (var brand in amazonBrands)
+            foreach (var brand in uniqueBrands)
             {
                 var trimmedBrand = brand.Trim();
 
