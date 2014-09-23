@@ -58,6 +58,14 @@ namespace CandidateParsingAgilityPack.Model
 
         public string Uri { get; set; }
 
+        public int PreviousContentWordCount { get; set; }
+
+        public int CandidateHtmlWordCount { get; set; }
+
+        public List<String> WordsInPreviousContent { get; set; }
+
+        public List<string> WordsInCandidateHtml { get; set; }
+
         //public List<String> UriSegments { get; set; }
     }
 }

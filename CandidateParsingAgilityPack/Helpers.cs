@@ -134,6 +134,10 @@
 
                         var previousContent = GetPreviousRelevantNode(initialcandidate);
 
+                        var previousContentOuterHtml = previousContent == null
+                                                               ? ""
+                                                               : previousContent.OuterHtml;
+
                         // Check that the owner name for the relation is present in the title, domain, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
                         // Only use one company name at the moment so a loop isn't necessary
 
@@ -144,7 +148,7 @@
                         }
                         if (initialcandidate.Node.OuterHtml.ToLowerInvariant()
                                             .Contains(company.ToLowerInvariant() + " ")
-                            || previousContent.ToLowerInvariant().Contains(company.ToLowerInvariant() + " "))
+                            || previousContentOuterHtml.ToLowerInvariant().Contains(company.ToLowerInvariant() + " "))
                         {
                             initialCandidateOrPreviousSiblingContainsPotentialOwner = true;
                         }
@@ -218,7 +222,7 @@
                                                                         IsItemLevelCandidate = true,
                                                                         PreviousContent =
                                                                                 safey.Sanitize(
-                                                                                               previousContent),
+                                                                                               previousContentOuterHtml),
                                                                         CandidateHtml =
                                                                                 safey.Sanitize(
                                                                                                innerSegment
@@ -244,16 +248,29 @@
                                         // Process to create a candidate for each whole list or table and all its brands
                                 else
                                 {
+                                    var wordsInPreviousContent = new List<string>();
+                                    if (previousContent != null)
+                                    {
+                                        wordsInPreviousContent = previousContent.InnerText.Split(new char[] { '.', '?', '!', ' ', ';', ':', ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                                    }
+
+                                    var wordsInCandidateHtml = initialcandidate.Node.InnerText.Split(new char[] { '.', '?', '!', ' ', ';', ':', ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
                                     var candidate = new Candidate
                                                         {
                                                                 IsTableSegment = initialcandidate.Type == "table",
                                                                 IsListSegment = initialcandidate.Type == "list",
                                                                 IsItemLevelCandidate = false,
-                                                                PreviousContent = safey.Sanitize(previousContent),
+                                                                PreviousContent = safey.Sanitize(previousContentOuterHtml),
+                                                                PreviousContentWordCount = wordsInPreviousContent.Count(),
+                                                                WordsInPreviousContent = wordsInPreviousContent,
                                                                 CandidateHtml =
                                                                         safey.Sanitize(
                                                                                        initialcandidate.Node
                                                                                                        .OuterHtml),
+                                                                
+                                                                CandidateHtmlWordCount = wordsInCandidateHtml.Count(),
+                                                                WordsInCandidateHtml = wordsInCandidateHtml,
                                                                 KnownCompanyNames = new List<String>(),
                                                                 KnownBrands = brandsPresentInInitialCandidate,
                                                                 DomainOrPageTitleContainsOwner =
@@ -342,6 +359,10 @@
 
                         var previousContent = GetPreviousRelevantNode(initialcandidate);
 
+                        var previousContentOuterHtml = previousContent == null
+                                                               ? ""
+                                                               : previousContent.OuterHtml;
+
                         // Check that the owner name for the relation is present in the title, domain, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
                         // Only use one company name at the moment so a loop isn't necessary
                         foreach (var ownerSynonym in relation.CompanyNames)
@@ -354,7 +375,7 @@
                             if (
                                     initialcandidate.Node.OuterHtml.ToLowerInvariant()
                                                     .Contains(ownerSynonym.ToLowerInvariant() + " ")
-                                    || previousContent.ToLowerInvariant()
+                                    || previousContentOuterHtml.ToLowerInvariant()
                                                       .Contains(ownerSynonym.ToLowerInvariant() + " "))
                             {
                                 initialCandidateOrPreviousSiblingContainOwner = true;
@@ -366,7 +387,7 @@
                         {
                             var knownBrandsPresent = new List<string>();
 
-                            // For each brand owned by the company
+                            // For each brand owned by the company, for this relation
                             foreach (var brand in relation.BrandNames)
                             {
                                 var brandOnItsOwn = new Regex(@"\b" + brand.ToLowerInvariant() + @"\b");
@@ -374,7 +395,6 @@
                                         brandOnItsOwn.IsMatch(initialcandidate.Node.OuterHtml.ToLowerInvariant()))
                                 {
                                     knownBrandsPresent.Add(brand);
-                                    // Create a candidate here if want item level candidates? But now to check 'multiple'? 
                                 }
                             }
 
@@ -429,7 +449,7 @@
                                                                         IsItemLevelCandidate = true,
                                                                         PreviousContent =
                                                                                 safey.Sanitize(
-                                                                                               previousContent),
+                                                                                               previousContentOuterHtml),
                                                                         CandidateHtml =
                                                                                 safey.Sanitize(
                                                                                                innerSegment
@@ -456,16 +476,29 @@
                                         // Process to create a candidate for each whole list or table and all its brands
                                 else
                                 {
+                                    var wordsInPreviousContent = new List<string>();
+
+                                    if (previousContent != null)
+                                    {
+                                        wordsInPreviousContent = previousContent.InnerText.Split(new char[] { '.', '?', '!', ' ', ';', ':', ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                                    }
+
+                                    var wordsInCandidateHtml = initialcandidate.Node.InnerText.Split(new char[] { '.', '?', '!', ' ', ';', ':', ',' }, StringSplitOptions.RemoveEmptyEntries);
+
                                     var candidate = new Candidate
                                                         {
                                                                 IsTableSegment = initialcandidate.Type == "table",
                                                                 IsListSegment = initialcandidate.Type == "list",
                                                                 IsItemLevelCandidate = false,
-                                                                PreviousContent = safey.Sanitize(previousContent),
+                                                                PreviousContent = safey.Sanitize(previousContentOuterHtml),
+                                                                WordsInPreviousContent = wordsInPreviousContent.ToList(),
+                                                                PreviousContentWordCount = wordsInPreviousContent.Count(),
                                                                 CandidateHtml =
                                                                         safey.Sanitize(
                                                                                        initialcandidate.Node
                                                                                                        .OuterHtml),
+                                                                WordsInCandidateHtml = wordsInCandidateHtml.ToList(),
+                                                                CandidateHtmlWordCount = wordsInCandidateHtml.Count(),
                                                                 KnownCompanyNames = relation.CompanyNames,
                                                                 KnownBrands = knownBrandsPresent,
                                                                 KnownCompanyAndBrands = relation,
@@ -614,9 +647,9 @@
             return companiesMentionedOnPage;
         }
 
-        private static string GetPreviousRelevantNode(InitialCandidate initialcandidate)
+        private static HtmlNode GetPreviousRelevantNode(InitialCandidate initialcandidate)
         {
-            var previousContent = "";
+            HtmlNode previousContent = null;
             var previousSibling = initialcandidate.Node.PreviousSibling;
             var parentNode = initialcandidate.Node.ParentNode;
             var grandparentNode = initialcandidate.Node.ParentNode.ParentNode;
@@ -624,7 +657,7 @@
             // Check the three preceeding previous siblings
             if (!previousSibling.OuterHtml.IsNullOrEmpty() && previousSibling.OuterHtml != "\n")
             {
-                previousContent = previousSibling.OuterHtml;
+                previousContent = previousSibling;
             }
             else
             {
@@ -632,25 +665,25 @@
                     && (!previousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
                         && previousSibling.PreviousSibling.OuterHtml != "\n"))
                 {
-                    previousContent = previousSibling.PreviousSibling.OuterHtml;
+                    previousContent = previousSibling.PreviousSibling;
                 }
                 else if (previousSibling.PreviousSibling != null
                          && (previousSibling.PreviousSibling.PreviousSibling != null
                              && (!previousSibling.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
                                  && previousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
                 {
-                    previousContent = previousSibling.PreviousSibling.PreviousSibling.OuterHtml;
+                    previousContent = previousSibling.PreviousSibling.PreviousSibling;
                 }
             }
 
             // Check the three previous siblings of the parent sibling
-            if (previousContent.IsNullOrEmpty())
+            if (previousContent == null || previousContent.OuterHtml.IsNullOrEmpty())
             {
                 if (parentNode.PreviousSibling != null
                     && (!parentNode.PreviousSibling.OuterHtml.IsNullOrEmpty()
                         && parentNode.PreviousSibling.OuterHtml != "\n"))
                 {
-                    previousContent = parentNode.PreviousSibling.OuterHtml;
+                    previousContent = parentNode.PreviousSibling;
                 }
                 else
                 {
@@ -659,7 +692,7 @@
                             && (!parentNode.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
                                 && parentNode.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
                     {
-                        previousContent = parentNode.PreviousSibling.PreviousSibling.OuterHtml;
+                        previousContent = parentNode.PreviousSibling.PreviousSibling;
                     }
                     else if (parentNode.PreviousSibling != null
                              && (parentNode.PreviousSibling.PreviousSibling != null
@@ -668,19 +701,19 @@
                                                     .IsNullOrEmpty()
                                          && parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml != "\n"))))
                     {
-                        previousContent = parentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml;
+                        previousContent = parentNode.PreviousSibling.PreviousSibling.PreviousSibling;
                     }
                 }
             }
 
             // Check the three previous siblings of the grandparent sibling
-            if (previousContent.IsNullOrEmpty())
+            if (previousContent == null || previousContent.OuterHtml.IsNullOrEmpty())
             {
                 if (grandparentNode.PreviousSibling != null
                     && (!grandparentNode.PreviousSibling.OuterHtml.IsNullOrEmpty()
                         && grandparentNode.PreviousSibling.OuterHtml != "\n"))
                 {
-                    previousContent = grandparentNode.PreviousSibling.OuterHtml;
+                    previousContent = grandparentNode.PreviousSibling;
                 }
                 else
                 {
@@ -689,7 +722,7 @@
                             && (!grandparentNode.PreviousSibling.PreviousSibling.OuterHtml.IsNullOrEmpty()
                                 && grandparentNode.PreviousSibling.PreviousSibling.OuterHtml != "\n")))
                     {
-                        previousContent = grandparentNode.PreviousSibling.PreviousSibling.OuterHtml;
+                        previousContent = grandparentNode.PreviousSibling.PreviousSibling;
                     }
                     else if (grandparentNode.PreviousSibling != null
                              && (grandparentNode.PreviousSibling.PreviousSibling != null
@@ -699,7 +732,7 @@
                                          && grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml
                                          != "\n"))))
                     {
-                        previousContent = grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling.OuterHtml;
+                        previousContent = grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling;
                     }
                 }
             }
