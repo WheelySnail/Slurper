@@ -521,7 +521,7 @@
             }
 
             var troublesomeBrands = new List<String> { "ee", "bury", "et", "ion", "ist", "ngs", "ry", "ss", "ting", "up", "ls", "oe", "may", "div", "se", "od", "tr", "ns", "ge", "ms", "ic", "am", "chocolate", "fruit", "green", "mini", "his", "ge", "ns", "pa", "ams", "none", "sen", "ips", "premium", "ps", "ub", "at" };
-            var brandStopList = new List<String> { "bury", "ting", "may", "div", "chocolate", "fruit", "green", "mini", "his", "none", "sen", "ips", "premium", "ion", "ist", "ngs", "ams", "none", "ist", "rts", "book", "official", "entity", "ref", "image", "border" };
+            var brandStopList = new List<String> { "bury", "ting", "may", "div", "chocolate", "fruit", "green", "mini", "his", "none", "food", "sen", "ips", "premium", "ion", "ist", "ngs", "ams", "none", "ist", "rts", "book", "official", "entity", "ref", "image", "border", "icon", "max", "bold", "default", "amp", "august", "rft", "non" };
 
             foreach (var stopListBrand in brandStopList)
             {
@@ -569,19 +569,23 @@
 
             foreach (var candidate in candidates)
             {
-                file.WriteLine(
-                               "Contains company/brand relationship? " + candidate.CompanyBrandRelationship.ToString()
-                               + Environment.NewLine + Environment.NewLine + "Page title: " + candidate.PageTitle
-                               + Environment.NewLine + Environment.NewLine + "Known company: "
-                               + candidate.KnownCompanyNames.FirstOrDefault().ToString() + Environment.NewLine
-                               + "Known brand: " + candidate.KnownBrand + Environment.NewLine + Environment.NewLine
-                               + "Multiple brands present:" + candidate.ContainsMultipleBrands.ToString()
-                               + Environment.NewLine + "\r Previous Relevant Node: " + candidate.PreviousContent
-                               + Environment.NewLine + "\r Html: " + candidate.CandidateHtml + Environment.NewLine
-                               + Environment.NewLine);
+                if (candidate.KnownBrands != null)
+                {
+                    file.WriteLine(
+                                   "Contains company/brand relationship? " + candidate.CompanyBrandRelationship
+                                   + Environment.NewLine + Environment.NewLine + "Page title: " + candidate.PageTitle
+                                   + Environment.NewLine + Environment.NewLine + "Known company: "
+                                   + candidate.KnownCompanyNames.FirstOrDefault() + Environment.NewLine
+                                   + "Known brand: " + candidate.KnownBrand + Environment.NewLine + Environment.NewLine
+                                   + "Known brands: " + String.Join(", ", candidate.KnownBrands) + Environment.NewLine + Environment.NewLine
+                                   + "Multiple brands present:" + candidate.ContainsMultipleBrands
+                                   + Environment.NewLine + "\r Previous Relevant Node: " + candidate.PreviousContent
+                                   + Environment.NewLine + "\r Html: " + candidate.CandidateHtml + Environment.NewLine
+                                   + Environment.NewLine);
+                }
                 Console.WriteLine(
                                   candidate.PageTitle + Environment.NewLine + ' '
-                                  + candidate.KnownCompanyNames.FirstOrDefault().ToString() + Environment.NewLine + ' '
+                                  + candidate.KnownCompanyNames.FirstOrDefault() + Environment.NewLine + ' '
                                   + candidate.CandidateHtml + Environment.NewLine);
             }
 
