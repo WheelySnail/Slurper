@@ -4,14 +4,8 @@
 
     using System;
     using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
 
     using CandidateParsingAgilityPack.Model;
-
-    using HtmlAgilityPack;
-
-    using Newtonsoft.Json;
 
     using numl.Model;
     using numl.Supervised;
@@ -26,6 +20,10 @@
             // ItemLevelCandidates retrieves list item/ table row level candidates representing a relationship between one company and one brand
             // Change to false to retrieve list/ table level candidates representing one company and any of its brands present in that block
             const bool ItemLevelCandidates = false;
+
+            var sentence1 = "Apple Genius Bar are a type of shop";
+            var sentence2 = "Genius Bar";
+            var sentence3 = "Microsoft are a large corporation based in the USA";
 
             var knownCompanyBrandRelationships = FreeBaseHelpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
 
@@ -48,6 +46,8 @@
             ClassifyTestCandidates(testCandidates, model);
 
             Helpers.OutputCandidates(testCandidates, "labelledTestCandidates");
+
+            Helpers.OutputJsonResults(testCandidates);
 
             Console.ReadLine();
         }
@@ -134,11 +134,8 @@
             //}
 
             var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
-            // TODO use real data
 
             var testCandidates = Helpers.GetTestCandidatesFromPages(pages, testCompanies, testBrands, itemLevelCandidates);
-
-            Helpers.OutputCandidates(testCandidates, "unlabelledTestCandidates");
 
             return testCandidates;
         }
