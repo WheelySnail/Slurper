@@ -140,6 +140,10 @@
                                                                ? ""
                                                                : previousContent.OuterHtml;
 
+                        var previousContentInnerText = previousContent == null
+                                       ? ""
+                                       : previousContent.InnerText;
+
                         // Check that the owner name for the relation is present in the title, domain, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
                         // Only use one company name at the moment so a loop isn't necessary
 
@@ -153,7 +157,7 @@
                         {
                             candidateHtmlContainsPotentialOwner = true;
                         }
-                        if (previousContentOuterHtml.ToLowerInvariant().Contains(company.ToLowerInvariant() + " "))
+                        if (previousContentInnerText.ToLowerInvariant().Contains(company.ToLowerInvariant() + " "))
                         {
                             previousContentContainsPotentialOwner = true;
                         }
@@ -169,7 +173,7 @@
                             {
                                 var brandOnItsOwn = new Regex(@"\b" + brand.ToLowerInvariant() + @"\b");
                                 if (
-                                        brandOnItsOwn.IsMatch(initialcandidate.Node.OuterHtml.ToLowerInvariant()) && company.ToLowerInvariant() != brand.ToLowerInvariant())
+                                        brandOnItsOwn.IsMatch(initialcandidate.Node.InnerText.ToLowerInvariant()) && company.ToLowerInvariant() != brand.ToLowerInvariant())
                                 {
                                     brandsPresentInInitialCandidate.Add(brand);
                                 }
@@ -303,49 +307,53 @@
                                     bool someItemsHaveNoOtherTextExceptBrand = !itemsWithBrandsForWholeCandidate.IsNullOrEmpty() && itemsWithBrandsForWholeCandidate.Any(
                                                               iwb => iwb.ContainsBrandOnly);
 
-                                    var candidate = new Candidate
+                                    // Multiple candidates must contain the company name in either the page title or the previous content section.
+                                    if (previousContentContainsPotentialOwner || domainOrTitleContainsPotentialOwner)
                                     {
-                                        IsTableSegment = initialcandidate.Type == "table",
-                                        IsListSegment = initialcandidate.Type == "list",
-                                        IsItemLevelCandidate = false,
-                                        PreviousContent = safey.Sanitize(previousContentOuterHtml),
-                                        PreviousContentWordCount = wordsInPreviousContent.Count(),
-                                        WordsInPreviousContent = wordsInPreviousContent,
-                                        CandidateHtml =
-                                                safey.Sanitize(
-                                                               initialcandidate.Node
-                                                                               .OuterHtml),
-
-                                        CandidateHtmlWordCount = wordsInCandidateHtml.Count(),
-                                        WordsInCandidateHtml = wordsInCandidateHtml,
-                                        KnownCompanyNames = new List<String>(),
-                                        KnownBrands = brandsPresentInInitialCandidate,
-                                        DomainOrPageTitleContainsOwner =
-                                                domainOrTitleContainsPotentialOwner,
-                                        PreviousContentContainsPotentialOwner = previousContentContainsPotentialOwner,
-                                        CandidateHtmlContainsPotentialOwner = candidateHtmlContainsPotentialOwner,
-                                        Uri = page,
-                                        PageTitle = title,
-                                        ContainsMultipleBrands =
-                                                brandsPresentInInitialCandidate.Count > 1,
-                                        ItemsContainBrandOnly = noOtherTextExceptBrands
-                                    };
-
-                                    // If each list or table item with a brand contains only a brand name
-                                    if (someItemsHaveNoOtherTextExceptBrand)
-                                    {
-                                        foreach (var segment in allInnerSegments)
+                                        var candidate = new Candidate
                                         {
-                                            var cleanedSegment = CleanInnerText(segment);
-                                            if (!candidate.KnownBrands.Contains(cleanedSegment))
+                                            IsTableSegment = initialcandidate.Type == "table",
+                                            IsListSegment = initialcandidate.Type == "list",
+                                            IsItemLevelCandidate = false,
+                                            PreviousContent = safey.Sanitize(previousContentOuterHtml),
+                                            PreviousContentWordCount = wordsInPreviousContent.Count(),
+                                            WordsInPreviousContent = wordsInPreviousContent,
+                                            CandidateHtml =
+                                                    safey.Sanitize(
+                                                                   initialcandidate.Node
+                                                                                   .OuterHtml),
+
+                                            CandidateHtmlWordCount = wordsInCandidateHtml.Count(),
+                                            WordsInCandidateHtml = wordsInCandidateHtml,
+                                            KnownCompanyNames = new List<String>(),
+                                            KnownBrands = brandsPresentInInitialCandidate,
+                                            DomainOrPageTitleContainsOwner =
+                                                    domainOrTitleContainsPotentialOwner,
+                                            PreviousContentContainsPotentialOwner = previousContentContainsPotentialOwner,
+                                            CandidateHtmlContainsPotentialOwner = candidateHtmlContainsPotentialOwner,
+                                            Uri = page,
+                                            PageTitle = title,
+                                            ContainsMultipleBrands =
+                                                    brandsPresentInInitialCandidate.Count > 1,
+                                            ItemsContainBrandOnly = noOtherTextExceptBrands
+                                        };
+
+                                        // If each list or table item with a brand contains only a brand name
+                                        if (someItemsHaveNoOtherTextExceptBrand)
+                                        {
+                                            foreach (var segment in allInnerSegments)
                                             {
-                                                candidate.KnownBrands.Add(cleanedSegment);
+                                                var cleanedSegment = CleanInnerText(segment);
+                                                if (!candidate.KnownBrands.Contains(cleanedSegment))
+                                                {
+                                                    candidate.KnownBrands.Add(cleanedSegment);
+                                                }
                                             }
                                         }
-                                    }
 
-                                    candidate.KnownCompanyNames.Add(company);
-                                    testCandidates.Add(candidate);
+                                        candidate.KnownCompanyNames.Add(company);
+                                        testCandidates.Add(candidate);
+                                    }
                                 }
                             }
                         }
@@ -439,6 +447,10 @@
                                                                ? ""
                                                                : previousContent.OuterHtml;
 
+                        var previousContentInnerText = previousContent == null
+                                       ? ""
+                                       : previousContent.InnerText;
+
                         // Check that the owner name for the relation is present in the title, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
                         // Only use one company name at the moment so a loop isn't necessary
                         foreach (var ownerSynonym in relation.CompanyNames)
@@ -449,13 +461,13 @@
                                 domainOrTitleContainsOwner = true;
                             }
                             if (
-                                    initialcandidate.Node.OuterHtml.ToLowerInvariant()
+                                    initialcandidate.Node.InnerText.ToLowerInvariant()
                                                     .Contains(ownerSynonym.ToLowerInvariant() + " "))
                             {
                                 candidateHtmlContainsPotentialOwner = true;
                             }
                             if (
-                                    previousContentOuterHtml.ToLowerInvariant()
+                                    previousContentInnerText.ToLowerInvariant()
                                                             .Contains(ownerSynonym.ToLowerInvariant() + " "))
                             {
                                 previousContentContainsPotentialOwner = true;
@@ -470,9 +482,13 @@
                             // For each brand owned by the company, for this relation
                             foreach (var brand in relation.BrandNames)
                             {
+                                var namedEntitiesInCandidate = new List<string>();
+
+                                
+
                                 var brandOnItsOwn = new Regex(@"\b" + brand.ToLowerInvariant() + @"\b");
                                 if (
-                                        brandOnItsOwn.IsMatch(initialcandidate.Node.OuterHtml.ToLowerInvariant()) && relation.CompanyNames.FirstOrDefault().ToLowerInvariant() != brand.ToLowerInvariant())
+                                        brandOnItsOwn.IsMatch(initialcandidate.Node.InnerText.ToLowerInvariant()) && relation.CompanyNames.FirstOrDefault().ToLowerInvariant() != brand.ToLowerInvariant())
                                 {
                                     knownBrandsPresent.Add(brand);
                                 }
@@ -580,7 +596,7 @@
                                                                         IsItemLevelCandidate = true,
                                                                         PreviousContent =
                                                                                 safey.Sanitize(
-                                                                                               previousContentOuterHtml),
+                                                                                               previousContentInnerText),
                                                                         WordsInPreviousContent = wordsInPreviousContent.ToList(),
                                                                         PreviousContentWordCount = wordsInPreviousContent.Count(),
                                                                         CandidateHtml = listOrTableItemContainingBrand.ItemHtml,
@@ -617,35 +633,39 @@
                                     bool brandsOnly = itemsWithBrandsForWholeCandidate.TrueForAll(
                                                                                                   iwb => iwb.ContainsBrandOnly);
 
-                                    var candidate = new Candidate
-                                                        {
-                                                                IsTableSegment = initialcandidate.Type == "table",
-                                                                IsListSegment = initialcandidate.Type == "list",
-                                                                IsItemLevelCandidate = false,
-                                                                PreviousContent = safey.Sanitize(previousContentOuterHtml),
-                                                                WordsInPreviousContent = wordsInPreviousContent.ToList(),
-                                                                PreviousContentWordCount = wordsInPreviousContent.Count(),
-                                                                CandidateHtml =
-                                                                        safey.Sanitize(
-                                                                                       initialcandidate.Node
-                                                                                                       .OuterHtml),
-                                                                WordsInCandidateHtml = wordsInCandidateHtml.ToList(),
-                                                                CandidateHtmlWordCount = wordsInCandidateHtml.Count(),
-                                                                KnownCompanyNames = relation.CompanyNames,
-                                                                KnownBrands = knownBrandsPresent,
-                                                                KnownCompanyAndBrands = relation,
-                                                                DomainOrPageTitleContainsOwner =
-                                                                        domainOrTitleContainsOwner,
-                                                                PreviousContentContainsPotentialOwner = previousContentContainsPotentialOwner,
-                                                                CandidateHtmlContainsPotentialOwner = candidateHtmlContainsPotentialOwner,
-                                                                Uri = page,
-                                                                PageTitle = title,
-                                                                ContainsMultipleBrands =
-                                                                        knownBrandsPresent.Count > 1,
-                                                                CompanyBrandRelationship = positiveCandidates,
-                                                                ItemsContainBrandOnly = brandsOnly,
-                                                        };
-                                    candidates.Add(candidate);
+                                    // The owner must be present in the previous content or page for multiple candidates
+                                    if (previousContentContainsPotentialOwner || domainOrTitleContainsOwner)
+                                    {
+                                        var candidate = new Candidate
+                                        {
+                                            IsTableSegment = initialcandidate.Type == "table",
+                                            IsListSegment = initialcandidate.Type == "list",
+                                            IsItemLevelCandidate = false,
+                                            PreviousContent = safey.Sanitize(previousContentInnerText),
+                                            WordsInPreviousContent = wordsInPreviousContent.ToList(),
+                                            PreviousContentWordCount = wordsInPreviousContent.Count(),
+                                            CandidateHtml =
+                                                    safey.Sanitize(
+                                                                   initialcandidate.Node
+                                                                                   .OuterHtml),
+                                            WordsInCandidateHtml = wordsInCandidateHtml.ToList(),
+                                            CandidateHtmlWordCount = wordsInCandidateHtml.Count(),
+                                            KnownCompanyNames = relation.CompanyNames,
+                                            KnownBrands = knownBrandsPresent,
+                                            KnownCompanyAndBrands = relation,
+                                            DomainOrPageTitleContainsOwner =
+                                                    domainOrTitleContainsOwner,
+                                            PreviousContentContainsPotentialOwner = previousContentContainsPotentialOwner,
+                                            CandidateHtmlContainsPotentialOwner = candidateHtmlContainsPotentialOwner,
+                                            Uri = page,
+                                            PageTitle = title,
+                                            ContainsMultipleBrands =
+                                                    knownBrandsPresent.Count > 1,
+                                            CompanyBrandRelationship = positiveCandidates,
+                                            ItemsContainBrandOnly = brandsOnly,
+                                        };
+                                        candidates.Add(candidate);                                        
+                                    }
                                 }
                             }
                         }
