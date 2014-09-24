@@ -282,7 +282,8 @@
                                                                         PageTitle = title,
                                                                         ContainsMultipleBrands =
                                                                                 brandsPresentInInitialCandidate
-                                                                                        .Count > 1
+                                                                                        .Count > 1,
+                                                                        ItemsContainBrandOnly = listOrTableItemContainingBrand.ContainsBrandOnly
                                                                 };
                                             candidate.KnownCompanyNames.Add(company);
                                             testCandidates.Add(candidate);
@@ -580,7 +581,11 @@
                                                                         PreviousContent =
                                                                                 safey.Sanitize(
                                                                                                previousContentOuterHtml),
+                                                                        WordsInPreviousContent = wordsInPreviousContent.ToList(),
+                                                                        PreviousContentWordCount = wordsInPreviousContent.Count(),
                                                                         CandidateHtml = listOrTableItemContainingBrand.ItemHtml,
+                                                                        WordsInCandidateHtml = listOrTableItemContainingBrand.WordsInItem,
+                                                                        CandidateHtmlWordCount = listOrTableItemContainingBrand.WordsInItem.Count,
                                                                         KnownCompanyNames =
                                                                                 relation.CompanyNames,
                                                                         KnownBrands = knownBrandsPresent,
@@ -595,7 +600,8 @@
                                                                         ContainsMultipleBrands =
                                                                                 knownBrandsPresent.Count > 1,
                                                                         CompanyBrandRelationship =
-                                                                                positiveCandidates
+                                                                                positiveCandidates,
+                                                                        ItemsContainBrandOnly = listOrTableItemContainingBrand.ContainsBrandOnly
                                                                 };
                                                 candidates.Add(candidate);
                                             }

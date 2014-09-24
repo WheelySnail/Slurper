@@ -11,31 +11,43 @@ namespace CandidateParsingAgilityPack.Model
 
     public class Candidate
     {
-        //[Feature]
-        //public bool BrandNameIsSimilarToCompanyName { get; set; }
-
-        [Feature]
-        public String CandidateHtml { get; set; }
-
         [Label]
         public bool CompanyBrandRelationship { get; set; }
 
         [Feature]
+        public String CandidateHtml { get; set; }
+
+        [Feature]
+        public string PreviousContent { get; set; }
+
+        [Feature]
+        public int CandidateHtmlWordCount { get; set; }
+
+        [Feature]
+        public int PreviousContentWordCount { get; set; }
+
+        [Feature]
         public bool ContainsMultipleBrands { get; set; }
 
-        //[Feature]
-        //public String DomainName { get; set; }
+        [Feature]
+        public bool ItemsContainBrandOnly { get; set; }
 
         [Feature]
         public bool DomainOrPageTitleContainsOwner { get; set; }
 
-        public bool IsItemLevelCandidate { get; set; }
+        [Feature]
+        public bool PreviousContentContainsPotentialOwner { get; set; }
+
+        [Feature]
+        public bool CandidateHtmlContainsPotentialOwner { get; set; }
 
         [Feature]
         public bool IsListSegment { get; set; }
 
         [Feature]
         public bool IsTableSegment { get; set; }
+
+        public bool IsItemLevelCandidate { get; set; }
 
         public string KnownBrand { get; set; }
 
@@ -45,28 +57,13 @@ namespace CandidateParsingAgilityPack.Model
 
         public List<string> KnownCompanyNames { get; set; }
 
-        //public List<String> NamedEntities { get; set; }
-
-        [Feature]
         public String PageTitle { get; set; }
-
-        [Feature]
-        public string PreviousContent { get; set; }
 
         public string Uri { get; set; }
 
-        public int PreviousContentWordCount { get; set; }
-
-        public int CandidateHtmlWordCount { get; set; }
-
-        public List<String> WordsInPreviousContent { get; set; }
+        public List<string> WordsInPreviousContent { get; set; }
 
         public List<string> WordsInCandidateHtml { get; set; }
 
-        public bool PreviousContentContainsPotentialOwner { get; set; }
-
-        public bool CandidateHtmlContainsPotentialOwner { get; set; }
-
-        public bool ItemsContainBrandOnly { get; set; }
     }
 }
