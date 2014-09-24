@@ -703,20 +703,20 @@
 
         internal static List<String> GetTestCompanies(List<CompanyAndBrands> companyBrandRelationships)
         {
-            // TODO retrieve all companies from Freebase, OpenCorporates or others, not just consumer companies
+            var companies = FreeBaseHelpers.GetKnownCompaniesFromFreeBaseBusinessOperations();
 
-            var companiesHouseCompanies = new List<String>();
+            //var companies = FreeBaseHelpers.GetKnownCompaniesFromFreeBaseConsumerCompanies();
 
-            var directory = new DirectoryInfo("C:/Users/Alice/Desktop/Companies");
+            //var directory = new DirectoryInfo("C:/Users/Alice/Desktop/Companies");
 
-            foreach (var file in directory.GetFiles())
-            {
-                companiesHouseCompanies.AddRange(File.ReadLines(file.FullName));
-            }
+            //foreach (var file in directory.GetFiles())
+            //{
+            //    companies.AddRange(File.ReadLines(file.FullName));
+            //}
 
             var newCompanies = new List<String>();
 
-            foreach (var company in companiesHouseCompanies)
+            foreach (var company in companies)
             {
                 if (!companyBrandRelationships.Any(rel => rel.CompanyNames.Contains(company)))
                 {

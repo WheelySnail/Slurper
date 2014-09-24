@@ -1,14 +1,19 @@
 namespace CandidateParsingAgilityPack
 {
+    #region Using Directives
+
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Net.Http;
     using System.Net.Http.Headers;
+    using System.Text.RegularExpressions;
 
     using CandidateParsingAgilityPack.Model;
 
     using Newtonsoft.Json;
+
+    #endregion
 
     internal class FreeBaseHelpers
     {
@@ -18,8 +23,7 @@ namespace CandidateParsingAgilityPack
 
         internal static FreeBaseBrandResponse GetKnownBrands()
         {
-            string companiesQuery = "?query=[{\"type\":\"/business/brand\",\"name\": null,\"limit\":8780}]&key="
-                                    + API_KEY;
+            string companiesQuery = "?query=[{\"type\":\"/business/brand\",\"name\": null,\"limit\":10}]&key=" + API_KEY;
 
             var client = new HttpClient();
             client.BaseAddress = new Uri(url);
@@ -38,18 +42,88 @@ namespace CandidateParsingAgilityPack
             }
         }
 
+        internal static List<String> GetKnownCompaniesFromFreeBaseConsumerCompanies()
+        {
+            string companiesQuery = "?query=[{\"type\":\"/business/consumer_company\",\"name\": null,\"limit\":10}]&key=" + API_KEY;
+
+            var client = new HttpClient();
+            client.BaseAddress = new Uri(url);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            HttpResponseMessage reponse = client.GetAsync(companiesQuery).Result;
+
+            if (reponse.IsSuccessStatusCode)
+            {
+                var responseString = reponse.Content.ReadAsStringAsync().Result;
+                var companies = JsonConvert.DeserializeObject<FreeBaseConsumerCompanyResponse>(responseString);
+                return GetCompanyNamesFromFreeBaseConsumerCompanyResponse(companies);
+            }
+            else
+            {
+                throw new Exception();
+            }
+        }
+
+        internal static List<String> GetKnownCompaniesFromFreeBaseBusinessOperations()
+        {
+            string companiesQuery = "?query=[{\"type\":\"/business/business_operation\",\"name\": null,\"limit\":10}]&key=" + API_KEY;
+
+            var client = new HttpClient();
+            client.BaseAddress = new Uri(url);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            HttpResponseMessage reponse = client.GetAsync(companiesQuery).Result;
+
+            if (reponse.IsSuccessStatusCode)
+            {
+                var responseString = reponse.Content.ReadAsStringAsync().Result;
+                var businesses = JsonConvert.DeserializeObject<FreeBaseBusinessOperationResponse>(responseString);
+                return GetCompanyNamesFromFreeBaseBusinessOperationResponse(businesses);
+            }
+            else
+            {
+                throw new Exception();
+            }
+        }
+
+        private static List<string> GetCompanyNamesFromFreeBaseBusinessOperationResponse(FreeBaseBusinessOperationResponse businesses)
+        {
+            var businessNames = new List<string>();
+            foreach (var business in businesses.Businesses)
+            {
+                business.Name = StripIncAndLtd(business.Name);
+                businessNames.Add(business.Name);
+            }
+            return businessNames;
+        }
+
+        private static string StripIncAndLtd(string name)
+        {
+            const string Pattern = @"(Limited|Incorporated|,\sLtd|,\sInc|,\s\.Ltd|,\s\.Inc|\.Ltd|\.Inc|Ltd\.|Inc\.|Ltd|Inc)$";
+            name = Regex.Replace(name, Pattern, "", RegexOptions.IgnoreCase);
+            return name.Trim();
+        }
+
+        private static List<string> GetCompanyNamesFromFreeBaseConsumerCompanyResponse(FreeBaseConsumerCompanyResponse companies)
+        {
+            var companyNames = new List<string>();
+            foreach (var company in companies.Companies)
+            {
+                company.Name = StripIncAndLtd(company.Name);
+                companyNames.Add(company.Name);
+            }
+            return companyNames;
+        }
+
         internal static List<CompanyAndBrands> GetKnownCompanyBrandRelationshipsFromConsumerCompanies()
         {
             var brandsResponse = new FreeBaseConsumerCompanyResponse();
             var productsResponse = new FreeBaseConsumerCompanyResponse();
 
-            // TODO this query is returning company brand relationships where the company has BOTH products and brands - only 241 of 2119 possible relations. Query both and combine
             string companiesWithBrandsQuery =
-                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"brands\":[{\"brand\": null}],\"limit\":20}]&key="
+                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"brands\":[{\"brand\": null}],\"limit\":30}]&key="
                     + API_KEY;
 
             string companiesWithProductsQuery =
-                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"products\":[{\"consumer_product\": null}],\"limit\":20}]&key="
+                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"products\":[{\"consumer_product\": null}],\"limit\":30}]&key="
                     + API_KEY;
 
             var client = new HttpClient();
@@ -82,8 +156,9 @@ namespace CandidateParsingAgilityPack
 
             var deDupedCompanyAndBrandsList = new List<CompanyAndBrands>();
 
-            var companiesAndBrands = MapFreeBaseConsumerCompaniesToCompanyBrandRelationship(brandsResponse.Companies); 
-            var companiesAndProducts = MapFreeBaseConsumerCompaniesToCompanyBrandRelationship(productsResponse.Companies); 
+            var companiesAndBrands = MapFreeBaseConsumerCompaniesToCompanyBrandRelationship(brandsResponse.Companies);
+            var companiesAndProducts = MapFreeBaseConsumerCompaniesToCompanyBrandRelationship(
+                                                                                              productsResponse.Companies);
 
             // Add product names to companies already present
             foreach (var companyAndBrands in companiesAndBrands)
@@ -92,7 +167,8 @@ namespace CandidateParsingAgilityPack
 
                 foreach (var companyAndProducts in companiesAndProducts)
                 {
-                    if (companyAndBrands.CompanyNames.FirstOrDefault() == companyAndProducts.CompanyNames.FirstOrDefault())
+                    if (companyAndBrands.CompanyNames.FirstOrDefault()
+                        == companyAndProducts.CompanyNames.FirstOrDefault())
                     {
                         companyAndBrands.BrandNames.AddRange(companyAndProducts.BrandNames);
                     }
@@ -103,9 +179,9 @@ namespace CandidateParsingAgilityPack
             {
                 if (
                         !deDupedCompanyAndBrandsList.Exists(
-                                                           cb =>
-                                                           cb.CompanyNames.FirstOrDefault()
-                                                           == companyAndProduct.CompanyNames.FirstOrDefault()))
+                                                            cb =>
+                                                            cb.CompanyNames.FirstOrDefault()
+                                                            == companyAndProduct.CompanyNames.FirstOrDefault()))
                 {
                     deDupedCompanyAndBrandsList.Add(companyAndProduct);
                 }

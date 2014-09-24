@@ -155,6 +155,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FreeBaseHelpers.cs" />
+    <Compile Include="Model\FreeBaseBusinessOperationResponse.cs" />
+    <Compile Include="Model\FreebaseBusinessOperation.cs" />
     <Compile Include="Model\ListOrTableItemContainingBrand.cs" />
     <Compile Include="Model\FreebaseBrand.cs" />
     <Compile Include="Model\FreeBaseBrandResponse.cs" />
