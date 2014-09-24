@@ -210,7 +210,7 @@
 
                                     var itemsWithBrand = new List<ListOrTableItem>();
 
-                                    innerSegments.AddRange(allInnerSegments.Where(ins => ins.OuterHtml.ToLowerInvariant().Contains(brand.ToLowerInvariant())));
+                                    innerSegments.AddRange(allInnerSegments.Where(ins => ins.InnerText.ToLowerInvariant().Contains(brand.ToLowerInvariant())));
 
                                     foreach (var innerSegment in innerSegments)
                                     {
@@ -439,7 +439,7 @@
                                                                ? ""
                                                                : previousContent.OuterHtml;
 
-                        // Check that the owner name for the relation is present in the title, domain, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
+                        // Check that the owner name for the relation is present in the title, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
                         // Only use one company name at the moment so a loop isn't necessary
                         foreach (var ownerSynonym in relation.CompanyNames)
                         {
@@ -504,7 +504,7 @@
                                                                                    .ToList()
                                                                                    .Where(
                                                                                           listItem =>
-                                                                                          listItem.OuterHtml
+                                                                                          listItem.InnerText
                                                                                                   .ToLowerInvariant()
                                                                                                   .Contains(
                                                                                                             brand
@@ -518,7 +518,7 @@
                                                                                    .ToList()
                                                                                    .Where(
                                                                                           listItem =>
-                                                                                          listItem.OuterHtml
+                                                                                          listItem.InnerText
                                                                                                   .ToLowerInvariant()
                                                                                                   .Contains(
                                                                                                             brand
