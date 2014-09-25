@@ -8,6 +8,9 @@
     using System.Linq;
     using System.Text.RegularExpressions;
 
+    using com.sun.tools.javac.util;
+
+    using CsQuery.Engine.PseudoClassSelectors;
     using CsQuery.ExtensionMethods.Internal;
 
     using Html;
@@ -117,8 +120,6 @@
                     {
                         var previousContent = GetPreviousRelevantNode(initialcandidate);
 
-                        var captions = initialcandidate.Node.SelectNodes("caption");
-
                         var previousContentOuterHtml = previousContent == null
                                                                ? ""
                                                                : previousContent.OuterHtml;
@@ -138,12 +139,16 @@
 
                         var previousContentContainsPotentialOwner = PreviousContentContainsPotentialOwner(previousContentInnerText, company);
 
-                        var captionsContainOwner = captions != null && captions.Any(c => c.InnerText.Contains(company));
-
                         // If a company name is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
                         if (domainOrTitleContainsPotentialOwner
                             || candidateHtmlContainsPotentialOwner || previousContentContainsPotentialOwner)
                         {
+                            var captions = initialcandidate.Node.SelectNodes("caption");
+
+                            var captionsContainOwner = captions != null && captions.Any(c => c.InnerText.Contains(company));
+                            
+                            var containsMoreThan10Languages = ContainsMoreThan10Languages(initialcandidate);
+                            
                             var brandsPresentInInitialCandidate = new List<string>();
 
                             // For each brand 
@@ -255,7 +260,8 @@
                                                                                 brandsPresentInInitialCandidate
                                                                                         .Count > 1,
                                                                         ItemsContainBrandOnly = listOrTableItemContainingBrand.ContainsBrandOnly,
-                                                                        CaptionsContainOwner = captionsContainOwner
+                                                                        CaptionsContainOwner = captionsContainOwner,
+                                                                        ContainsMoreThan10Languages = containsMoreThan10Languages
                                                                 };
                                             testCandidates.Add(candidate);
                                         }
@@ -317,7 +323,8 @@
                                             ContainsMultipleBrands =
                                                     brandsPresentInInitialCandidate.Count > 1,
                                             ItemsContainBrandOnly = noOtherTextExceptBrands,
-                                            CaptionsContainOwner = captionsContainOwner
+                                            CaptionsContainOwner = captionsContainOwner,
+                                            ContainsMoreThan10Languages = containsMoreThan10Languages
                                         };
 
                                         // If each list or table item with a brand contains only a brand name
@@ -464,8 +471,6 @@
 
                         previousContentInnerText = Regex.Replace(previousContentInnerText, relation.CompanyName, "");
 
-                        var captions = initialcandidate.Node.SelectNodes("caption");
-
                         // Check that the owner name for the relation is present in the title, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
 
                         var domainOrTitleContainsOwner = DomainOrTitleContainsPotentialOwner(page, relation.CompanyName, title);
@@ -474,13 +479,16 @@
 
                         var previousContentContainsPotentialOwner = PreviousContentContainsPotentialOwner(previousContentInnerText, relation.CompanyName);
 
-                        var captionsContainOwner = captions != null && captions.Any(c => c.InnerText.Contains(relation.CompanyName));
-                        
-
                         // If the company name for the relation is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
                         if (domainOrTitleContainsOwner || candidateHtmlContainsPotentialOwner || previousContentContainsPotentialOwner)
                         {
                             var knownBrandsPresent = new List<string>();
+
+                            var captions = initialcandidate.Node.SelectNodes("caption");
+
+                            var captionsContainOwner = captions != null && captions.Any(c => c.InnerText.Contains(relation.CompanyName));
+
+                            var containsMoreThan10Languages = ContainsMoreThan10Languages(initialcandidate);
 
                             // For each brand owned by the company, for this relation
                             foreach (var brand in relation.BrandNames)
@@ -591,7 +599,8 @@
                                                                         CompanyBrandRelationship =
                                                                                 positiveCandidates,
                                                                         ItemsContainBrandOnly = listOrTableItemContainingBrand.ContainsBrandOnly,
-                                                                        CaptionsContainOwner = captionsContainOwner
+                                                                        CaptionsContainOwner = captionsContainOwner,
+                                                                        ContainsMoreThan10Languages = containsMoreThan10Languages
                                                                 };
                                                 candidates.Add(candidate);
                                             }
@@ -651,7 +660,8 @@
                                                     knownBrandsPresent.Count > 1,
                                             CompanyBrandRelationship = positiveCandidates,
                                             ItemsContainBrandOnly = brandsOnly,
-                                            CaptionsContainOwner = captionsContainOwner
+                                            CaptionsContainOwner = captionsContainOwner,
+                                            ContainsMoreThan10Languages = containsMoreThan10Languages
                                         };
                                         candidates.Add(candidate);                                        
                                     }
@@ -664,6 +674,36 @@
             return candidates;
         }
 
+        private static bool ContainsMoreThan10Languages(InitialCandidate initialcandidate)
+        {
+            var itemsWithALanguage = new List<HtmlNode>();
+
+            var items = new List<HtmlNode>();
+
+            items.AddRange(initialcandidate.Node.Descendants("li"));
+            items.AddRange(initialcandidate.Node.Descendants("tr")); 
+
+            var languages = GetLanguages();
+
+            foreach (var language in languages)
+            {
+                var languageOnItsOwn = new Regex(@"\b" + language.ToLowerInvariant() + @"\b");
+
+                foreach (var item in items)
+                {
+                    if (languageOnItsOwn.IsMatch(item.InnerText.ToLowerInvariant()))
+                    {
+                        itemsWithALanguage.Add(item);
+                    }
+
+                }       
+            }
+
+            var containsMoreThan10Languages = itemsWithALanguage.Count > 5;
+            return containsMoreThan10Languages;
+        }
+
+   
         private static List<HtmlNode> InnerSegmentsWithBrand(InitialCandidate initialcandidate, string brand)
         {
             var innerSegments = new List<HtmlNode>();
@@ -766,6 +806,20 @@
             shorterList.Add("Cadbury");
 
             return shorterList;
+        }
+
+        internal static List<string> GetLanguages()
+        {
+            var languages = new List<String>();
+
+            var directory = new DirectoryInfo("C:/Users/Alice/Desktop/languages");
+
+            foreach (var file in directory.GetFiles())
+            {
+                languages.AddRange(File.ReadLines(file.FullName));
+            }
+
+            return languages.Select(language => language.Trim().ToLowerInvariant()).ToList();
         }
 
         internal static void OutputJsonResults(List<Candidate> candidates)

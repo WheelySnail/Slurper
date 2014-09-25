@@ -67,5 +67,8 @@ namespace Slurper.Model
 
         [Feature]
         public bool CaptionsContainOwner { get; set; }
+
+        [Feature]
+        public bool ContainsMoreThan10Languages { get; set; }
     }
 }
