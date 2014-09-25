@@ -107,20 +107,7 @@
 
                 // Gather all tables and lists. Doesn't seem to be a way to retrieve a node's html element type after it's been stored so add this to an initial candidate object! 
                 // Exclude tables and lists which include child lists
-                var initialCandidateSegments =
-                        root.Descendants("table")
-                            .ToList()
-                            .Where(table => !table.OuterHtml.Contains("<ul>"))
-                            .Select(table => new InitialCandidate() { Node = table, Type = "table" })
-                            .ToList();
-
-                initialCandidateSegments.AddRange(
-                                                  root.Descendants("ul")
-                                                      .ToList()
-                                                      .Where(list => !list.InnerHtml.Contains("<ul>"))
-                                                      .Select(
-                                                              list =>
-                                                              new InitialCandidate() { Node = list, Type = "list" }));
+                var initialCandidateSegments = InitialCandidateSegments(root);
 
                 // For each list or table in the page
                 foreach (var initialcandidate in initialCandidateSegments)
@@ -128,12 +115,6 @@
                     // For each company mentioned on this page.
                     foreach (var company in companiesMentionedOnPage)
                     {
-                        var domainOrTitleContainsPotentialOwner = false;
-
-                        var previousContentContainsPotentialOwner = false;
-
-                        var candidateHtmlContainsPotentialOwner = false;
-
                         var previousContent = GetPreviousRelevantNode(initialcandidate);
 
                         var previousContentOuterHtml = previousContent == null
@@ -149,20 +130,11 @@
                         // Check that the owner name for the relation is present in the title, domain, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
                         // Only use one company name at the moment so a loop isn't necessary
 
-                        if (page.ToLowerInvariant().Contains(company.ToLowerInvariant() + " ")
-                            || title.ToLowerInvariant().Contains(company.ToLowerInvariant() + " "))
-                        {
-                            domainOrTitleContainsPotentialOwner = true;
-                        }
-                        if (initialcandidate.Node.OuterHtml.ToLowerInvariant()
-                                            .Contains(company.ToLowerInvariant() + " "))
-                        {
-                            candidateHtmlContainsPotentialOwner = true;
-                        }
-                        if (previousContentInnerText.ToLowerInvariant().Contains(company.ToLowerInvariant() + " "))
-                        {
-                            previousContentContainsPotentialOwner = true;
-                        }
+                        var domainOrTitleContainsPotentialOwner = DomainOrTitleContainsPotentialOwner(page, company, title);
+
+                        var candidateHtmlContainsPotentialOwner = CandidateContainsPotentialOwner(initialcandidate, company);
+
+                        var previousContentContainsPotentialOwner = PreviousContentContainsPotentialOwner(previousContentInnerText, company);
 
                         // If a company name is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
                         if (domainOrTitleContainsPotentialOwner
@@ -185,21 +157,7 @@
                             {
                                 var itemsWithBrandsForWholeCandidate = new List<ListOrTableItem>();
 
-                                var allInnerSegments = new List<HtmlNode>();
-
-                                // Get all the list items and table rows, whether or not they contain a brand
-                                if (initialcandidate.Type == "list")
-                                {
-                                        allInnerSegments.AddRange(
-                                                               initialcandidate.Node.Descendants("li")
-                                                                               .ToList());
-                                }
-                                else if (initialcandidate.Type == "table")
-                                {
-                                        allInnerSegments.AddRange(
-                                                               initialcandidate.Node.Descendants("tr")
-                                                                               .ToList());
-                                }
+                                var allInnerSegments = AllInnerSegments(initialcandidate);
 
                                 var wordsInPreviousContent = new List<string>();
 
@@ -380,6 +338,58 @@
             return testCandidates;
         }
 
+        private static List<InitialCandidate> InitialCandidateSegments(HtmlNode root)
+        {
+            var initialCandidateSegments =
+                    root.Descendants("table")
+                        .ToList()
+                        .Where(table => !table.OuterHtml.Contains("<ul>"))
+                        .Select(table => new InitialCandidate() { Node = table, Type = "table" })
+                        .ToList();
+
+            initialCandidateSegments.AddRange(
+                                              root.Descendants("ul")
+                                                  .ToList()
+                                                  .Where(list => !list.InnerHtml.Contains("<ul>"))
+                                                  .Select(list => new InitialCandidate() { Node = list, Type = "list" }));
+            return initialCandidateSegments;
+        }
+
+        private static List<HtmlNode> AllInnerSegments(InitialCandidate initialcandidate)
+        {
+            var allInnerSegments = new List<HtmlNode>();
+
+            // Get all the list items and table rows, whether or not they contain a brand
+            if (initialcandidate.Type == "list")
+            {
+                allInnerSegments.AddRange(initialcandidate.Node.Descendants("li").ToList());
+            }
+            else if (initialcandidate.Type == "table")
+            {
+                allInnerSegments.AddRange(initialcandidate.Node.Descendants("tr").ToList());
+            }
+            return allInnerSegments;
+        }
+
+        private static bool PreviousContentContainsPotentialOwner(string previousContentInnerText, string company)
+        {
+            bool previousContentContainsPotentialOwner = previousContentInnerText.ToLowerInvariant().Contains(company.ToLowerInvariant() + " ");
+            return previousContentContainsPotentialOwner;
+        }
+
+        private static bool CandidateContainsPotentialOwner(InitialCandidate initialcandidate, string company)
+        {
+            bool candidateHtmlContainsPotentialOwner = initialcandidate.Node.InnerText.ToLowerInvariant().Contains(company.ToLowerInvariant() + " ");
+            return candidateHtmlContainsPotentialOwner;
+        }
+
+        private static bool DomainOrTitleContainsPotentialOwner(string page, string company, string title)
+        {
+            bool domainOrTitleContainsPotentialOwner = page.ToLowerInvariant().Contains(company.ToLowerInvariant() + " ")
+                                                       || title.ToLowerInvariant().Contains(company.ToLowerInvariant() + " ");
+            return domainOrTitleContainsPotentialOwner;
+        }
+
         private static string CleanInnerText(HtmlNode innerSegment)
         {
             var trimmedText = innerSegment.InnerText.Trim();
@@ -430,20 +440,7 @@
                 // Gather all tables and lists. Doesn't seem to be a way to retrieve a node's html element type after it's been stored so add this to an initial candidate object! 
                 // Exclude tables and lists which include child lists
 
-                var initialCandidateSegments =
-                        root.Descendants("table")
-                            .ToList()
-                            .Where(table => !table.OuterHtml.Contains("<ul>"))
-                            .Select(table => new InitialCandidate() { Node = table, Type = "table" })
-                            .ToList();
-
-                initialCandidateSegments.AddRange(
-                                                  root.Descendants("ul")
-                                                      .ToList()
-                                                      .Where(list => !list.InnerHtml.Contains("<ul>"))
-                                                      .Select(
-                                                              list =>
-                                                              new InitialCandidate() { Node = list, Type = "list" }));
+                var initialCandidateSegments = InitialCandidateSegments(root);
 
                 // For each list or table in the page
                 foreach (var initialcandidate in initialCandidateSegments)
@@ -451,12 +448,6 @@
                     // For each relation where an owner name is present on this page. Candidates are created at this level as they are a combination of relation + segment.
                     foreach (var relation in relationsWhereOwnerMentionedOnPage)
                     {
-                        var domainOrTitleContainsOwner = false;
-
-                        var candidateHtmlContainsPotentialOwner = false;
-
-                        var previousContentContainsPotentialOwner = false;
-
                         var previousContent = GetPreviousRelevantNode(initialcandidate);
 
                         var previousContentInnerText = previousContent == null
@@ -466,24 +457,12 @@
                         previousContentInnerText = Regex.Replace(previousContentInnerText, relation.CompanyName, "");
 
                         // Check that the owner name for the relation is present in the title, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
-                 
-                            if (page.ToLowerInvariant().Contains(relation.CompanyName.ToLowerInvariant() + " ")
-                                || title.ToLowerInvariant().Contains(relation.CompanyName.ToLowerInvariant() + " "))
-                            {
-                                domainOrTitleContainsOwner = true;
-                            }
-                            if (
-                                    initialcandidate.Node.InnerText.ToLowerInvariant()
-                                                    .Contains(relation.CompanyName.ToLowerInvariant() + " "))
-                            {
-                                candidateHtmlContainsPotentialOwner = true;
-                            }
-                            if (
-                                    previousContentInnerText.ToLowerInvariant()
-                                                            .Contains(relation.CompanyName.ToLowerInvariant() + " "))
-                            {
-                                previousContentContainsPotentialOwner = true;
-                            }
+
+                        var domainOrTitleContainsOwner = DomainOrTitleContainsPotentialOwner(page, relation.CompanyName, title);
+
+                        var candidateHtmlContainsPotentialOwner = CandidateContainsPotentialOwner(initialcandidate, relation.CompanyName);
+
+                        var previousContentContainsPotentialOwner = PreviousContentContainsPotentialOwner(previousContentInnerText, relation.CompanyName);
                         
 
                         // If the company name for the relation is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
@@ -494,10 +473,6 @@
                             // For each brand owned by the company, for this relation
                             foreach (var brand in relation.BrandNames)
                             {
-                                var namedEntitiesInCandidate = new List<string>();
-
-                                
-
                                 var brandOnItsOwn = new Regex(@"\b" + brand.ToLowerInvariant() + @"\b");
                                 if (
                                         brandOnItsOwn.IsMatch(initialcandidate.Node.InnerText.ToLowerInvariant()) && relation.CompanyName.ToLowerInvariant() != brand.ToLowerInvariant())
@@ -521,40 +496,11 @@
                            // Get any LI or TD element surrounding each brand mention
                                     foreach (var brand in knownBrandsPresent)
                                     {
-                                        var innerSegments = new List<HtmlNode>();
-
                                         var itemsWithBrand = new List<ListOrTableItem>();
 
-                                        if (initialcandidate.Type == "list")
-                                        {
-                                            innerSegments.AddRange(
-                                                                   initialcandidate.Node.Descendants("li")
-                                                                                   .ToList()
-                                                                                   .Where(
-                                                                                          listItem =>
-                                                                                          listItem.InnerText
-                                                                                                  .ToLowerInvariant()
-                                                                                                  .Contains(
-                                                                                                            brand
-                                                                                                                    .ToLowerInvariant
-                                                                                                                    ())));
-                                        }
-                                        else if (initialcandidate.Type == "table")
-                                        {
-                                            innerSegments.AddRange(
-                                                                   initialcandidate.Node.Descendants("tr")
-                                                                                   .ToList()
-                                                                                   .Where(
-                                                                                          listItem =>
-                                                                                          listItem.InnerText
-                                                                                                  .ToLowerInvariant()
-                                                                                                  .Contains(
-                                                                                                            brand
-                                                                                                                    .ToLowerInvariant
-                                                                                                                    ())));
-                                        }
+                                        var innerSegments = InnerSegmentsWithBrand(initialcandidate, brand);
 
-                                    foreach (var innerSegment in innerSegments)
+                                        foreach (var innerSegment in innerSegments)
                                     {
                                         var trimmedText = innerSegment.InnerText.Trim();
 
@@ -702,6 +648,33 @@
                 }
             }
             return candidates;
+        }
+
+        private static List<HtmlNode> InnerSegmentsWithBrand(InitialCandidate initialcandidate, string brand)
+        {
+            var innerSegments = new List<HtmlNode>();
+
+            if (initialcandidate.Type == "list")
+            {
+                innerSegments.AddRange(
+                                       initialcandidate.Node.Descendants("li")
+                                                       .ToList()
+                                                       .Where(
+                                                              listItem =>
+                                                              listItem.InnerText.ToLowerInvariant()
+                                                                      .Contains(brand.ToLowerInvariant())));
+            }
+            else if (initialcandidate.Type == "table")
+            {
+                innerSegments.AddRange(
+                                       initialcandidate.Node.Descendants("tr")
+                                                       .ToList()
+                                                       .Where(
+                                                              listItem =>
+                                                              listItem.InnerText.ToLowerInvariant()
+                                                                      .Contains(brand.ToLowerInvariant())));
+            }
+            return innerSegments;
         }
 
         internal static IEnumerable<string> GetPages(string path)
