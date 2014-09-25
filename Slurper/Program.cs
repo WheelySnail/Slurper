@@ -4,8 +4,13 @@
 
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Text.RegularExpressions;
+
+    using com.sun.tools.javac.util;
 
     using edu.stanford.nlp.ie.crf;
+    using edu.stanford.nlp.ling;
 
     using numl;
     using numl.Model;
@@ -13,6 +18,8 @@
     using numl.Supervised.DecisionTree;
 
     using Slurper.Model;
+
+    using Attribute = com.sun.tools.javac.code.Attribute;
 
     #endregion
 
@@ -24,25 +31,9 @@
             // Change to false to retrieve list/ table level candidates representing one company and any of its brands present in that block
             const bool ItemLevelCandidates = false;
 
-            var sentence1 = "Apple Genius Bar are a type of shop";
-            var sentence2 = "Genius Bar, the workplace of Anita Millas";
-            var sentence3 = "Microsoft are a large corporation based in the USA, Europe, Paris, PorcupineHat";
-
             CRFClassifier classifier =
             CRFClassifier.getClassifierNoExceptions(
                 @"C:/Users/Alice/Desktop/english.all.3class.distsim.crf.ser.gz");
-
-            Console.WriteLine("{0}\n", classifier.classifyToString(sentence3));
-
-            var classification = classifier.classify(sentence1).toArray();
-            for (var i = 0; i < classification.Length; i++)
-            {
-                Console.WriteLine("{0}\n:{1}\n", i, classification[i]);
-            }
-            
-            // classified output contains 2+ People
-            // classified output contains 2+ Organisations
-            // classified output contains 2+ Places
 
             var knownCompanyBrandRelationships = FreeBaseHelpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
 
@@ -50,13 +41,13 @@
 
             trainingCandidates.AddRange(GetPositiveTrainingCandidates(
                                                                            knownCompanyBrandRelationships,
-                                                                           ItemLevelCandidates));
+                                                                           ItemLevelCandidates, classifier));
 
             trainingCandidates.AddRange(GetNegativeTrainingCandidates(
                                                                            knownCompanyBrandRelationships,
-                                                                           ItemLevelCandidates));
+                                                                           ItemLevelCandidates, classifier));
 
-            var testCandidates = GetTestCandidates(knownCompanyBrandRelationships, ItemLevelCandidates);
+            var testCandidates = GetTestCandidates(knownCompanyBrandRelationships, ItemLevelCandidates, classifier);
 
             //// Create naive bayes, holding back data
             //var d = Descriptor.Create<Candidate>();
@@ -103,9 +94,7 @@
             return model;
         }
 
-        private static List<Candidate> GetPositiveTrainingCandidates(
-                List<CompanyAndBrands> companyBrandRelationships,
-                bool itemBrandLevelCandidates)
+        private static List<Candidate> GetPositiveTrainingCandidates(List<CompanyAndBrands> companyBrandRelationships, bool itemBrandLevelCandidates, CRFClassifier classifier)
         {
             // Only use seed data where the company owns more than one brand
             // TODO should I remove this step as it's not matched in the negative examples? 
@@ -118,16 +107,14 @@
                                                                     pages,
                                                                     knownCompanyBrandRelationshipsWithMultipleBrands,
                                                                     itemBrandLevelCandidates,
-                                                                    true);
+                                                                    true, classifier);
 
             Helpers.OutputCandidates(candidates, "positivetraining");
 
             return candidates;
         }
 
-        private static List<Candidate> GetNegativeTrainingCandidates(
-                List<CompanyAndBrands> companyBrandRelationships,
-                bool itemBrandLevelCandidates)
+        private static List<Candidate> GetNegativeTrainingCandidates(List<CompanyAndBrands> companyBrandRelationships, bool itemBrandLevelCandidates, CRFClassifier classifier)
         {
             var knownCompanyBrandNonRelationships =
                     Helpers.CreateKnownCompanyBrandNonRelationships(companyBrandRelationships);
@@ -138,16 +125,14 @@
                                                                             pages,
                                                                             knownCompanyBrandNonRelationships,
                                                                             itemBrandLevelCandidates,
-                                                                            false);
+                                                                            false, classifier);
 
             Helpers.OutputCandidates(negativeCandidates, "negativetraining");
 
             return negativeCandidates;
         }
 
-        private static List<Candidate> GetTestCandidates(
-                List<CompanyAndBrands> companyBrandRelationships,
-                bool itemLevelCandidates)
+        private static List<Candidate> GetTestCandidates(List<CompanyAndBrands> companyBrandRelationships, bool itemLevelCandidates, CRFClassifier classifier)
         {
             var testBrands = Helpers.GetTestBrands(companyBrandRelationships);
 
@@ -164,7 +149,7 @@
 
             var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
 
-            var testCandidates = Helpers.GetTestCandidatesFromPages(pages, testCompanies, testBrands, itemLevelCandidates);
+            var testCandidates = Helpers.GetTestCandidatesFromPages(pages, testCompanies, testBrands, itemLevelCandidates, classifier);
 
             return testCandidates;
         }

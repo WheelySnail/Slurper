@@ -13,6 +13,8 @@
     using CsQuery.Engine.PseudoClassSelectors;
     using CsQuery.ExtensionMethods.Internal;
 
+    using edu.stanford.nlp.ie.crf;
+
     using Html;
 
     using HtmlAgilityPack;
@@ -72,11 +74,7 @@
             return knownCandidates.Where(r => r.BrandNames.Count() > 1).ToList();
         }
 
-        public static List<Candidate> GetTestCandidatesFromPages(
-                IEnumerable<string> pages,
-                List<string> companies,
-                List<string> brands,
-                bool itemBrandLevelCandidates)
+        public static List<Candidate> GetTestCandidatesFromPages(IEnumerable<string> pages, List<string> companies, List<string> brands, bool itemBrandLevelCandidates, CRFClassifier classifier)
         {
             var testCandidates = new List<Candidate>();
 
@@ -138,6 +136,14 @@
                         var candidateHtmlContainsPotentialOwner = CandidateContainsPotentialOwner(initialcandidate, company);
 
                         var previousContentContainsPotentialOwner = PreviousContentContainsPotentialOwner(previousContentInnerText, company);
+
+                        var nerTaggedInnerText = classifier.classifyToString(initialcandidate.Node.InnerText);
+
+                        var numberOfPeople = GetNumberOfPersonNames(nerTaggedInnerText);
+
+                        var numberOfOrganisations = GetNumberOfOrganisationNames(nerTaggedInnerText);
+
+                        var numberOfLocations = GetNumberOfLocations(nerTaggedInnerText);
 
                         // If a company name is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
                         if (domainOrTitleContainsPotentialOwner
@@ -261,7 +267,10 @@
                                                                                         .Count > 1,
                                                                         ItemsContainBrandOnly = listOrTableItemContainingBrand.ContainsBrandOnly,
                                                                         CaptionsContainOwner = captionsContainOwner,
-                                                                        ContainsMoreThan10Languages = containsMoreThan10Languages
+                                                                        ContainsMoreThan10Languages = containsMoreThan10Languages,
+                                                                        NumberOfLocationNames = numberOfLocations,
+                                                                        NumberOfOrganisationNames = numberOfOrganisations,
+                                                                        NumberOfPersonNames = numberOfPeople
                                                                 };
                                             candidate.MapWordsToWordFeatures();
                                             testCandidates.Add(candidate);
@@ -325,7 +334,10 @@
                                                     brandsPresentInInitialCandidate.Count > 1,
                                             ItemsContainBrandOnly = noOtherTextExceptBrands,
                                             CaptionsContainOwner = captionsContainOwner,
-                                            ContainsMoreThan10Languages = containsMoreThan10Languages
+                                            ContainsMoreThan10Languages = containsMoreThan10Languages,
+                                            NumberOfLocationNames = numberOfLocations,
+                                            NumberOfOrganisationNames = numberOfOrganisations,
+                                            NumberOfPersonNames = numberOfPeople
                                         };
 
                                         // If each list or table item with a brand contains only a brand name
@@ -416,11 +428,7 @@
             return trimmedText;
         }
 
-        public static List<Candidate> GetTrainingCandidatesFromPages(
-                IEnumerable<string> pages,
-                List<CompanyAndBrands> knownCompanyAndBrandsRelationships,
-                bool itemBrandLevelCandidates,
-                bool positiveCandidates)
+        public static List<Candidate> GetTrainingCandidatesFromPages(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships, bool itemBrandLevelCandidates, bool positiveCandidates, CRFClassifier classifier)
         {
             var doc = new HtmlDocument();
 
@@ -479,6 +487,14 @@
                         var candidateHtmlContainsPotentialOwner = CandidateContainsPotentialOwner(initialcandidate, relation.CompanyName);
 
                         var previousContentContainsPotentialOwner = PreviousContentContainsPotentialOwner(previousContentInnerText, relation.CompanyName);
+
+                        var nerTaggedInnerText = classifier.classifyToString(initialcandidate.Node.InnerText);
+
+                        var numberOfPeople = GetNumberOfPersonNames(nerTaggedInnerText);
+
+                        var numberOfOrganisations = GetNumberOfOrganisationNames(nerTaggedInnerText);
+
+                        var numberOfLocations = GetNumberOfLocations(nerTaggedInnerText);
 
                         // If the company name for the relation is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
                         if (domainOrTitleContainsOwner || candidateHtmlContainsPotentialOwner || previousContentContainsPotentialOwner)
@@ -601,7 +617,10 @@
                                                                                 positiveCandidates,
                                                                         ItemsContainBrandOnly = listOrTableItemContainingBrand.ContainsBrandOnly,
                                                                         CaptionsContainOwner = captionsContainOwner,
-                                                                        ContainsMoreThan10Languages = containsMoreThan10Languages
+                                                                        ContainsMoreThan10Languages = containsMoreThan10Languages,
+                                                                        NumberOfLocationNames = numberOfLocations,
+                                                                        NumberOfOrganisationNames = numberOfOrganisations,
+                                                                        NumberOfPersonNames = numberOfPeople
                                                                 };
                                                 candidate.MapWordsToWordFeatures();
                                                 candidates.Add(candidate);
@@ -663,7 +682,10 @@
                                             CompanyBrandRelationship = positiveCandidates,
                                             ItemsContainBrandOnly = brandsOnly,
                                             CaptionsContainOwner = captionsContainOwner,
-                                            ContainsMoreThan10Languages = containsMoreThan10Languages
+                                            ContainsMoreThan10Languages = containsMoreThan10Languages,
+                                            NumberOfLocationNames = numberOfLocations,
+                                            NumberOfOrganisationNames = numberOfOrganisations,
+                                            NumberOfPersonNames = numberOfPeople
                                         };
                                         candidate.MapWordsToWordFeatures();
                                         candidates.Add(candidate);                                        
@@ -675,6 +697,27 @@
                 }
             }
             return candidates;
+        }
+
+        private static int GetNumberOfLocations(string nerTaggedInnerText)
+        {
+            var locationPattern = new Regex(@"ORGANIZATION\s+");
+            int numberOfLocations = locationPattern.Matches(nerTaggedInnerText).Count;
+            return numberOfLocations;
+        }
+
+        private static int GetNumberOfOrganisationNames(string nerTaggedInnerText)
+        {
+            var organisationPattern = new Regex(@"LOCATION\s+");
+            int numberOfOrganisations = organisationPattern.Matches(nerTaggedInnerText).Count;
+            return numberOfOrganisations;
+        }
+
+        private static int GetNumberOfPersonNames(string nerTaggedInnerText)
+        {
+            var personPattern = new Regex(@"PERSON\s+");
+            int numberOfPeople = personPattern.Matches(nerTaggedInnerText).Count;
+            return numberOfPeople;
         }
 
         private static bool ContainsMoreThan10Languages(InitialCandidate initialcandidate)

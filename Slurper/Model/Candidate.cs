@@ -164,13 +164,13 @@ namespace Slurper.Model
         public bool License { get; set; }
 
         [Feature]
-        public bool ContainsMultipleLocationNames { get; set; }
+        public int NumberOfLocationNames { get; set; }
 
         [Feature]
-        public bool ContainsMultiplePersonNames { get; set; }
+        public int NumberOfPersonNames { get; set; }
 
         [Feature]
-        public bool ContainsMultipleOrganizationNames { get; set; }
+        public int NumberOfOrganisationNames { get; set; }
 
         public void MapWordsToWordFeatures()
         {
