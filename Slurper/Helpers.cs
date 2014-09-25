@@ -32,7 +32,7 @@
         {
             var nonRelationships = new List<CompanyAndBrands>();
 
-            // Create giant list of all brand names
+            // Create list of all brand names
             var allBrands = new List<string>();
 
             foreach (var knownCompanyBrandRelationship in knownCompanyBrandRelationships)
@@ -40,7 +40,7 @@
                 allBrands.AddRange(knownCompanyBrandRelationship.BrandNames);
             }
 
-            // For each entry, make new local copy of giant list
+            // For each entry, make new local copy of the list
             // Remove items which are associated with the brand
             for (int i = 0; i < knownCompanyBrandRelationships.Count - 1; i++)
             {

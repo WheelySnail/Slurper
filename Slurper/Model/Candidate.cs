@@ -161,6 +161,15 @@ namespace Slurper.Model
         public bool By { get; set; }
 
         [Feature]
+        public bool Core { get; set; }
+
+        [Feature]
+        public bool Major { get; set; }
+
+        [Feature]
+        public bool Brands { get; set; }
+
+        [Feature]
         public bool License { get; set; }
 
         [Feature]
