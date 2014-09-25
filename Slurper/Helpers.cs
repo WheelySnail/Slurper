@@ -347,7 +347,7 @@
                                             foreach (var segment in allInnerSegments)
                                             {
                                                 var cleanedSegment = CleanInnerText(segment);
-                                                if (!candidate.KnownBrands.Contains(cleanedSegment))
+                                                if (!candidate.KnownBrands.Contains(cleanedSegment) && ContainsNounPhrase(cleanedSegment, tagger))
                                                 {
                                                     candidate.KnownBrands.Add(cleanedSegment);
                                                 }
@@ -796,6 +796,8 @@
 
             var uniqueBrands = amazonBrands.Distinct().ToList();
 
+            uniqueBrands.Sort();
+
             var newBrands = new List<String>();
 
             foreach (var brand in uniqueBrands)
@@ -805,21 +807,10 @@
                 if ((!companyBrandRelationships.Any(rel => rel.BrandNames.Contains(trimmedBrand)))
                     && trimmedBrand.Length > 2)
                 {
-                    var taggedBrand = tagger.tagString(trimmedBrand);
-
-                    if (taggedBrand.Contains("_NN") || taggedBrand.Contains("_NS") || taggedBrand.Contains("_NNP")
-                        || taggedBrand.Contains("_NNS"))
+                    if (ContainsNounPhrase(trimmedBrand, tagger))
                     {
                         newBrands.Add(trimmedBrand.ToLowerInvariant());
                     }
-                    else
-                    {
-                        var b = "oops";
-                    }
-                }
-                else
-                {
-                    var i = 0;
                 }
             }
 
@@ -832,6 +823,14 @@
             }
 
             return newBrands;
+        }
+
+        internal static bool ContainsNounPhrase(String text, MaxentTagger tagger)
+        {
+            var taggedText = tagger.tagString(text);
+
+            return (taggedText.Contains("_NN") || taggedText.Contains("_NS") || taggedText.Contains("_NNP")
+                    || taggedText.Contains("_NNS"));
         }
 
         internal static List<String> GetTestCompanies(List<CompanyAndBrands> companyBrandRelationships)
