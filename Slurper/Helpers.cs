@@ -53,8 +53,8 @@
                 nonRelationships.Add(
                                      new CompanyAndBrands
                                          {
-                                                 CompanyNames =
-                                                         knownCompanyBrandRelationships[i].CompanyNames,
+                                                 CompanyName =
+                                                         knownCompanyBrandRelationships[i].CompanyName,
                                                  BrandNames = allTheBrandsExceptYoursI
                                          });
             }
@@ -278,7 +278,7 @@
                                                                         CandidateHtml = listOrTableItemContainingBrand.ItemHtml,
                                                                         CandidateHtmlWordCount = listOrTableItemContainingBrand.ItemWordCount,
                                                                         WordsInCandidateHtml = listOrTableItemContainingBrand.WordsInItem,
-                                                                        KnownCompanyNames = new List<string>(),
+                                                                        KnownCompanyName = company,
                                                                         KnownBrands =
                                                                                 brandsPresentInInitialCandidate,
                                                                         KnownBrand = brand,
@@ -293,7 +293,6 @@
                                                                                         .Count > 1,
                                                                         ItemsContainBrandOnly = listOrTableItemContainingBrand.ContainsBrandOnly
                                                                 };
-                                            candidate.KnownCompanyNames.Add(company);
                                             testCandidates.Add(candidate);
                                         }
                                     }
@@ -343,7 +342,7 @@
 
                                             CandidateHtmlWordCount = wordsInCandidateHtml.Count(),
                                             WordsInCandidateHtml = wordsInCandidateHtml,
-                                            KnownCompanyNames = new List<String>(),
+                                            KnownCompanyName = company,
                                             KnownBrands = brandsPresentInInitialCandidate,
                                             DomainOrPageTitleContainsOwner =
                                                     domainOrTitleContainsPotentialOwner,
@@ -369,7 +368,6 @@
                                             }
                                         }
 
-                                        candidate.KnownCompanyNames.Add(company);
                                         testCandidates.Add(candidate);
                                     }
                                 }
@@ -465,30 +463,28 @@
                                        ? ""
                                        : previousContent.InnerText;
 
-                        previousContentInnerText = Regex.Replace(previousContentInnerText, relation.CompanyNames.FirstOrDefault(), "");
+                        previousContentInnerText = Regex.Replace(previousContentInnerText, relation.CompanyName, "");
 
                         // Check that the owner name for the relation is present in the title, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
-                        // Only use one company name at the moment so a loop isn't necessary
-                        foreach (var ownerSynonym in relation.CompanyNames)
-                        {
-                            if (page.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant() + " ")
-                                || title.ToLowerInvariant().Contains(ownerSynonym.ToLowerInvariant() + " "))
+                 
+                            if (page.ToLowerInvariant().Contains(relation.CompanyName.ToLowerInvariant() + " ")
+                                || title.ToLowerInvariant().Contains(relation.CompanyName.ToLowerInvariant() + " "))
                             {
                                 domainOrTitleContainsOwner = true;
                             }
                             if (
                                     initialcandidate.Node.InnerText.ToLowerInvariant()
-                                                    .Contains(ownerSynonym.ToLowerInvariant() + " "))
+                                                    .Contains(relation.CompanyName.ToLowerInvariant() + " "))
                             {
                                 candidateHtmlContainsPotentialOwner = true;
                             }
                             if (
                                     previousContentInnerText.ToLowerInvariant()
-                                                            .Contains(ownerSynonym.ToLowerInvariant() + " "))
+                                                            .Contains(relation.CompanyName.ToLowerInvariant() + " "))
                             {
                                 previousContentContainsPotentialOwner = true;
                             }
-                        }
+                        
 
                         // If the company name for the relation is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
                         if (domainOrTitleContainsOwner || candidateHtmlContainsPotentialOwner || previousContentContainsPotentialOwner)
@@ -504,7 +500,7 @@
 
                                 var brandOnItsOwn = new Regex(@"\b" + brand.ToLowerInvariant() + @"\b");
                                 if (
-                                        brandOnItsOwn.IsMatch(initialcandidate.Node.InnerText.ToLowerInvariant()) && relation.CompanyNames.FirstOrDefault().ToLowerInvariant() != brand.ToLowerInvariant())
+                                        brandOnItsOwn.IsMatch(initialcandidate.Node.InnerText.ToLowerInvariant()) && relation.CompanyName.ToLowerInvariant() != brand.ToLowerInvariant())
                                 {
                                     knownBrandsPresent.Add(brand);
                                 }
@@ -621,8 +617,8 @@
                                                                         CandidateHtml = listOrTableItemContainingBrand.ItemHtml,
                                                                         WordsInCandidateHtml = listOrTableItemContainingBrand.WordsInItem,
                                                                         CandidateHtmlWordCount = listOrTableItemContainingBrand.WordsInItem.Count,
-                                                                        KnownCompanyNames =
-                                                                                relation.CompanyNames,
+                                                                        KnownCompanyName =
+                                                                                relation.CompanyName,
                                                                         KnownBrands = knownBrandsPresent,
                                                                         KnownBrand = brand,
                                                                         KnownCompanyAndBrands = relation,
@@ -654,7 +650,7 @@
 
                                     var previousContentWithoutCompany = Regex.Replace(
                                                   previousContentInnerText,
-                                                  relation.CompanyNames.FirstOrDefault(),
+                                                  relation.CompanyName,
                                                   "");
 
                                     var candidateHtmlWithoutBrands = initialcandidate.Node.OuterHtml;
@@ -683,7 +679,7 @@
                                                                    candidateHtmlWithoutBrands),
                                             WordsInCandidateHtml = wordsInCandidateHtml.ToList(),
                                             CandidateHtmlWordCount = wordsInCandidateHtml.Count(),
-                                            KnownCompanyNames = relation.CompanyNames,
+                                            KnownCompanyName = relation.CompanyName,
                                             KnownBrands = knownBrandsPresent,
                                             KnownCompanyAndBrands = relation,
                                             DomainOrPageTitleContainsOwner =
@@ -770,7 +766,7 @@
 
             foreach (var company in companies)
             {
-                if (!companyBrandRelationships.Any(rel => rel.CompanyNames.Contains(company)))
+                if (!companyBrandRelationships.Any(rel => rel.CompanyName.Equals(company)))
                 {
                     newCompanies.Add(company.Trim().ToLowerInvariant());
                 }
@@ -819,7 +815,7 @@
                                    "Contains company/brand relationship? " + candidate.CompanyBrandRelationship
                                    + Environment.NewLine + Environment.NewLine + "Page title: " + candidate.PageTitle
                                    + Environment.NewLine + Environment.NewLine + "Known company: "
-                                   + candidate.KnownCompanyNames.FirstOrDefault() + Environment.NewLine
+                                   + candidate.KnownCompanyName + Environment.NewLine
                                    + "Known brand: " + candidate.KnownBrand + Environment.NewLine + Environment.NewLine
                                    + "Known brands: " + String.Join(", ", candidate.KnownBrands) + Environment.NewLine + Environment.NewLine
                                    + "Multiple brands present:" + candidate.ContainsMultipleBrands
@@ -829,7 +825,7 @@
                 }
                 Console.WriteLine(
                                   candidate.PageTitle + Environment.NewLine + ' '
-                                  + candidate.KnownCompanyNames.FirstOrDefault() + Environment.NewLine + ' '
+                                  + candidate.KnownCompanyName + Environment.NewLine + ' '
                                   + candidate.CandidateHtml + Environment.NewLine);
             }
 
@@ -842,7 +838,7 @@
         {
             var classifiedRelation = new ClassifiedRelation();
             classifiedRelation.IsRelation = candidate.CompanyBrandRelationship;
-            classifiedRelation.Company = candidate.KnownCompanyNames.FirstOrDefault();
+            classifiedRelation.Company = candidate.KnownCompanyName;
             classifiedRelation.Brands = new List<string>(candidate.KnownBrands);
             classifiedRelation.Brand = candidate.KnownBrand;
             classifiedRelation.Source = new RelationSource
@@ -975,15 +971,11 @@
             // Check if the page or filename contains any known seed company names 
             foreach (var relation in knownCompanyAndBrandsRelationships)
             {
-                foreach (var ownerCompanySynonym in relation.CompanyNames)
+
+                if (root.OuterHtml.ToLowerInvariant().Contains(relation.CompanyName.ToLowerInvariant() + " ")
+                    || page.ToLowerInvariant().Contains(relation.CompanyName.ToLowerInvariant() + " "))
                 {
-                    if (root.OuterHtml.ToLowerInvariant().Contains(ownerCompanySynonym.ToLowerInvariant() + " ")
-                        || page.ToLowerInvariant().Contains(ownerCompanySynonym.ToLowerInvariant() + " "))
-                    {
-                        relationsWhereOwnerMentionedOnPage.Add(relation);
-                        // stop checking for synonym mentions once one synonym for a company has been identified 
-                        break;
-                    }
+                    relationsWhereOwnerMentionedOnPage.Add(relation);
                 }
             }
             return relationsWhereOwnerMentionedOnPage;

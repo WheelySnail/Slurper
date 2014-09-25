@@ -16,7 +16,7 @@
 
         public string CompanyId { get; set; }
 
-        public List<string> CompanyNames { get; set; }
+        public string CompanyName { get; set; }
 
         public string RelationshipId { get; set; }
 

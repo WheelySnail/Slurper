@@ -55,7 +55,7 @@ namespace Slurper.Model
 
         public CompanyAndBrands KnownCompanyAndBrands { get; set; }
 
-        public List<string> KnownCompanyNames { get; set; }
+        public string KnownCompanyName { get; set; }
 
         public String PageTitle { get; set; }
 
