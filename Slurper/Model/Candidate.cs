@@ -145,6 +145,33 @@ namespace Slurper.Model
         [Feature]
         public bool Acquisitions { get; set; }
 
+        [Feature]
+        public bool Licence { get; set; }
+
+        [Feature]
+        public bool Creative { get; set; }
+
+        [Feature]
+        public bool Commons { get; set; }
+
+        [Feature]
+        public bool Appointment { get; set; }
+
+        [Feature]
+        public bool By { get; set; }
+
+        [Feature]
+        public bool License { get; set; }
+
+        [Feature]
+        public bool ContainsMultipleLocationNames { get; set; }
+
+        [Feature]
+        public bool ContainsMultiplePersonNames { get; set; }
+
+        [Feature]
+        public bool ContainsMultipleOrganizationNames { get; set; }
+
         public void MapWordsToWordFeatures()
         {
             this.Acquisitions = WordsInPreviousContent.Contains("acquisitions");
@@ -170,7 +197,12 @@ namespace Slurper.Model
             this.Since = WordsInPreviousContent.Contains("since");
             this.Sold = WordsInPreviousContent.Contains("sold");
             this.Staff = WordsInPreviousContent.Contains("staff");
-            this.Tax = WordsInPreviousContent.Contains("tax");
+            this.Licence = WordsInPreviousContent.Contains("licence");
+            this.License = WordsInPreviousContent.Contains("license");
+            this.Creative = WordsInPreviousContent.Contains("creative");
+            this.Commons = WordsInPreviousContent.Contains("commons");
+            this.Appointment = WordsInPreviousContent.Contains("appointment");
+            this.By = WordsInPreviousContent.Contains("by");
         }
     }
 }

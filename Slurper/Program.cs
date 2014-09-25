@@ -5,6 +5,8 @@
     using System;
     using System.Collections.Generic;
 
+    using edu.stanford.nlp.ie.crf;
+
     using numl;
     using numl.Model;
     using numl.Supervised;
@@ -23,8 +25,24 @@
             const bool ItemLevelCandidates = false;
 
             var sentence1 = "Apple Genius Bar are a type of shop";
-            var sentence2 = "Genius Bar";
-            var sentence3 = "Microsoft are a large corporation based in the USA";
+            var sentence2 = "Genius Bar, the workplace of Anita Millas";
+            var sentence3 = "Microsoft are a large corporation based in the USA, Europe, Paris, PorcupineHat";
+
+            CRFClassifier classifier =
+            CRFClassifier.getClassifierNoExceptions(
+                @"C:/Users/Alice/Desktop/english.all.3class.distsim.crf.ser.gz");
+
+            Console.WriteLine("{0}\n", classifier.classifyToString(sentence3));
+
+            var classification = classifier.classify(sentence1).toArray();
+            for (var i = 0; i < classification.Length; i++)
+            {
+                Console.WriteLine("{0}\n:{1}\n", i, classification[i]);
+            }
+            
+            // classified output contains 2+ People
+            // classified output contains 2+ Organisations
+            // classified output contains 2+ Places
 
             var knownCompanyBrandRelationships = FreeBaseHelpers.GetKnownCompanyBrandRelationshipsFromConsumerCompanies();
 
