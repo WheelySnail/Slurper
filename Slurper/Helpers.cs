@@ -165,7 +165,6 @@
                                 if (brandOnItsOwn.IsMatch(initialcandidate.Node.InnerText.ToLowerInvariant())
                                     && company.ToLowerInvariant() != brand.ToLowerInvariant())
                                 {
-                                    brandsPresentInInitialCandidate.Add(brand);
                                     if (ContainsNounPhrase(brand, tagger))
                                     {
                                         brandsPresentInInitialCandidate.Add(brand); 
@@ -800,8 +799,6 @@
             }
 
             var uniqueBrands = amazonBrands.Distinct().ToList();
-
-            uniqueBrands.Sort();
 
             var newBrands = new List<String>();
 
