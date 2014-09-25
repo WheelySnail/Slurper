@@ -65,5 +65,7 @@ namespace Slurper.Model
 
         public List<string> WordsInCandidateHtml { get; set; }
 
+        [Feature]
+        public bool CaptionsContainOwner { get; set; }
     }
 }

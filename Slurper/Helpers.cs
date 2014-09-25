@@ -117,6 +117,8 @@
                     {
                         var previousContent = GetPreviousRelevantNode(initialcandidate);
 
+                        var captions = initialcandidate.Node.SelectNodes("caption");
+
                         var previousContentOuterHtml = previousContent == null
                                                                ? ""
                                                                : previousContent.OuterHtml;
@@ -135,6 +137,8 @@
                         var candidateHtmlContainsPotentialOwner = CandidateContainsPotentialOwner(initialcandidate, company);
 
                         var previousContentContainsPotentialOwner = PreviousContentContainsPotentialOwner(previousContentInnerText, company);
+
+                        var captionsContainOwner = captions != null && captions.Any(c => c.InnerText.Contains(company));
 
                         // If a company name is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
                         if (domainOrTitleContainsPotentialOwner
@@ -249,7 +253,8 @@
                                                                         ContainsMultipleBrands =
                                                                                 brandsPresentInInitialCandidate
                                                                                         .Count > 1,
-                                                                        ItemsContainBrandOnly = listOrTableItemContainingBrand.ContainsBrandOnly
+                                                                        ItemsContainBrandOnly = listOrTableItemContainingBrand.ContainsBrandOnly,
+                                                                        CaptionsContainOwner = captionsContainOwner
                                                                 };
                                             testCandidates.Add(candidate);
                                         }
@@ -310,7 +315,8 @@
                                             PageTitle = title,
                                             ContainsMultipleBrands =
                                                     brandsPresentInInitialCandidate.Count > 1,
-                                            ItemsContainBrandOnly = noOtherTextExceptBrands
+                                            ItemsContainBrandOnly = noOtherTextExceptBrands,
+                                            CaptionsContainOwner = captionsContainOwner
                                         };
 
                                         // If each list or table item with a brand contains only a brand name
@@ -456,6 +462,8 @@
 
                         previousContentInnerText = Regex.Replace(previousContentInnerText, relation.CompanyName, "");
 
+                        var captions = initialcandidate.Node.SelectNodes("caption");
+
                         // Check that the owner name for the relation is present in the title, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
 
                         var domainOrTitleContainsOwner = DomainOrTitleContainsPotentialOwner(page, relation.CompanyName, title);
@@ -463,6 +471,8 @@
                         var candidateHtmlContainsPotentialOwner = CandidateContainsPotentialOwner(initialcandidate, relation.CompanyName);
 
                         var previousContentContainsPotentialOwner = PreviousContentContainsPotentialOwner(previousContentInnerText, relation.CompanyName);
+
+                        var captionsContainOwner = captions != null && captions.Any(c => c.InnerText.Contains(relation.CompanyName));
                         
 
                         // If the company name for the relation is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
@@ -578,7 +588,8 @@
                                                                                 knownBrandsPresent.Count > 1,
                                                                         CompanyBrandRelationship =
                                                                                 positiveCandidates,
-                                                                        ItemsContainBrandOnly = listOrTableItemContainingBrand.ContainsBrandOnly
+                                                                        ItemsContainBrandOnly = listOrTableItemContainingBrand.ContainsBrandOnly,
+                                                                        CaptionsContainOwner = captionsContainOwner
                                                                 };
                                                 candidates.Add(candidate);
                                             }
@@ -638,6 +649,7 @@
                                                     knownBrandsPresent.Count > 1,
                                             CompanyBrandRelationship = positiveCandidates,
                                             ItemsContainBrandOnly = brandsOnly,
+                                            CaptionsContainOwner = captionsContainOwner
                                         };
                                         candidates.Add(candidate);                                        
                                     }
