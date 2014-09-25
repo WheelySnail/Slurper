@@ -70,5 +70,107 @@ namespace Slurper.Model
 
         [Feature]
         public bool ContainsMoreThan10Languages { get; set; }
+
+
+        [Feature]
+        public bool Since { get; set; }
+
+        [Feature]
+        public bool Own { get; set; }
+
+        [Feature]
+        public bool Products { get; set; }
+
+        [Feature]
+        public bool Product { get; set; }
+
+        [Feature]
+        public bool Became { get; set; }
+
+        [Feature]
+        public bool Merged { get; set; }
+
+        [Feature]
+        public bool Sold { get; set; }
+
+        [Feature]
+        public bool Other { get; set; }
+
+        [Feature]
+        public bool Recent { get; set; }
+
+        [Feature]
+        public bool Further { get; set; }
+
+        [Feature]
+        public bool Information { get; set; }
+
+        [Feature]
+        public bool Tax { get; set; }
+
+        [Feature]
+        public bool External { get; set; }
+
+        [Feature]
+        public bool Links { get; set; }
+
+        [Feature]
+        public bool Revenue { get; set; }
+
+        [Feature]
+        public bool Services { get; set; }
+
+        [Feature]
+        public bool Income { get; set; }
+
+        [Feature]
+        public bool Outside { get; set; }
+
+        [Feature]
+        public bool Environmental { get; set; }
+
+        [Feature]
+        public bool Reading { get; set; }
+
+        [Feature]
+        public bool Former { get; set; }
+
+
+        [Feature]
+        public bool Consulting { get; set; }
+
+        [Feature]
+        public bool Staff { get; set; }
+
+        [Feature]
+        public bool Acquisitions { get; set; }
+
+        public void MapWordsToWordFeatures()
+        {
+            this.Acquisitions = WordsInPreviousContent.Contains("acquisitions");
+            this.Became = WordsInPreviousContent.Contains("became");
+            this.Consulting = WordsInPreviousContent.Contains("consulting");
+            this.Environmental = WordsInPreviousContent.Contains("environmental");
+            this.External = WordsInPreviousContent.Contains("external");
+            this.Former = WordsInPreviousContent.Contains("former");
+            this.Further = WordsInPreviousContent.Contains("further");
+            this.Income = WordsInPreviousContent.Contains("income");
+            this.Information = WordsInPreviousContent.Contains("information");
+            this.Links = WordsInPreviousContent.Contains("links");
+            this.Merged= WordsInPreviousContent.Contains("merged");
+            this.Other = WordsInPreviousContent.Contains("other");
+            this.Outside = WordsInPreviousContent.Contains("outside");
+            this.Own = WordsInPreviousContent.Contains("own");
+            this.Product = WordsInPreviousContent.Contains("product");
+            this.Products = WordsInPreviousContent.Contains("products");
+            this.Reading = WordsInPreviousContent.Contains("reading");
+            this.Recent = WordsInPreviousContent.Contains("recent");
+            this.Revenue = WordsInPreviousContent.Contains("revenue");
+            this.Services = WordsInPreviousContent.Contains("services");
+            this.Since = WordsInPreviousContent.Contains("since");
+            this.Sold = WordsInPreviousContent.Contains("sold");
+            this.Staff = WordsInPreviousContent.Contains("staff");
+            this.Tax = WordsInPreviousContent.Contains("tax");
+        }
     }
 }

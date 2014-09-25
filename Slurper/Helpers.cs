@@ -263,6 +263,7 @@
                                                                         CaptionsContainOwner = captionsContainOwner,
                                                                         ContainsMoreThan10Languages = containsMoreThan10Languages
                                                                 };
+                                            candidate.MapWordsToWordFeatures();
                                             testCandidates.Add(candidate);
                                         }
                                     }
@@ -339,7 +340,7 @@
                                                 }
                                             }
                                         }
-
+                                        candidate.MapWordsToWordFeatures();
                                         testCandidates.Add(candidate);
                                     }
                                 }
@@ -602,6 +603,7 @@
                                                                         CaptionsContainOwner = captionsContainOwner,
                                                                         ContainsMoreThan10Languages = containsMoreThan10Languages
                                                                 };
+                                                candidate.MapWordsToWordFeatures();
                                                 candidates.Add(candidate);
                                             }
                                         }
@@ -663,6 +665,7 @@
                                             CaptionsContainOwner = captionsContainOwner,
                                             ContainsMoreThan10Languages = containsMoreThan10Languages
                                         };
+                                        candidate.MapWordsToWordFeatures();
                                         candidates.Add(candidate);                                        
                                     }
                                 }
