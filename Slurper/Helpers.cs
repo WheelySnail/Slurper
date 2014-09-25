@@ -167,7 +167,18 @@
                                 {
                                     if (ContainsNounPhrase(brand, tagger))
                                     {
-                                        brandsPresentInInitialCandidate.Add(brand); 
+                                        var nounPhrasesInCandidate =
+                                                GetFullNounPhrasesFromString(initialcandidate.Node.InnerText, tagger);
+                                        if (nounPhrasesInCandidate.Count > 0)
+                                        {
+                                            foreach (var nounPhrase in nounPhrasesInCandidate)
+                                            {
+                                                if (brand.ToLowerInvariant() == nounPhrase.ToLowerInvariant())
+                                                {
+                                                    brandsPresentInInitialCandidate.Add(brand);
+                                                } 
+                                            }
+                                        }
                                     }
 
                                 }
@@ -832,6 +843,12 @@
                     || taggedText.Contains("_NNS"));
         }
 
+        internal static bool TaggedTextContainsNounPhrase(String text)
+        {
+            return (text.Contains("_NN") || text.Contains("_NS") || text.Contains("_NNP")
+                    || text.Contains("_NNS"));
+        }
+
         internal static List<String> GetTestCompanies(List<CompanyAndBrands> companyBrandRelationships)
         {
             var companies = FreeBaseHelpers.GetKnownCompaniesFromFreeBaseBusinessOperations();
@@ -1063,6 +1080,32 @@
                 previousContent = null;
             }
             return previousContent;
+        }
+
+        internal static List<string> GetFullNounPhrasesFromString(string text, MaxentTagger tagger)
+        {
+            var nounPhrases = new List<String>();
+            var taggedText = tagger.tagString(text);
+            var tokens = taggedText.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+            var pattern = @"_NN|_NS|_NNP|_NNS";
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                if (TaggedTextContainsNounPhrase(tokens[i]) && (i+1) != tokens.Count && TaggedTextContainsNounPhrase(tokens[i +1]))
+						{
+						var plainToken1 = Regex.Replace(tokens[i], pattern, "");
+                        var plainToken2 = Regex.Replace(tokens[i + 1], pattern, "");
+						    nounPhrases.Add(plainToken1 + " " + plainToken2);
+						}
+                else
+                {
+                    if(TaggedTextContainsNounPhrase(tokens[i]))
+                    {
+                        var plainToken1 = Regex.Replace(tokens[i], pattern, "");
+                        nounPhrases.Add(plainToken1);
+                    }
+                }
+            }
+            return nounPhrases;
         }
 
         private static List<CompanyAndBrands> GetKnownRelationsWhereCompanyIsPresentOnPage(
