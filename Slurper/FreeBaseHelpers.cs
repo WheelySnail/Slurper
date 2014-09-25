@@ -1,4 +1,4 @@
-namespace CandidateParsingAgilityPack
+namespace Slurper
 {
     #region Using Directives
 
@@ -9,9 +9,9 @@ namespace CandidateParsingAgilityPack
     using System.Net.Http.Headers;
     using System.Text.RegularExpressions;
 
-    using CandidateParsingAgilityPack.Model;
-
     using Newtonsoft.Json;
+
+    using Slurper.Model;
 
     #endregion
 

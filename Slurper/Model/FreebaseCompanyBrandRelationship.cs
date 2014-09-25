@@ -1,4 +1,4 @@
-﻿namespace CandidateParsingAgilityPack.Model
+﻿namespace Slurper.Model
 {
     #region Using Directives
 

@@ -1,4 +1,4 @@
-﻿namespace CandidateParsingAgilityPack
+﻿namespace Slurper
 {
     #region Using Directives
 

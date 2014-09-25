@@ -1,15 +1,15 @@
-﻿namespace CandidateParsingAgilityPack
+﻿namespace Slurper
 {
     #region Using Directives
 
     using System;
     using System.Collections.Generic;
 
-    using CandidateParsingAgilityPack.Model;
-
     using numl.Model;
     using numl.Supervised;
     using numl.Supervised.DecisionTree;
+
+    using Slurper.Model;
 
     #endregion
 

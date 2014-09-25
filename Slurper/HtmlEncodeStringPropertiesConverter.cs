@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CandidateParsingAgilityPack
+﻿namespace Slurper
 {
-    using System.Web;
+    using System;
 
     using CsQuery.Output;
 
     using Newtonsoft.Json;
-        public class HtmlEncodeStringPropertiesConverter : JsonConverter
+
+    public class HtmlEncodeStringPropertiesConverter : JsonConverter
         {
             private HtmlEncoderBasic HtmlEncoderBasic { get; set; }
             public override bool CanConvert(Type objectType)

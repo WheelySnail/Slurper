@@ -1,4 +1,4 @@
-﻿namespace CandidateParsingAgilityPack.Model
+﻿namespace Slurper.Model
 {
     #region Using Directives
 
@@ -6,10 +6,8 @@
 
     #endregion
 
-    public class Company
+    public class Brand
     {
-        public string Id { get; set; }
-
         public String Name { get; set; }
     }
 }

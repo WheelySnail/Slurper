@@ -1,4 +1,4 @@
-namespace CandidateParsingAgilityPack.Model
+﻿namespace Slurper.Model
 {
     #region Using Directives
 
@@ -6,12 +6,9 @@ namespace CandidateParsingAgilityPack.Model
 
     #endregion
 
-    internal class FreebaseBrand
+    internal class FreebaseBusinessOperation
     {
         [JsonProperty(PropertyName = "name")]
         public string Name { get; set; }
-
-        [JsonProperty(PropertyName = "type")]
-        public string Type { get; set; }
     }
 }

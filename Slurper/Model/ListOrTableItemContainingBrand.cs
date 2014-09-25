@@ -1,4 +1,4 @@
-namespace CandidateParsingAgilityPack.Model
+namespace Slurper.Model
 {
     using System.Collections.Generic;
 

@@ -1,16 +1,17 @@
-﻿namespace CandidateParsingAgilityPack.Model
+namespace Slurper.Model
 {
     #region Using Directives
-
-    using System.Collections.Generic;
 
     using Newtonsoft.Json;
 
     #endregion
 
-    internal class FreebaseBusinessOperation
+    internal class FreebaseBrand
     {
         [JsonProperty(PropertyName = "name")]
         public string Name { get; set; }
+
+        [JsonProperty(PropertyName = "type")]
+        public string Type { get; set; }
     }
 }

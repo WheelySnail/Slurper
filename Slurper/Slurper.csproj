@@ -7,8 +7,8 @@
     <ProjectGuid>{8CBC70B2-78C6-4BE3-9B5B-EF51E03017CC}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CandidateParsingAgilityPack</RootNamespace>
-    <AssemblyName>CandidateParsingAgilityPack</AssemblyName>
+    <RootNamespace>Slurper</RootNamespace>
+    <AssemblyName>Slurper</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

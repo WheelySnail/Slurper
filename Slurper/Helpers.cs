@@ -1,4 +1,4 @@
-﻿namespace CandidateParsingAgilityPack
+﻿namespace Slurper
 {
     #region Using Directives
 
@@ -8,8 +8,6 @@
     using System.Linq;
     using System.Text.RegularExpressions;
 
-    using CandidateParsingAgilityPack.Model;
-
     using CsQuery.ExtensionMethods.Internal;
 
     using Html;
@@ -17,6 +15,8 @@
     using HtmlAgilityPack;
 
     using Newtonsoft.Json;
+
+    using Slurper.Model;
 
     #endregion
 
