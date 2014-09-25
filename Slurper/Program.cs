@@ -11,6 +11,12 @@
 
     using edu.stanford.nlp.ie.crf;
     using edu.stanford.nlp.ling;
+    using edu.stanford.nlp.parser.lexparser;
+    using edu.stanford.nlp.process;
+    using edu.stanford.nlp.tagger.maxent;
+    using edu.stanford.nlp.trees;
+
+    using java.io;
 
     using numl;
     using numl.Model;
@@ -20,6 +26,7 @@
     using Slurper.Model;
 
     using Attribute = com.sun.tools.javac.code.Attribute;
+    using Console = System.Console;
 
     #endregion
 
@@ -31,6 +38,8 @@
             // Change to false to retrieve list/ table level candidates representing one company and any of its brands present in that block
             const bool ItemLevelCandidates = false;
 
+            MaxentTagger tagger = new MaxentTagger(@"C:/Users/Alice/Desktop/stanford-postagger-2014-08-27/models/english-left3words-distsim.tagger");
+
             CRFClassifier classifier =
             CRFClassifier.getClassifierNoExceptions(
                 @"C:/Users/Alice/Desktop/english.all.3class.distsim.crf.ser.gz");
@@ -41,13 +50,13 @@
 
             trainingCandidates.AddRange(GetPositiveTrainingCandidates(
                                                                            knownCompanyBrandRelationships,
-                                                                           ItemLevelCandidates, classifier));
+                                                                           ItemLevelCandidates, classifier, tagger));
 
             trainingCandidates.AddRange(GetNegativeTrainingCandidates(
                                                                            knownCompanyBrandRelationships,
-                                                                           ItemLevelCandidates, classifier));
+                                                                           ItemLevelCandidates, classifier, tagger));
 
-            var testCandidates = GetTestCandidates(knownCompanyBrandRelationships, ItemLevelCandidates, classifier);
+            var testCandidates = GetTestCandidates(knownCompanyBrandRelationships, ItemLevelCandidates, classifier, tagger);
 
             //// Create naive bayes, holding back data
             //var d = Descriptor.Create<Candidate>();
@@ -94,7 +103,7 @@
             return model;
         }
 
-        private static List<Candidate> GetPositiveTrainingCandidates(List<CompanyAndBrands> companyBrandRelationships, bool itemBrandLevelCandidates, CRFClassifier classifier)
+        private static List<Candidate> GetPositiveTrainingCandidates(List<CompanyAndBrands> companyBrandRelationships, bool itemBrandLevelCandidates, CRFClassifier classifier, MaxentTagger tagger)
         {
             // Only use seed data where the company owns more than one brand
             // TODO should I remove this step as it's not matched in the negative examples? 
@@ -107,14 +116,14 @@
                                                                     pages,
                                                                     knownCompanyBrandRelationshipsWithMultipleBrands,
                                                                     itemBrandLevelCandidates,
-                                                                    true, classifier);
+                                                                    true, classifier, tagger);
 
             Helpers.OutputCandidates(candidates, "positivetraining");
 
             return candidates;
         }
 
-        private static List<Candidate> GetNegativeTrainingCandidates(List<CompanyAndBrands> companyBrandRelationships, bool itemBrandLevelCandidates, CRFClassifier classifier)
+        private static List<Candidate> GetNegativeTrainingCandidates(List<CompanyAndBrands> companyBrandRelationships, bool itemBrandLevelCandidates, CRFClassifier classifier, MaxentTagger tagger)
         {
             var knownCompanyBrandNonRelationships =
                     Helpers.CreateKnownCompanyBrandNonRelationships(companyBrandRelationships);
@@ -125,16 +134,16 @@
                                                                             pages,
                                                                             knownCompanyBrandNonRelationships,
                                                                             itemBrandLevelCandidates,
-                                                                            false, classifier);
+                                                                            false, classifier, tagger);
 
             Helpers.OutputCandidates(negativeCandidates, "negativetraining");
 
             return negativeCandidates;
         }
 
-        private static List<Candidate> GetTestCandidates(List<CompanyAndBrands> companyBrandRelationships, bool itemLevelCandidates, CRFClassifier classifier)
+        private static List<Candidate> GetTestCandidates(List<CompanyAndBrands> companyBrandRelationships, bool itemLevelCandidates, CRFClassifier classifier, MaxentTagger tagger)
         {
-            var testBrands = Helpers.GetTestBrands(companyBrandRelationships);
+            var testBrands = Helpers.GetTestBrands(companyBrandRelationships, tagger);
 
             var testCompanies = Helpers.GetTestCompanies(companyBrandRelationships);
 
@@ -149,7 +158,7 @@
 
             var pages = Helpers.GetPages("C:/Users/Alice/Desktop/TestDocuments");
 
-            var testCandidates = Helpers.GetTestCandidatesFromPages(pages, testCompanies, testBrands, itemLevelCandidates, classifier);
+            var testCandidates = Helpers.GetTestCandidatesFromPages(pages, testCompanies, testBrands, itemLevelCandidates, classifier, tagger);
 
             return testCandidates;
         }

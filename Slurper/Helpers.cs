@@ -14,6 +14,7 @@
     using CsQuery.ExtensionMethods.Internal;
 
     using edu.stanford.nlp.ie.crf;
+    using edu.stanford.nlp.tagger.maxent;
 
     using Html;
 
@@ -74,7 +75,7 @@
             return knownCandidates.Where(r => r.BrandNames.Count() > 1).ToList();
         }
 
-        public static List<Candidate> GetTestCandidatesFromPages(IEnumerable<string> pages, List<string> companies, List<string> brands, bool itemBrandLevelCandidates, CRFClassifier classifier)
+        public static List<Candidate> GetTestCandidatesFromPages(IEnumerable<string> pages, List<string> companies, List<string> brands, bool itemBrandLevelCandidates, CRFClassifier classifier, MaxentTagger tagger)
         {
             var testCandidates = new List<Candidate>();
 
@@ -428,7 +429,7 @@
             return trimmedText;
         }
 
-        public static List<Candidate> GetTrainingCandidatesFromPages(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships, bool itemBrandLevelCandidates, bool positiveCandidates, CRFClassifier classifier)
+        public static List<Candidate> GetTrainingCandidatesFromPages(IEnumerable<string> pages, List<CompanyAndBrands> knownCompanyAndBrandsRelationships, bool itemBrandLevelCandidates, bool positiveCandidates, CRFClassifier classifier, MaxentTagger tagger)
         {
             var doc = new HtmlDocument();
 
@@ -782,7 +783,7 @@
             return Directory.GetFiles(path, "*.htm*", SearchOption.AllDirectories).Where(f => !f.Contains("Image~") && !f.Contains("Talk~")); 
         }
 
-        internal static List<String> GetTestBrands(List<CompanyAndBrands> companyBrandRelationships)
+        internal static List<string> GetTestBrands(List<CompanyAndBrands> companyBrandRelationships, MaxentTagger tagger)
         {
             var amazonBrands = new List<String>();
 
@@ -801,9 +802,20 @@
             {
                 var trimmedBrand = brand.Trim();
 
-                if ((!companyBrandRelationships.Any(rel => rel.BrandNames.Contains(trimmedBrand))) && trimmedBrand.Length > 2)
+                if ((!companyBrandRelationships.Any(rel => rel.BrandNames.Contains(trimmedBrand)))
+                    && trimmedBrand.Length > 2)
                 {
-                    newBrands.Add(trimmedBrand.ToLowerInvariant());
+                    var taggedBrand = tagger.tagString(trimmedBrand);
+
+                    if (taggedBrand.Contains("_NN") || taggedBrand.Contains("_NS") || taggedBrand.Contains("_NNP")
+                        || taggedBrand.Contains("_NNS"))
+                    {
+                        newBrands.Add(trimmedBrand.ToLowerInvariant());
+                    }
+                    else
+                    {
+                        var b = "oops";
+                    }
                 }
                 else
                 {
