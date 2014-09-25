@@ -177,6 +177,7 @@
 
                                     var itemsWithBrand = new List<ListOrTableItem>();
 
+                                    // Make sure inner segment length is less than 300 chars as heuristic against layout tables
                                     innerSegments.AddRange(allInnerSegments.Where(ins => ins.InnerText.ToLowerInvariant().Contains(brand.ToLowerInvariant())));
 
                                     foreach (var innerSegment in innerSegments)
@@ -349,15 +350,16 @@
             var initialCandidateSegments =
                     root.Descendants("table")
                         .ToList()
-                        .Where(table => !table.OuterHtml.Contains("<ul>"))
+                        .Where(table => !table.OuterHtml.Contains("<ul>") && !table.ChildNodes.Any(cn => cn.InnerText.Length > 300) && !(table.Descendants("tr").ToList().Count > 100))
                         .Select(table => new InitialCandidate() { Node = table, Type = "table" })
                         .ToList();
 
             initialCandidateSegments.AddRange(
                                               root.Descendants("ul")
                                                   .ToList()
-                                                  .Where(list => !list.InnerHtml.Contains("<ul>"))
+                                                  .Where(list => !list.InnerHtml.Contains("<ul>") && !list.ChildNodes.Any(cn => cn.InnerText.Length > 300) && !(list.Descendants("li").ToList().Count > 100))
                                                   .Select(list => new InitialCandidate() { Node = list, Type = "list" }));
+            // Length check as a heuristic to prevent uptake of entire pages using a table as layout
             return initialCandidateSegments;
         }
 
@@ -943,6 +945,12 @@
                         previousContent = grandparentNode.PreviousSibling.PreviousSibling.PreviousSibling;
                     }
                 }
+            }
+
+            // Prevent very large sections of previous content as these tend to be less informative
+            if (previousContent !=null && previousContent.InnerText.Length > 20000)
+            {
+                previousContent = null;
             }
             return previousContent;
         }
