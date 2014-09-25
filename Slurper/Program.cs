@@ -5,6 +5,7 @@
     using System;
     using System.Collections.Generic;
 
+    using numl;
     using numl.Model;
     using numl.Supervised;
     using numl.Supervised.DecisionTree;
@@ -39,6 +40,16 @@
 
             var testCandidates = GetTestCandidates(knownCompanyBrandRelationships, ItemLevelCandidates);
 
+            //// Create naive bayes, holding back data
+            //var d = Descriptor.Create<Candidate>();
+            //var g = new DecisionTreeGenerator(d);
+            //g.SetHint(0.5);
+            //// The Learner uses 80% of the data to train the model and 20% to test the model. The learner also runs the generator 1000 times and returns the most accurate model.
+            //var nbmodel = Learner.Learn(trainingCandidates, 0.80, 1000, g);
+            //Console.WriteLine(nbmodel);
+            //Console.ReadLine();
+
+            // Create decision tree
             var model = GenerateModel(trainingCandidates);
 
             Console.WriteLine(model);
