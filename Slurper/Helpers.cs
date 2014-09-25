@@ -166,6 +166,11 @@
                                     && company.ToLowerInvariant() != brand.ToLowerInvariant())
                                 {
                                     brandsPresentInInitialCandidate.Add(brand);
+                                    if (ContainsNounPhrase(brand, tagger))
+                                    {
+                                        brandsPresentInInitialCandidate.Add(brand); 
+                                    }
+
                                 }
                             }
 
@@ -805,17 +810,14 @@
                 var trimmedBrand = brand.Trim();
 
                 if ((!companyBrandRelationships.Any(rel => rel.BrandNames.Contains(trimmedBrand)))
-                    && trimmedBrand.Length > 2)
+                    && trimmedBrand.Length > 2 && ContainsNounPhrase(trimmedBrand.ToLowerInvariant(), tagger))
                 {
-                    if (ContainsNounPhrase(trimmedBrand, tagger))
-                    {
-                        newBrands.Add(trimmedBrand.ToLowerInvariant());
-                    }
+                    newBrands.Add(trimmedBrand.ToLowerInvariant());
                 }
             }
 
             var troublesome2LetterBrands = new List<String> { "ee", "et", "ry", "ss", "up", "ls", "oe", "se", "od", "tr", "ns", "ge", "ms", "ic", "am", "ge", "ns", "pa", "ips", "ps", "ub", "at" };
-            var brandStopList = new List<String> { "bury", "ting", "may", "div", "chocolate", "fruit", "green", "mini", "his", "none", "food", "sen", "ips", "premium", "ion", "ist", "ngs", "ams", "none", "ist", "rts", "book", "official", "entity", "ref", "image", "border", "icon", "max", "bold", "default", "amp", "august", "rft", "non", "various", "ips", "computer", "other", "generic", "block", "m.c" };
+            var brandStopList = new List<String> { "bury", "ting", "may", "div", "chocolate", "fruit", "green", "mini", "his", "none", "food", "sen", "ips", "premium", "ion", "ist", "ngs", "ams", "none", "ist", "rts", "book", "official", "entity", "ref", "image", "border", "icon", "max", "bold", "default", "amp", "august", "rft", "non", "various", "ips", "computer", "other", "generic", "block", "m.c", "billion"};
 
             foreach (var stopListBrand in brandStopList)
             {
