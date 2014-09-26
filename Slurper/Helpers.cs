@@ -839,13 +839,13 @@
         {
             var taggedText = tagger.tagString(text);
 
-            return (taggedText.Contains("_NN") || taggedText.Contains("_NS") || taggedText.Contains("_NNP")
+            return (taggedText.Contains("_NN") || taggedText.Contains("_NNS") || taggedText.Contains("_NNP")
                     || taggedText.Contains("_NNS"));
         }
 
         internal static bool TaggedTextContainsNounPhrase(String text)
         {
-            return (text.Contains("_NN") || text.Contains("_NS") || text.Contains("_NNP")
+            return (text.Contains("_NN") || text.Contains("_NNS") || text.Contains("_NNP")
                     || text.Contains("_NNS"));
         }
 
@@ -1085,23 +1085,28 @@
         internal static List<string> GetFullNounPhrasesFromString(string text, MaxentTagger tagger)
         {
             var nounPhrases = new List<String>();
-            var taggedText = tagger.tagString(text);
-            var tokens = taggedText.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-            var pattern = @"_NN|_NS|_NNP|_NNS";
-            for (int i = 0; i < tokens.Count; i++)
+            // Split into new lines before tagging - don't want to require that names on different lines are all matched by one brand
+            string[] lines = Regex.Split(text, @"(?<=[\n])");
+            foreach (var line in lines)
             {
-                if (TaggedTextContainsNounPhrase(tokens[i]) && (i+1) != tokens.Count && TaggedTextContainsNounPhrase(tokens[i +1]))
-						{
-						var plainToken1 = Regex.Replace(tokens[i], pattern, "");
-                        var plainToken2 = Regex.Replace(tokens[i + 1], pattern, "");
-						    nounPhrases.Add(plainToken1 + " " + plainToken2);
-						}
-                else
+                var taggedText = tagger.tagString(line);
+                var tokens = taggedText.Split(new char[] { '.', '?', '!', ' ', ';', ':', ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                var pattern = @"_NNPS|_NNP|_NNS|_NN";
+                for (int i = 0; i < tokens.Count; i++)
                 {
-                    if(TaggedTextContainsNounPhrase(tokens[i]))
+                    if (TaggedTextContainsNounPhrase(tokens[i]) && (i + 1) != tokens.Count && TaggedTextContainsNounPhrase(tokens[i + 1]))
                     {
                         var plainToken1 = Regex.Replace(tokens[i], pattern, "");
-                        nounPhrases.Add(plainToken1);
+                        var plainToken2 = Regex.Replace(tokens[i + 1], pattern, "");
+                        nounPhrases.Add(plainToken1 + " " + plainToken2);
+                    }
+                    else
+                    {
+                        if (TaggedTextContainsNounPhrase(tokens[i]))
+                        {
+                            var plainToken1 = Regex.Replace(tokens[i], pattern, "");
+                            nounPhrases.Add(plainToken1);
+                        }
                     }
                 }
             }

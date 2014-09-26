@@ -15,9 +15,13 @@ namespace Slurper.Model
         public bool CompanyBrandRelationship { get; set; }
 
         [Feature]
-        public String CandidateHtml { get; set; }
+        public String CandidateHtmlWithoutCandidateEntities { get; set; }
 
         [Feature]
+        public string PreviousContentWithoutCandidateEntities { get; set; }
+
+        public String CandidateHtml { get; set; }
+
         public string PreviousContent { get; set; }
 
         [Feature]
