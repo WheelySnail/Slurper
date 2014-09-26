@@ -572,11 +572,6 @@
 
                         var previousContentContainsPotentialOwner = PreviousContentContainsPotentialOwner(previousContentInnerText, relation.CompanyName);
 
-                        var nearestHeadingIndicatesNoRelation = nearestHeadingAbove.ToLowerInvariant().Contains("external links") || nearestHeadingAbove.ToLowerInvariant().Contains("references") || nearestHeadingAbove.ToLowerInvariant().Contains("by appointment to"); ;
-
-                        var previousContentIndicatesNoRelation =
-previousContentInnerText.ToLowerInvariant().Contains("external links") || previousContentInnerText.ToLowerInvariant().Contains("references") || previousContentInnerText.ToLowerInvariant().Contains("by appointment to");
-
                         var nerTaggedInnerText = classifier.classifyToString(initialcandidate.Node.InnerText);
 
                         var numberOfPeople = GetNumberOfPersonNames(nerTaggedInnerText);
@@ -588,7 +583,7 @@ previousContentInnerText.ToLowerInvariant().Contains("external links") || previo
                         var numberOfLanguageNames = NumberOfItemsContainingALanguageName(initialcandidate);
 
                         // If the company name for the relation is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
-                        if (!nearestHeadingIndicatesNoRelation && ( !previousContentIndicatesNoRelation && (numberOfLanguageNames < 5 && (domainOrTitleContainsOwner || candidateHtmlContainsPotentialOwner || previousContentContainsPotentialOwner))))
+                        if (domainOrTitleContainsOwner || candidateHtmlContainsPotentialOwner || previousContentContainsPotentialOwner)
                         {
                             var knownBrandsPresent = new List<string>();
 
