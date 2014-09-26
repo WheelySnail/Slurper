@@ -17,14 +17,14 @@
         [JsonProperty(PropertyName = "company")]
         public string Company { get; set; }
 
-        [JsonProperty(PropertyName = "source")]
-        public RelationSource Source { get; set; }
-
         [JsonProperty(PropertyName = "brand")]
         public string Brand { get; set; }
 
         [JsonProperty(PropertyName = "occurrences")]
         public int Occurrences { get; set; }
+
+        [JsonProperty(PropertyName = "source")]
+        public RelationSource Source { get; set; }
     }
 
     internal class RelationSource
