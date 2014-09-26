@@ -65,7 +65,7 @@ namespace Slurper
 
         internal static List<String> GetKnownCompaniesFromFreeBaseBusinessOperations()
         {
-            string companiesQuery = "?query=[{\"type\":\"/business/business_operation\",\"name\": null,\"limit\":10}]&key=" + API_KEY;
+            string companiesQuery = "?query=[{\"type\":\"/business/business_operation\",\"name\": null,\"limit\":100}]&key=" + API_KEY;
 
             var client = new HttpClient();
             client.BaseAddress = new Uri(url);
@@ -119,11 +119,11 @@ namespace Slurper
             var productsResponse = new FreeBaseConsumerCompanyResponse();
 
             string companiesWithBrandsQuery =
-                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"brands\":[{\"brand\": null}],\"limit\":30}]&key="
+                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"brands\":[{\"brand\": null}],\"limit\":100}]&key="
                     + API_KEY;
 
             string companiesWithProductsQuery =
-                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"products\":[{\"consumer_product\": null}],\"limit\":30}]&key="
+                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"products\":[{\"consumer_product\": null}],\"limit\":100}]&key="
                     + API_KEY;
 
             var client = new HttpClient();
@@ -167,8 +167,8 @@ namespace Slurper
 
                 foreach (var companyAndProducts in companiesAndProducts)
                 {
-                    if (companyAndBrands.CompanyNames.FirstOrDefault()
-                        == companyAndProducts.CompanyNames.FirstOrDefault())
+                    if (companyAndBrands.CompanyName
+                        == companyAndProducts.CompanyName)
                     {
                         companyAndBrands.BrandNames.AddRange(companyAndProducts.BrandNames);
                     }
@@ -180,8 +180,8 @@ namespace Slurper
                 if (
                         !deDupedCompanyAndBrandsList.Exists(
                                                             cb =>
-                                                            cb.CompanyNames.FirstOrDefault()
-                                                            == companyAndProduct.CompanyNames.FirstOrDefault()))
+                                                            cb.CompanyName
+                                                            == companyAndProduct.CompanyName))
                 {
                     deDupedCompanyAndBrandsList.Add(companyAndProduct);
                 }
@@ -226,12 +226,7 @@ namespace Slurper
                                                   new CompanyAndBrands
                                                       {
                                                               BrandNames = allBrandsAndProducts,
-                                                              CompanyNames =
-                                                                      new List<string>
-                                                                          {
-                                                                                  freebaseConsumerCompany
-                                                                                          .Name
-                                                                          }
+                                                              CompanyName = freebaseConsumerCompany.Name
                                                       });
                 }
             }
