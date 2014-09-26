@@ -4,6 +4,7 @@
 
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
@@ -44,6 +45,9 @@
                 allBrands.AddRange(knownCompanyBrandRelationship.BrandNames);
             }
 
+            // Remove certain items where there's a real overlap in ownership between two companies, which could lead to incorrect negative examples
+            allBrands.RemoveAll(nr => nr == "Ambi Pur" || nr == "Dolce Gusto" || nr == "Persil" || nr == "sunlight");
+
             // For each entry, make new local copy of the list
             // Remove items which are associated with the brand
             for (int i = 0; i < knownCompanyBrandRelationships.Count - 1; i++)
@@ -67,6 +71,9 @@
                                                  BrandNames = allTheBrandsExceptYoursI
                                          });
             }
+
+            // Remove certain items where there's a real overlap in ownership between two companies, which could lead to incorrect negative examples
+            nonRelationships.RemoveAll(nr => nr.CompanyName == "Cadbury" || nr.CompanyName == "Kraft Foods");
 
             return nonRelationships;
         }
@@ -201,6 +208,8 @@
 
                                 }
                             }
+
+                            brandsPresentInInitialCandidate = brandsPresentInInitialCandidate.Distinct().ToList();
 
                             if (brandsPresentInInitialCandidate.Count > 0)
                             {
@@ -932,9 +941,6 @@
 
             shorterList.AddRange(newCompanies.Take(1000));
 
-            // TODO remove this hack used for testing
-            shorterList.Add("Cadbury");
-
             return shorterList;
         }
 
@@ -1263,8 +1269,8 @@
             foreach (var relation in knownCompanyAndBrandsRelationships)
             {
 
-                if (root.OuterHtml.ToLowerInvariant().Contains(relation.CompanyName.ToLowerInvariant() + " ")
-                    || page.ToLowerInvariant().Contains(relation.CompanyName.ToLowerInvariant() + " "))
+                if (relation.CompanyName != null && (root.OuterHtml.ToLowerInvariant().Contains(relation.CompanyName.ToLowerInvariant() + " ")
+                                                     || page.ToLowerInvariant().Contains(relation.CompanyName.ToLowerInvariant() + " ")))
                 {
                     relationsWhereOwnerMentionedOnPage.Add(relation);
                 }

@@ -16,16 +16,14 @@ namespace Slurper.Model
         [Label]
         public bool CompanyBrandRelationship { get; set; }
 
-        [Feature]
-        public String CandidateHtmlWithoutCandidateEntities { get; set; }
+        public string CandidateHtmlWithoutCandidateEntities { get; set; }
 
-        [Feature]
         public string PreviousContentWithoutCandidateEntities { get; set; }
 
         [Feature]
         public string NearestHeadingAbove { get; set; }
 
-        public String CandidateHtml { get; set; }
+        public string CandidateHtml { get; set; }
 
         public string PreviousContent { get; set; }
 
@@ -60,13 +58,13 @@ namespace Slurper.Model
 
         public string KnownBrand { get; set; }
 
-        public List<String> KnownBrands { get; set; }
+        public List<string> KnownBrands { get; set; }
 
         public CompanyAndBrands KnownCompanyAndBrands { get; set; }
 
         public string KnownCompanyName { get; set; }
 
-        public String PageTitle { get; set; }
+        public string PageTitle { get; set; }
 
         public string Uri { get; set; }
 
@@ -79,7 +77,6 @@ namespace Slurper.Model
 
         [Feature]
         public int NumberOfItemsWithLanguages { get; set; }
-
 
         [Feature]
         public bool Since { get; set; }
@@ -223,6 +220,7 @@ namespace Slurper.Model
             this.Core = WordsInPreviousContent.Contains("core");
             this.Major = WordsInPreviousContent.Contains("major");
             this.Brands = WordsInPreviousContent.Contains("brands");
+            this.Tax = WordsInPreviousContent.Contains("tax");
         }
     }
 }

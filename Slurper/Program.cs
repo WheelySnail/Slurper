@@ -3,6 +3,8 @@
     #region Using Directives
 
     using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Linq;
 
     using edu.stanford.nlp.ie.crf;
     using edu.stanford.nlp.tagger.maxent;
@@ -39,9 +41,10 @@
                                                                            knownCompanyBrandRelationships,
                                                                            ItemLevelCandidates, classifier, tagger));
 
+            // Make sure the number of positive and negative candidates is equal
             trainingCandidates.AddRange(GetNegativeTrainingCandidates(
                                                                            knownCompanyBrandRelationships,
-                                                                           ItemLevelCandidates, classifier, tagger));
+                                                                           ItemLevelCandidates, classifier, tagger).Take(trainingCandidates.Count));
 
             var testCandidates = GetTestCandidates(knownCompanyBrandRelationships, ItemLevelCandidates, classifier, tagger);
 
@@ -64,6 +67,8 @@
             Helpers.OutputCandidates(testCandidates, "labelledTestCandidates");
 
             Helpers.OutputJsonResults(testCandidates);
+
+            Console.WriteLine("done");
 
             Console.ReadLine();
         }
