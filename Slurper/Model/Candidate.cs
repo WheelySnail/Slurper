@@ -22,6 +22,9 @@ namespace Slurper.Model
         [Feature]
         public string PreviousContentWithoutCandidateEntities { get; set; }
 
+        [Feature]
+        public string NearestHeadingAbove { get; set; }
+
         public String CandidateHtml { get; set; }
 
         public string PreviousContent { get; set; }

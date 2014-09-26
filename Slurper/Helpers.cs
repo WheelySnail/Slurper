@@ -122,6 +122,13 @@
                     {
                         var previousContent = GetPreviousRelevantNode(initialcandidate);
 
+                        var nearestHeadingAbove = "";
+
+                        if (root.Descendants("h1").Any() || root.Descendants("h2").Any())
+                        {
+                            nearestHeadingAbove = GetNearestHeadingAbove(initialcandidate);
+                        }
+
                         var previousContentOuterHtml = previousContent == null
                                                                ? ""
                                                                : previousContent.OuterHtml;
@@ -136,8 +143,6 @@
 
                         var previousContentInnerTextWithoutEntity = Regex.Replace(previousContentInnerText, company, "");
 
-                        // Check that the owner name for the relation is present in the title, domain, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
-                        // Only use one company name at the moment so a loop isn't necessary
 
                         var domainOrTitleContainsPotentialOwner = DomainOrTitleContainsPotentialOwner(page, company, title);
 
@@ -280,6 +285,7 @@
                                                                         CandidateHtmlWithoutCandidateEntities = listOrTableItemContainingBrand.ItemHtmlWithoutBrand,
                                                                         CandidateHtmlWordCount = listOrTableItemContainingBrand.ItemWordCount,
                                                                         WordsInCandidateHtml = listOrTableItemContainingBrand.WordsInItem,
+                                                                        NearestHeadingAbove = nearestHeadingAbove,
                                                                         KnownCompanyName = company,
                                                                         KnownBrands =
                                                                                 brandsPresentInInitialCandidate,
@@ -348,6 +354,7 @@
 
                                             CandidateHtmlWordCount = wordsInCandidateHtml.Count(),
                                             WordsInCandidateHtml = wordsInCandidateHtml,
+                                            NearestHeadingAbove = nearestHeadingAbove,
                                             KnownCompanyName = company,
                                             KnownBrands = brandsPresentInInitialCandidate,
                                             DomainOrPageTitleContainsOwner =
@@ -389,6 +396,40 @@
             }
 
             return testCandidates;
+        }
+
+        private static string GetNearestHeadingAbove(InitialCandidate initialcandidate)
+        {
+            var elementToCheck = initialcandidate.Node;
+
+            var totalToCheck = 16;
+
+            while ((totalToCheck > 0))
+            {
+                if (elementToCheck.OuterHtml.Contains("<h1>") || elementToCheck.OuterHtml.Contains("<h2>"))
+                {
+                    return elementToCheck.InnerText;
+                }
+                else
+                {
+                    if (totalToCheck == 12 || totalToCheck == 8 || totalToCheck == 4)
+                    {
+                        if (elementToCheck.ParentNode != null && elementToCheck.ParentNode.PreviousSibling != null)
+                        {
+                            elementToCheck = elementToCheck.ParentNode.PreviousSibling;
+                        }
+                    }
+                    else
+                    {
+                        if (elementToCheck.PreviousSibling != null)
+                        {
+                            elementToCheck = elementToCheck.PreviousSibling;
+                        }
+                    }
+                }
+                totalToCheck--;
+            }
+            return "";
         }
 
         private static List<InitialCandidate> InitialCandidateSegments(HtmlNode root)
@@ -512,7 +553,12 @@
 
                         previousContentInnerText = Regex.Replace(previousContentInnerText, relation.CompanyName, "");
 
-                        // Check that the owner name for the relation is present in the title, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
+                        var nearestHeadingAbove = "";
+
+                        if (root.Descendants("h1").Any() || root.Descendants("h2").Any())
+                        {
+                            nearestHeadingAbove = GetNearestHeadingAbove(initialcandidate);
+                        }
 
                         var domainOrTitleContainsOwner = DomainOrTitleContainsPotentialOwner(page, relation.CompanyName, title);
 
@@ -631,6 +677,7 @@
                                                                         CandidateHtmlWithoutCandidateEntities = listOrTableItemContainingBrand.ItemHtmlWithoutBrand,
                                                                         WordsInCandidateHtml = listOrTableItemContainingBrand.WordsInItem,
                                                                         CandidateHtmlWordCount = listOrTableItemContainingBrand.WordsInItem.Count,
+                                                                        NearestHeadingAbove = nearestHeadingAbove,
                                                                         KnownCompanyName =
                                                                                 relation.CompanyName,
                                                                         KnownBrands = knownBrandsPresent,
@@ -696,6 +743,7 @@
                                                                    candidateHtmlWithoutBrands),
                                             WordsInCandidateHtml = wordsInCandidateHtml.ToList(),
                                             CandidateHtmlWordCount = wordsInCandidateHtml.Count(),
+                                            NearestHeadingAbove = nearestHeadingAbove,
                                             KnownCompanyName = relation.CompanyName,
                                             KnownBrands = knownBrandsPresent,
                                             KnownCompanyAndBrands = relation,
@@ -921,7 +969,6 @@
                 }
             }
 
-            // Make clean deduped list
             var dedupedClassifiedRelations = new List<ClassifiedRelation>();
 
             var uniqueGroup =
@@ -940,16 +987,20 @@
 
             foreach (var duplicateGroup in duplicateGroups)
             {
-                var count = duplicateGroup.Count();
                 var trueInstances = duplicateGroup.Where(cr => cr.IsRelation);
                 var falseInstances = duplicateGroup.Where(cr => !cr.IsRelation);
                 var isRelation = trueInstances.Count() >= falseInstances.Count();
+                var text = trueInstances.FirstOrDefault().Source.Text;
                 dedupedClassifiedRelations.Add(new ClassifiedRelation
                                                    {
                                                            IsRelation = isRelation,
                                                            Occurrences = trueInstances.Count(),
                                                            Company = duplicateGroup.Key.Company,
-                                                           Brand = duplicateGroup.Key.Brand
+                                                           Brand = duplicateGroup.Key.Brand,
+                                                           Source = new RelationSource
+                                                                        {
+                                                                                Text = text
+                                                                        }
                                                    });
             }
 
@@ -977,10 +1028,10 @@
                                    "Contains company/brand relationship? " + candidate.CompanyBrandRelationship
                                    + Environment.NewLine + Environment.NewLine + "Page title: " + candidate.PageTitle
                                    + Environment.NewLine + Environment.NewLine + "Domain/ Title contain owner: " + candidate.DomainOrPageTitleContainsOwner
-                                   + Environment.NewLine + Environment.NewLine + "Known company: "
-                                   + candidate.KnownCompanyName + Environment.NewLine
+                                   + Environment.NewLine + Environment.NewLine + "Known company: " + candidate.KnownCompanyName + Environment.NewLine
                                    + "Known brand: " + candidate.KnownBrand + Environment.NewLine + Environment.NewLine
                                    + "Known brands: " + String.Join(", ", candidate.KnownBrands) + Environment.NewLine + Environment.NewLine
+                                   + "Previous heading: " + String.Join(", ", candidate.NearestHeadingAbove) + Environment.NewLine + Environment.NewLine
                                    + "Location names: " + String.Join(", ", candidate.NumberOfLocationNames) + Environment.NewLine + Environment.NewLine
                                    + "Person names: " + String.Join(", ", candidate.NumberOfPersonNames) + Environment.NewLine + Environment.NewLine
                                    + "Organisation names: " + String.Join(", ", candidate.NumberOfOrganisationNames) + Environment.NewLine + Environment.NewLine
@@ -1017,8 +1068,8 @@
             {
                 var classifiedRelation = new ClassifiedRelation();
                 classifiedRelation.IsRelation = candidate.CompanyBrandRelationship;
-                classifiedRelation.Company = candidate.KnownCompanyName;
-                classifiedRelation.Brand = candidate.KnownBrand;
+                classifiedRelation.Company = candidate.KnownCompanyName.ToLowerInvariant();
+                classifiedRelation.Brand = candidate.KnownBrand.ToLowerInvariant();
                 classifiedRelation.Occurrences = 1;
                 classifiedRelation.Source = new RelationSource
                                                 {
@@ -1038,8 +1089,8 @@
                 {
                     var classifiedRelation = new ClassifiedRelation();
                     classifiedRelation.IsRelation = candidate.CompanyBrandRelationship;
-                    classifiedRelation.Company = candidate.KnownCompanyName;
-                    classifiedRelation.Brand = brand;
+                    classifiedRelation.Company = candidate.KnownCompanyName.ToLowerInvariant();
+                    classifiedRelation.Brand = brand.ToLowerInvariant();
                     classifiedRelation.Occurrences = 1;
                     classifiedRelation.Source = new RelationSource
                                                     {
