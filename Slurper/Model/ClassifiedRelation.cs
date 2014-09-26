@@ -14,9 +14,6 @@
         [JsonProperty(PropertyName = "isRelation")]
         public bool IsRelation { get; set; }
 
-        [JsonProperty(PropertyName = "brands")]
-        public List<string> Brands { get; set; }
-
         [JsonProperty(PropertyName = "company")]
         public string Company { get; set; }
 
@@ -25,6 +22,9 @@
 
         [JsonProperty(PropertyName = "brand")]
         public string Brand { get; set; }
+
+        [JsonProperty(PropertyName = "occurrences")]
+        public int Occurrences { get; set; }
     }
 
     internal class RelationSource

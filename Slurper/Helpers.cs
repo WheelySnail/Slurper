@@ -8,9 +8,13 @@
     using System.Linq;
     using System.Text.RegularExpressions;
 
+    using com.sun.org.apache.bcel.@internal.generic;
+    using com.sun.org.apache.xpath.@internal.operations;
+
     using CsQuery.ExtensionMethods.Internal;
 
     using edu.stanford.nlp.ie.crf;
+    using edu.stanford.nlp.parser.lexparser;
     using edu.stanford.nlp.tagger.maxent;
 
     using Html;
@@ -20,6 +24,8 @@
     using Newtonsoft.Json;
 
     using Slurper.Model;
+
+    using String = System.String;
 
     #endregion
 
@@ -905,18 +911,54 @@
         {
             var jsonFile = new StreamWriter("C:/Users/Alice/Desktop/results.js");
 
-            var classifiedRelations = new ClassifiedRelationsResponse { Relations = new List<ClassifiedRelation>() };
+            var classifiedRelations = new List<ClassifiedRelation>();
 
             foreach (var candidate in candidates)
             {
-                if (candidate.KnownBrands != null)
+                if (candidate.KnownBrands != null || candidate.KnownBrand != null)
                 {
-                    ClassifiedRelation classifiedRelation = MapCandidateToClassifiedRelation(candidate);
-
-                    classifiedRelations.Relations.Add(classifiedRelation);
+                    classifiedRelations.AddRange(MapCandidateToClassifiedRelation(candidate));
                 }
             }
-            string json = JsonConvert.SerializeObject(classifiedRelations);
+
+            // Make clean deduped list
+            var dedupedClassifiedRelations = new List<ClassifiedRelation>();
+
+            var uniqueGroup =
+                    classifiedRelations.GroupBy(cr => new { cr.Company, cr.Brand}).Where(g => g.Count() <= 1);
+
+            foreach (var unique in uniqueGroup)
+            {
+                foreach (var classifiedRelation in unique)
+                {
+                    dedupedClassifiedRelations.Add(classifiedRelation);
+                }
+            }
+
+            var duplicateGroups =
+                    classifiedRelations.GroupBy(cr => new { cr.Company, cr.Brand}).Where(g => g.Count() > 1);
+
+            foreach (var duplicateGroup in duplicateGroups)
+            {
+                var count = duplicateGroup.Count();
+                var trueInstances = duplicateGroup.Where(cr => cr.IsRelation);
+                var falseInstances = duplicateGroup.Where(cr => !cr.IsRelation);
+                var isRelation = trueInstances.Count() >= falseInstances.Count();
+                dedupedClassifiedRelations.Add(new ClassifiedRelation
+                                                   {
+                                                           IsRelation = isRelation,
+                                                           Occurrences = trueInstances.Count(),
+                                                           Company = duplicateGroup.Key.Company,
+                                                           Brand = duplicateGroup.Key.Brand
+                                                   });
+            }
+
+            // Restrict all responses to those with the value true
+            dedupedClassifiedRelations = dedupedClassifiedRelations.FindAll(cr => cr.IsRelation == true);
+
+            var classifiedRelationsResponse = new ClassifiedRelationsResponse { Relations = dedupedClassifiedRelations };
+
+            string json = JsonConvert.SerializeObject(classifiedRelationsResponse);
 
             jsonFile.WriteLine(json);
 
@@ -934,13 +976,25 @@
                     file.WriteLine(
                                    "Contains company/brand relationship? " + candidate.CompanyBrandRelationship
                                    + Environment.NewLine + Environment.NewLine + "Page title: " + candidate.PageTitle
+                                   + Environment.NewLine + Environment.NewLine + "Domain/ Title contain owner: " + candidate.DomainOrPageTitleContainsOwner
                                    + Environment.NewLine + Environment.NewLine + "Known company: "
                                    + candidate.KnownCompanyName + Environment.NewLine
                                    + "Known brand: " + candidate.KnownBrand + Environment.NewLine + Environment.NewLine
                                    + "Known brands: " + String.Join(", ", candidate.KnownBrands) + Environment.NewLine + Environment.NewLine
-                                   + "Multiple brands present:" + candidate.ContainsMultipleBrands
-                                   + Environment.NewLine + "\r Previous Relevant Node: " + candidate.PreviousContentWithoutCandidateEntities
-                                   + Environment.NewLine + "\r Html: " + candidate.CandidateHtmlWithoutCandidateEntities + Environment.NewLine
+                                   + "Location names: " + String.Join(", ", candidate.NumberOfLocationNames) + Environment.NewLine + Environment.NewLine
+                                   + "Person names: " + String.Join(", ", candidate.NumberOfPersonNames) + Environment.NewLine + Environment.NewLine
+                                   + "Organisation names: " + String.Join(", ", candidate.NumberOfOrganisationNames) + Environment.NewLine + Environment.NewLine
+                                   + "Contains multiple language names: " + String.Join(", ", candidate.ContainsMoreThan10Languages) + Environment.NewLine + Environment.NewLine
+                                   + "Candidate HTML word count: " + String.Join(", ", candidate.CandidateHtmlWordCount) + Environment.NewLine + Environment.NewLine
+                                   + "Previous content word count: " + String.Join(", ", candidate.PreviousContentWordCount) + Environment.NewLine + Environment.NewLine
+                                   + "Previous content contains potential owner: " + String.Join(", ", candidate.PreviousContentContainsPotentialOwner) + Environment.NewLine + Environment.NewLine
+                                   + "Candidate HTML contains potential owner: " + String.Join(", ", candidate.CandidateHtmlContainsPotentialOwner) + Environment.NewLine + Environment.NewLine
+                                   + "Captions contain owner: " + String.Join(", ", candidate.CaptionsContainOwner) + Environment.NewLine + Environment.NewLine
+                                   + "Candidate HTML contains potential owner: " + String.Join(", ", candidate.CandidateHtmlContainsPotentialOwner) + Environment.NewLine + Environment.NewLine
+                                   + "Some items contain brand only: " + String.Join(", ", candidate.ItemsContainBrandOnly) + Environment.NewLine + Environment.NewLine
+                                   + "Contains Multiple brands?" + candidate.ContainsMultipleBrands
+                                   + Environment.NewLine + "\r Previous Relevant Node: " + candidate.PreviousContent
+                                   + Environment.NewLine + "\r Html: " + candidate.CandidateHtml + Environment.NewLine
                                    + Environment.NewLine);
                 }
                 Console.WriteLine(
@@ -954,20 +1008,52 @@
             Console.WriteLine(candidates.Count.ToString());
         }
 
-        private static ClassifiedRelation MapCandidateToClassifiedRelation(Candidate candidate)
+        private static List<ClassifiedRelation> MapCandidateToClassifiedRelation(Candidate candidate)
         {
-            var classifiedRelation = new ClassifiedRelation();
-            classifiedRelation.IsRelation = candidate.CompanyBrandRelationship;
-            classifiedRelation.Company = candidate.KnownCompanyName;
-            classifiedRelation.Brands = new List<string>(candidate.KnownBrands);
-            classifiedRelation.Brand = candidate.KnownBrand;
-            classifiedRelation.Source = new RelationSource
-                                            {
-                                                Url = candidate.Uri,
-                                                Text = candidate.PreviousContentWithoutCandidateEntities + candidate.CandidateHtmlWithoutCandidateEntities,
-                                                Date = DateTime.Now
-                                            };
-            return classifiedRelation;
+            var classifiedRelations = new List<ClassifiedRelation>();
+
+            // If item level, use brand
+            if (candidate.IsItemLevelCandidate)
+            {
+                var classifiedRelation = new ClassifiedRelation();
+                classifiedRelation.IsRelation = candidate.CompanyBrandRelationship;
+                classifiedRelation.Company = candidate.KnownCompanyName;
+                classifiedRelation.Brand = candidate.KnownBrand;
+                classifiedRelation.Occurrences = 1;
+                classifiedRelation.Source = new RelationSource
+                                                {
+                                                        Url = candidate.Uri,
+                                                        Text =
+                                                                candidate.PreviousContent
+                                                                + candidate.CandidateHtml,
+                                                        Date = DateTime.Now
+                                                };
+                classifiedRelations.Add(classifiedRelation);
+            }
+
+            // If its a table or list level candidate, loop through the brands
+            if (!candidate.IsItemLevelCandidate)
+            {
+                foreach (var brand in candidate.KnownBrands)
+                {
+                    var classifiedRelation = new ClassifiedRelation();
+                    classifiedRelation.IsRelation = candidate.CompanyBrandRelationship;
+                    classifiedRelation.Company = candidate.KnownCompanyName;
+                    classifiedRelation.Brand = brand;
+                    classifiedRelation.Occurrences = 1;
+                    classifiedRelation.Source = new RelationSource
+                                                    {
+                                                            Url = candidate.Uri,
+                                                            Text =
+                                                                    candidate.PreviousContent
+                                                                    + candidate.CandidateHtml,
+                                                            Date = DateTime.Now
+                                                    };
+                    classifiedRelations.Add(classifiedRelation);
+                }
+            }
+
+            return classifiedRelations;
         }
 
         protected static List<Candidate> FilterCandidatesForMultipleBrandPresence(List<Candidate> allCandidates)
@@ -1138,4 +1224,13 @@
             return relationsWhereOwnerMentionedOnPage;
         }
     }
+
+    static class Extensions
+    {
+        public static IList<T> Clone<T>(this IList<T> listToClone) where T : ICloneable
+        {
+            return listToClone.Select(item => (T)item.Clone()).ToList();
+        }
+    }
+
 }

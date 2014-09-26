@@ -7,6 +7,8 @@ namespace Slurper.Model
 
     using numl.Model;
 
+    using sun.tools.tree;
+
     #endregion
 
     public class Candidate
@@ -139,7 +141,6 @@ namespace Slurper.Model
         [Feature]
         public bool Former { get; set; }
 
-
         [Feature]
         public bool Consulting { get; set; }
 
@@ -216,6 +217,9 @@ namespace Slurper.Model
             this.Commons = WordsInPreviousContent.Contains("commons");
             this.Appointment = WordsInPreviousContent.Contains("appointment");
             this.By = WordsInPreviousContent.Contains("by");
+            this.Core = WordsInPreviousContent.Contains("core");
+            this.Major = WordsInPreviousContent.Contains("major");
+            this.Brands = WordsInPreviousContent.Contains("brands");
         }
     }
 }
