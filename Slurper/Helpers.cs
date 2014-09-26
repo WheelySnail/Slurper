@@ -151,10 +151,10 @@
                         var previousContentContainsPotentialOwner = PreviousContentContainsPotentialOwner(previousContentInnerText, company);
 
                         var nearestHeadingIndicatesNoRelation =
-                                nearestHeadingAbove.ToLowerInvariant().Contains("external links") || nearestHeadingAbove.ToLowerInvariant().Contains("references") || nearestHeadingAbove.ToLowerInvariant().Contains("by appointment to");
+                                nearestHeadingAbove.ToLowerInvariant().Contains("external links") || nearestHeadingAbove.ToLowerInvariant().Contains("references") || nearestHeadingAbove.ToLowerInvariant().Contains("by appointment to") || nearestHeadingAbove.ToLowerInvariant().Contains("further reading");
 
                         var previousContentIndicatesNoRelation =
-        previousContentInnerText.ToLowerInvariant().Contains("external links") || previousContentInnerText.ToLowerInvariant().Contains("references") || previousContentInnerText.ToLowerInvariant().Contains("by appointment to");
+        previousContentInnerText.ToLowerInvariant().Contains("external links") || previousContentInnerText.ToLowerInvariant().Contains("references") || previousContentInnerText.ToLowerInvariant().Contains("by appointment to") || previousContentInnerText.ToLowerInvariant().Contains("further reading");
 
                         var nerTaggedInnerText = classifier.classifyToString(initialcandidate.Node.InnerText);
 
