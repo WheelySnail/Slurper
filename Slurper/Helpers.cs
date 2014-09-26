@@ -150,6 +150,9 @@
 
                         var previousContentContainsPotentialOwner = PreviousContentContainsPotentialOwner(previousContentInnerText, company);
 
+                        var nearestHeadingIndicatesOtherLinks =
+                                nearestHeadingAbove.ToLowerInvariant().Contains("external links");
+
                         var nerTaggedInnerText = classifier.classifyToString(initialcandidate.Node.InnerText);
 
                         var numberOfPeople = GetNumberOfPersonNames(nerTaggedInnerText);
@@ -159,8 +162,8 @@
                         var numberOfLocations = GetNumberOfLocations(nerTaggedInnerText);
 
                         // If a company name is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
-                        if (domainOrTitleContainsPotentialOwner
-                            || candidateHtmlContainsPotentialOwner || previousContentContainsPotentialOwner)
+                        if (!nearestHeadingIndicatesOtherLinks && (domainOrTitleContainsPotentialOwner
+                            || candidateHtmlContainsPotentialOwner || previousContentContainsPotentialOwner))
                         {
                             var captions = initialcandidate.Node.SelectNodes("caption");
 
@@ -566,6 +569,8 @@
 
                         var previousContentContainsPotentialOwner = PreviousContentContainsPotentialOwner(previousContentInnerText, relation.CompanyName);
 
+                        var nearestHeadingIndicatesOtherLinks = nearestHeadingAbove.ToLowerInvariant().Contains("external links");
+
                         var nerTaggedInnerText = classifier.classifyToString(initialcandidate.Node.InnerText);
 
                         var numberOfPeople = GetNumberOfPersonNames(nerTaggedInnerText);
@@ -575,7 +580,7 @@
                         var numberOfLocations = GetNumberOfLocations(nerTaggedInnerText);
 
                         // If the company name for the relation is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
-                        if (domainOrTitleContainsOwner || candidateHtmlContainsPotentialOwner || previousContentContainsPotentialOwner)
+                        if (!nearestHeadingIndicatesOtherLinks && (domainOrTitleContainsOwner || candidateHtmlContainsPotentialOwner || previousContentContainsPotentialOwner))
                         {
                             var knownBrandsPresent = new List<string>();
 
@@ -913,15 +918,6 @@
         {
             var companies = FreeBaseHelpers.GetKnownCompaniesFromFreeBaseBusinessOperations();
 
-            //var companies = FreeBaseHelpers.GetKnownCompaniesFromFreeBaseConsumerCompanies();
-
-            //var directory = new DirectoryInfo("C:/Users/Alice/Desktop/Companies");
-
-            //foreach (var file in directory.GetFiles())
-            //{
-            //    companies.AddRange(File.ReadLines(file.FullName));
-            //}
-
             var newCompanies = new List<String>();
 
             foreach (var company in companies)
@@ -936,6 +932,7 @@
 
             shorterList.AddRange(newCompanies.Take(1000));
 
+            // TODO remove this hack used for testing
             shorterList.Add("Cadbury");
 
             return shorterList;
@@ -990,7 +987,7 @@
                 var trueInstances = duplicateGroup.Where(cr => cr.IsRelation);
                 var falseInstances = duplicateGroup.Where(cr => !cr.IsRelation);
                 var isRelation = trueInstances.Count() >= falseInstances.Count();
-                var text = trueInstances.FirstOrDefault().Source.Text;
+                var text = !trueInstances.Any() ? "" : trueInstances.FirstOrDefault().Source.Text;
                 dedupedClassifiedRelations.Add(new ClassifiedRelation
                                                    {
                                                            IsRelation = isRelation,
