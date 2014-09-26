@@ -2,30 +2,17 @@
 {
     #region Using Directives
 
-    using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text.RegularExpressions;
-
-    using com.sun.tools.javac.util;
 
     using edu.stanford.nlp.ie.crf;
-    using edu.stanford.nlp.ling;
-    using edu.stanford.nlp.parser.lexparser;
-    using edu.stanford.nlp.process;
     using edu.stanford.nlp.tagger.maxent;
-    using edu.stanford.nlp.trees;
 
-    using java.io;
-
-    using numl;
     using numl.Model;
     using numl.Supervised;
     using numl.Supervised.DecisionTree;
 
     using Slurper.Model;
 
-    using Attribute = com.sun.tools.javac.code.Attribute;
     using Console = System.Console;
 
     #endregion

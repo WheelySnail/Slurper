@@ -8,9 +8,6 @@
     using System.Linq;
     using System.Text.RegularExpressions;
 
-    using com.sun.tools.javac.util;
-
-    using CsQuery.Engine.PseudoClassSelectors;
     using CsQuery.ExtensionMethods.Internal;
 
     using edu.stanford.nlp.ie.crf;
@@ -122,12 +119,16 @@
                         var previousContentOuterHtml = previousContent == null
                                                                ? ""
                                                                : previousContent.OuterHtml;
+                        
+                        var previousContentWithoutCompany = Regex.Replace(previousContentOuterHtml,
+                                                                                      company,
+                                                                                      "");
 
                         var previousContentInnerText = previousContent == null
                                        ? ""
                                        : previousContent.InnerText;
 
-                        previousContentInnerText = Regex.Replace(previousContentInnerText, company, "");
+                        var previousContentInnerTextWithoutEntity = Regex.Replace(previousContentInnerText, company, "");
 
                         // Check that the owner name for the relation is present in the title, domain, list/ table or previous relevant node. This is a necessary but not sufficient condition for creating a candidate
                         // Only use one company name at the moment so a loop isn't necessary
@@ -234,6 +235,9 @@
                                         {
                                             ItemHtml =
                                                     safey.Sanitize(
+                                                                   innerSegment.OuterHtml),
+                                            ItemHtmlWithoutBrand =
+                                                    safey.Sanitize(
                                                                    htmlWithoutBrand),
                                             ItemInnerText = trimmedText,
                                             ItemWordCount = wordsInInnerSegment.Count(),
@@ -260,12 +264,14 @@
                                                                                 initialcandidate.Type
                                                                                 == "list",
                                                                         IsItemLevelCandidate = true,
-                                                                        PreviousContent =
+                                                                        PreviousContent = safey.Sanitize(previousContentOuterHtml),
+                                                                        PreviousContentWithoutCandidateEntities =
                                                                                 safey.Sanitize(
-                                                                                               previousContentInnerText),
+                                                                                               previousContentWithoutCompany),
                                                                         PreviousContentWordCount = wordsInPreviousContent.Count(),
                                                                         WordsInPreviousContent = wordsInPreviousContent,
                                                                         CandidateHtml = listOrTableItemContainingBrand.ItemHtml,
+                                                                        CandidateHtmlWithoutCandidateEntities = listOrTableItemContainingBrand.ItemHtmlWithoutBrand,
                                                                         CandidateHtmlWordCount = listOrTableItemContainingBrand.ItemWordCount,
                                                                         WordsInCandidateHtml = listOrTableItemContainingBrand.WordsInItem,
                                                                         KnownCompanyName = company,
@@ -306,10 +312,6 @@
                                     bool someItemsHaveNoOtherTextExceptBrand = !itemsWithBrandsForWholeCandidate.IsNullOrEmpty() && itemsWithBrandsForWholeCandidate.Any(
                                                               iwb => iwb.ContainsBrandOnly);
 
-                                    var previousContentWithoutCompany = Regex.Replace(
-                                                                                      previousContentOuterHtml,
-                                                                                      company,
-                                                                                      "");
 
                                     var candidateHtmlWithoutBrands = initialcandidate.Node.OuterHtml;
 
@@ -329,10 +331,12 @@
                                             IsTableSegment = initialcandidate.Type == "table",
                                             IsListSegment = initialcandidate.Type == "list",
                                             IsItemLevelCandidate = false,
-                                            PreviousContent = safey.Sanitize(previousContentWithoutCompany),
+                                            PreviousContent =  safey.Sanitize(previousContentOuterHtml),
+                                            PreviousContentWithoutCandidateEntities = safey.Sanitize(previousContentWithoutCompany),
                                             PreviousContentWordCount = wordsInPreviousContent.Count(),
                                             WordsInPreviousContent = wordsInPreviousContent,
-                                            CandidateHtml =
+                                            CandidateHtml = safey.Sanitize(initialcandidate.Node.OuterHtml),
+                                            CandidateHtmlWithoutCandidateEntities =
                                                     safey.Sanitize(
                                                                    candidateHtmlWithoutBrands),
 
@@ -490,6 +494,12 @@
                     {
                         var previousContent = GetPreviousRelevantNode(initialcandidate);
 
+                        var previousContentOuterHtml = previousContent == null
+                                       ? ""
+                                       : previousContent.InnerText;
+
+                        var previousContentWithoutCompany = Regex.Replace(previousContentOuterHtml, relation.CompanyName, "");
+                        
                         var previousContentInnerText = previousContent == null
                                        ? ""
                                        : previousContent.InnerText;
@@ -582,9 +592,8 @@
 
                                         var itemWithBrand = new ListOrTableItem
                                         {
-                                            ItemHtml =
-                                                    safey.Sanitize(
-                                                                   htmlWithoutBrand),
+                                            ItemHtml = safey.Sanitize(innerSegment.OuterHtml),
+                                            ItemHtmlWithoutBrand = safey.Sanitize(htmlWithoutBrand),
                                             ItemWordCount = wordsInInnerSegment.Count(),
                                             WordsInItem = wordsInInnerSegment,
                                             KnownBrand = brand,
@@ -608,12 +617,12 @@
                                                                                 initialcandidate.Type
                                                                                 == "list",
                                                                         IsItemLevelCandidate = true,
-                                                                        PreviousContent =
-                                                                                safey.Sanitize(
-                                                                                               previousContentInnerText),
+                                                                        PreviousContent = safey.Sanitize(previousContentOuterHtml),
+                                                                        PreviousContentWithoutCandidateEntities = safey.Sanitize(previousContentWithoutCompany),
                                                                         WordsInPreviousContent = wordsInPreviousContent.ToList(),
                                                                         PreviousContentWordCount = wordsInPreviousContent.Count(),
                                                                         CandidateHtml = listOrTableItemContainingBrand.ItemHtml,
+                                                                        CandidateHtmlWithoutCandidateEntities = listOrTableItemContainingBrand.ItemHtmlWithoutBrand,
                                                                         WordsInCandidateHtml = listOrTableItemContainingBrand.WordsInItem,
                                                                         CandidateHtmlWordCount = listOrTableItemContainingBrand.WordsInItem.Count,
                                                                         KnownCompanyName =
@@ -653,11 +662,6 @@
                                     bool brandsOnly = itemsWithBrandsForWholeCandidate.TrueForAll(
                                                                                                   iwb => iwb.ContainsBrandOnly);
 
-                                    var previousContentWithoutCompany = Regex.Replace(
-                                                  previousContentInnerText,
-                                                  relation.CompanyName,
-                                                  "");
-
                                     var candidateHtmlWithoutBrands = initialcandidate.Node.OuterHtml;
 
                                     foreach (var brand in knownBrandsPresent)
@@ -676,10 +680,12 @@
                                             IsTableSegment = initialcandidate.Type == "table",
                                             IsListSegment = initialcandidate.Type == "list",
                                             IsItemLevelCandidate = false,
-                                            PreviousContent = safey.Sanitize(previousContentWithoutCompany),
+                                            PreviousContent = safey.Sanitize(previousContentOuterHtml),
+                                            PreviousContentWithoutCandidateEntities = safey.Sanitize(previousContentWithoutCompany),
                                             WordsInPreviousContent = wordsInPreviousContent.ToList(),
                                             PreviousContentWordCount = wordsInPreviousContent.Count(),
-                                            CandidateHtml =
+                                            CandidateHtml = safey.Sanitize(initialcandidate.Node.OuterHtml),
+                                            CandidateHtmlWithoutCandidateEntities =
                                                     safey.Sanitize(
                                                                    candidateHtmlWithoutBrands),
                                             WordsInCandidateHtml = wordsInCandidateHtml.ToList(),
@@ -933,14 +939,14 @@
                                    + "Known brand: " + candidate.KnownBrand + Environment.NewLine + Environment.NewLine
                                    + "Known brands: " + String.Join(", ", candidate.KnownBrands) + Environment.NewLine + Environment.NewLine
                                    + "Multiple brands present:" + candidate.ContainsMultipleBrands
-                                   + Environment.NewLine + "\r Previous Relevant Node: " + candidate.PreviousContent
-                                   + Environment.NewLine + "\r Html: " + candidate.CandidateHtml + Environment.NewLine
+                                   + Environment.NewLine + "\r Previous Relevant Node: " + candidate.PreviousContentWithoutCandidateEntities
+                                   + Environment.NewLine + "\r Html: " + candidate.CandidateHtmlWithoutCandidateEntities + Environment.NewLine
                                    + Environment.NewLine);
                 }
                 Console.WriteLine(
                                   candidate.PageTitle + Environment.NewLine + ' '
                                   + candidate.KnownCompanyName + Environment.NewLine + ' '
-                                  + candidate.CandidateHtml + Environment.NewLine);
+                                  + candidate.CandidateHtmlWithoutCandidateEntities + Environment.NewLine);
             }
 
             file.Close();
@@ -958,7 +964,7 @@
             classifiedRelation.Source = new RelationSource
                                             {
                                                 Url = candidate.Uri,
-                                                Text = candidate.PreviousContent + candidate.CandidateHtml,
+                                                Text = candidate.PreviousContentWithoutCandidateEntities + candidate.CandidateHtmlWithoutCandidateEntities,
                                                 Date = DateTime.Now
                                             };
             return classifiedRelation;

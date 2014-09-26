@@ -15,5 +15,7 @@ namespace Slurper.Model
         public bool ContainsBrandOnly { get; set; }
 
         public string ItemInnerText { get; set; }
+
+        public string ItemHtmlWithoutBrand { get; set; }
     }
 }
