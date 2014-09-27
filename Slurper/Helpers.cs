@@ -417,7 +417,7 @@
         {
             var elementToCheck = initialcandidate.Node;
 
-            var totalToCheck = 16;
+            var totalToCheck = 35;
 
             while ((totalToCheck > 0))
             {
@@ -427,7 +427,7 @@
                 }
                 else
                 {
-                    if (totalToCheck == 12 || totalToCheck == 8 || totalToCheck == 4)
+                    if (totalToCheck == 28 || totalToCheck == 21 || totalToCheck == 14 || totalToCheck == 7)
                     {
                         if (elementToCheck.ParentNode != null && elementToCheck.ParentNode.PreviousSibling != null)
                         {

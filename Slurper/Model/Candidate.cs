@@ -4,6 +4,7 @@ namespace Slurper.Model
 
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     using numl.Model;
 
@@ -20,7 +21,6 @@ namespace Slurper.Model
 
         public string PreviousContentWithoutCandidateEntities { get; set; }
 
-        [Feature]
         public string NearestHeadingAbove { get; set; }
 
         public string CandidateHtml { get; set; }
@@ -163,9 +163,6 @@ namespace Slurper.Model
         public bool Appointment { get; set; }
 
         [Feature]
-        public bool By { get; set; }
-
-        [Feature]
         public bool Core { get; set; }
 
         [Feature]
@@ -178,6 +175,9 @@ namespace Slurper.Model
         public bool License { get; set; }
 
         [Feature]
+        public bool Contents { get; set; }
+
+        [Feature]
         public int NumberOfLocationNames { get; set; }
 
         [Feature]
@@ -188,39 +188,39 @@ namespace Slurper.Model
 
         public void MapWordsToWordFeatures()
         {
-            this.Acquisitions = WordsInPreviousContent.Contains("acquisitions");
-            this.Became = WordsInPreviousContent.Contains("became");
-            this.Consulting = WordsInPreviousContent.Contains("consulting");
-            this.Environmental = WordsInPreviousContent.Contains("environmental");
-            this.External = WordsInPreviousContent.Contains("external");
-            this.Former = WordsInPreviousContent.Contains("former");
-            this.Further = WordsInPreviousContent.Contains("further");
-            this.Income = WordsInPreviousContent.Contains("income");
-            this.Information = WordsInPreviousContent.Contains("information");
-            this.Links = WordsInPreviousContent.Contains("links");
-            this.Merged= WordsInPreviousContent.Contains("merged");
-            this.Other = WordsInPreviousContent.Contains("other");
-            this.Outside = WordsInPreviousContent.Contains("outside");
-            this.Own = WordsInPreviousContent.Contains("own");
-            this.Product = WordsInPreviousContent.Contains("product");
-            this.Products = WordsInPreviousContent.Contains("products");
-            this.Reading = WordsInPreviousContent.Contains("reading");
-            this.Recent = WordsInPreviousContent.Contains("recent");
-            this.Revenue = WordsInPreviousContent.Contains("revenue");
-            this.Services = WordsInPreviousContent.Contains("services");
-            this.Since = WordsInPreviousContent.Contains("since");
-            this.Sold = WordsInPreviousContent.Contains("sold");
-            this.Staff = WordsInPreviousContent.Contains("staff");
-            this.Licence = WordsInPreviousContent.Contains("licence");
-            this.License = WordsInPreviousContent.Contains("license");
-            this.Creative = WordsInPreviousContent.Contains("creative");
-            this.Commons = WordsInPreviousContent.Contains("commons");
-            this.Appointment = WordsInPreviousContent.Contains("appointment");
-            this.By = WordsInPreviousContent.Contains("by");
-            this.Core = WordsInPreviousContent.Contains("core");
-            this.Major = WordsInPreviousContent.Contains("major");
-            this.Brands = WordsInPreviousContent.Contains("brands");
-            this.Tax = WordsInPreviousContent.Contains("tax");
+            this.Acquisitions = WordsInPreviousContent.Any(w => w.Equals("acquisitions", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("acquisitions");
+            this.Became = WordsInPreviousContent.Any(w => w.Equals("became", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("became"); 
+            this.Consulting = WordsInPreviousContent.Any(w => w.Equals("consulting", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("consulting"); 
+            this.Environmental = WordsInPreviousContent.Any(w => w.Equals("environmental", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("environmental"); 
+            this.External = WordsInPreviousContent.Any(w => w.Equals("external", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("external"); 
+            this.Former = WordsInPreviousContent.Any(w => w.Equals("former", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("former"); 
+            this.Further = WordsInPreviousContent.Any(w => w.Equals("further", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("further"); 
+            this.Income = WordsInPreviousContent.Any(w => w.Equals("income", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("income"); 
+            this.Information = WordsInPreviousContent.Any(w => w.Equals("information", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("information"); 
+            this.Links = WordsInPreviousContent.Any(w => w.Equals("links", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("links"); 
+            this.Merged = WordsInPreviousContent.Any(w => w.Equals("merged", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("merged"); 
+            this.Other = WordsInPreviousContent.Any(w => w.Equals("other", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("other"); 
+            this.Outside = WordsInPreviousContent.Any(w => w.Equals("outside", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("outside"); 
+            this.Own = WordsInPreviousContent.Any(w => w.Equals("own", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("own"); 
+            this.Product = WordsInPreviousContent.Any(w => w.Equals("product", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("product"); 
+            this.Products = WordsInPreviousContent.Any(w => w.Equals("products", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("products");
+            this.Reading = WordsInPreviousContent.Any(w => w.Equals("reading", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("reading"); 
+            this.Recent = WordsInPreviousContent.Any(w => w.Equals("recent", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("recent"); 
+            this.Revenue = WordsInPreviousContent.Any(w => w.Equals("revenue", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("revenue"); 
+            this.Services = WordsInPreviousContent.Any(w => w.Equals("services", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("services"); 
+            this.Since = WordsInPreviousContent.Any(w => w.Equals("since", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("since"); 
+            this.Sold = WordsInPreviousContent.Any(w => w.Equals("sold", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("sold"); 
+            this.Staff = WordsInPreviousContent.Any(w => w.Equals("staff", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("staff"); 
+            this.Licence = WordsInPreviousContent.Any(w => w.Equals("licence", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("licence"); 
+            this.License = WordsInPreviousContent.Any(w => w.Equals("license", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("license"); 
+            this.Creative = WordsInPreviousContent.Any(w => w.Equals("creative", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("creative"); 
+            this.Commons = WordsInPreviousContent.Any(w => w.Equals("commons", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("commons"); 
+            this.Appointment = WordsInPreviousContent.Any(w => w.Equals("appointment", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("appointment"); 
+            this.Core = WordsInPreviousContent.Any(w => w.Equals("core", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("acquisitions"); 
+            this.Major = WordsInPreviousContent.Any(w => w.Equals("major", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("core"); 
+            this.Brands = WordsInPreviousContent.Any(w => w.Equals("brands", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("brands"); 
+            this.Tax = WordsInPreviousContent.Any(w => w.Equals("tax", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("tax");
+            this.Contents = WordsInPreviousContent.Any(w => w.Equals("contents", StringComparison.InvariantCultureIgnoreCase)) || NearestHeadingAbove.ToLowerInvariant().Contains("contents"); 
         }
     }
 }

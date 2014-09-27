@@ -9,6 +9,7 @@
     using edu.stanford.nlp.ie.crf;
     using edu.stanford.nlp.tagger.maxent;
 
+    using numl;
     using numl.Model;
     using numl.Supervised;
     using numl.Supervised.DecisionTree;
@@ -42,20 +43,23 @@
                                                                            ItemLevelCandidates, classifier, tagger));
 
             // Make sure the number of positive and negative candidates is equal
-            trainingCandidates.AddRange(GetNegativeTrainingCandidates(
+            var positivesCount = trainingCandidates.Count();
+
+            var negativeTrainingCandidates = GetNegativeTrainingCandidates(
                                                                            knownCompanyBrandRelationships,
-                                                                           ItemLevelCandidates, classifier, tagger).Take(trainingCandidates.Count));
+                                                                           ItemLevelCandidates, classifier, tagger).Take(positivesCount);
+
+            trainingCandidates.AddRange(negativeTrainingCandidates);
 
             var testCandidates = GetTestCandidates(knownCompanyBrandRelationships, ItemLevelCandidates, classifier, tagger);
 
-            //// Create naive bayes, holding back data
-            //var d = Descriptor.Create<Candidate>();
-            //var g = new DecisionTreeGenerator(d);
-            //g.SetHint(0.5);
-            //// The Learner uses 80% of the data to train the model and 20% to test the model. The learner also runs the generator 1000 times and returns the most accurate model.
-            //var nbmodel = Learner.Learn(trainingCandidates, 0.80, 1000, g);
-            //Console.WriteLine(nbmodel);
-            //Console.ReadLine();
+            // Create naive bayes, holding back data
+            var d = Descriptor.Create<Candidate>();
+            var g = new DecisionTreeGenerator(d);
+            g.SetHint(0.5);
+            // The Learner uses 80% of the data to train the model and 20% to test the model. The learner also runs the generator 1000 times and returns the most accurate model.
+            var nbmodel = Learner.Learn(trainingCandidates, 0.80, 1000, g);
+            Console.WriteLine(nbmodel);
 
             // Create decision tree
             var model = GenerateModel(trainingCandidates);
