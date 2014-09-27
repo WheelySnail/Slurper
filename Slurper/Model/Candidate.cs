@@ -31,6 +31,9 @@ namespace Slurper.Model
         public int CandidateHtmlWordCount { get; set; }
 
         [Feature]
+        public int NumberOfLinksInCandidateHtml { get; set; }
+
+        [Feature]
         public int PreviousContentWordCount { get; set; }
 
         [Feature]

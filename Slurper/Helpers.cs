@@ -173,6 +173,8 @@
 
                         var numberOfLanguageNames = NumberOfItemsContainingALanguageName(initialcandidate);
 
+                        var numberOfLinksInCandidateHtml = NumberOfLinks(initialcandidate);
+
                         // If a company name is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
                         if (!nearestHeadingIndicatesNoRelation && (!previousContentIndicatesNoRelation && (numberOfLanguageNames < 5 && (domainOrTitleContainsPotentialOwner
                             || candidateHtmlContainsPotentialOwner || previousContentContainsPotentialOwner))))
@@ -299,6 +301,7 @@
                                                                         CandidateHtml = listOrTableItemContainingBrand.ItemHtml,
                                                                         CandidateHtmlWithoutCandidateEntities = listOrTableItemContainingBrand.ItemHtmlWithoutBrand,
                                                                         CandidateHtmlWordCount = listOrTableItemContainingBrand.ItemWordCount,
+                                                                        NumberOfLinksInCandidateHtml = numberOfLinksInCandidateHtml,
                                                                         WordsInCandidateHtml = listOrTableItemContainingBrand.WordsInItem,
                                                                         NearestHeadingAbove = nearestHeadingAbove,
                                                                         KnownCompanyName = company,
@@ -368,6 +371,7 @@
                                                                    candidateHtmlWithoutBrands),
 
                                             CandidateHtmlWordCount = wordsInCandidateHtml.Count(),
+                                            NumberOfLinksInCandidateHtml = numberOfLinksInCandidateHtml,
                                             WordsInCandidateHtml = wordsInCandidateHtml,
                                             NearestHeadingAbove = nearestHeadingAbove,
                                             KnownCompanyName = company,
@@ -413,11 +417,18 @@
             return testCandidates;
         }
 
+        private static int NumberOfLinks(InitialCandidate initialcandidate)
+        {
+            var pattern = new Regex(@"a href");
+            int numberOfLinks = pattern.Matches(initialcandidate.Node.OuterHtml).Count;
+            return numberOfLinks;
+        }
+
         private static string GetNearestHeadingAbove(InitialCandidate initialcandidate)
         {
             var elementToCheck = initialcandidate.Node;
 
-            var totalToCheck = 35;
+            var totalToCheck = 20;
 
             while ((totalToCheck > 0))
             {
@@ -427,7 +438,7 @@
                 }
                 else
                 {
-                    if (totalToCheck == 28 || totalToCheck == 21 || totalToCheck == 14 || totalToCheck == 7)
+                    if (totalToCheck == 16 || totalToCheck == 8 || totalToCheck == 4)
                     {
                         if (elementToCheck.ParentNode != null && elementToCheck.ParentNode.PreviousSibling != null)
                         {
@@ -591,6 +602,8 @@
 
                         var numberOfLanguageNames = NumberOfItemsContainingALanguageName(initialcandidate);
 
+                        var numberOfLinksInCandidateHtml = NumberOfLinks(initialcandidate);
+
                         // If the company name for the relation is present in the title, domain, list/ table or previous relevant node, continue to check for brand names
                         if (domainOrTitleContainsOwner || candidateHtmlContainsPotentialOwner || previousContentContainsPotentialOwner)
                         {
@@ -692,6 +705,7 @@
                                                                         CandidateHtmlWithoutCandidateEntities = listOrTableItemContainingBrand.ItemHtmlWithoutBrand,
                                                                         WordsInCandidateHtml = listOrTableItemContainingBrand.WordsInItem,
                                                                         CandidateHtmlWordCount = listOrTableItemContainingBrand.WordsInItem.Count,
+                                                                        NumberOfLinksInCandidateHtml = numberOfLinksInCandidateHtml,
                                                                         NearestHeadingAbove = nearestHeadingAbove,
                                                                         KnownCompanyName =
                                                                                 relation.CompanyName,
@@ -757,6 +771,7 @@
                                                     safey.Sanitize(
                                                                    candidateHtmlWithoutBrands),
                                             WordsInCandidateHtml = wordsInCandidateHtml.ToList(),
+                                            NumberOfLinksInCandidateHtml = numberOfLinksInCandidateHtml,
                                             CandidateHtmlWordCount = wordsInCandidateHtml.Count(),
                                             NearestHeadingAbove = nearestHeadingAbove,
                                             KnownCompanyName = relation.CompanyName,
@@ -1040,6 +1055,7 @@
                                    + "Organisation names: " + String.Join(", ", candidate.NumberOfOrganisationNames) + Environment.NewLine + Environment.NewLine
                                    + "Contains multiple language names: " + String.Join(", ", candidate.NumberOfItemsWithLanguages) + Environment.NewLine + Environment.NewLine
                                    + "Candidate HTML word count: " + String.Join(", ", candidate.CandidateHtmlWordCount) + Environment.NewLine + Environment.NewLine
+                                   + "Number of links in HTML: " + String.Join(", ", candidate.NumberOfLinksInCandidateHtml) + Environment.NewLine + Environment.NewLine
                                    + "Previous content word count: " + String.Join(", ", candidate.PreviousContentWordCount) + Environment.NewLine + Environment.NewLine
                                    + "Previous content contains potential owner: " + String.Join(", ", candidate.PreviousContentContainsPotentialOwner) + Environment.NewLine + Environment.NewLine
                                    + "Candidate HTML contains potential owner: " + String.Join(", ", candidate.CandidateHtmlContainsPotentialOwner) + Environment.NewLine + Environment.NewLine
