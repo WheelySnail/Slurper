@@ -13,6 +13,7 @@
     using numl.Model;
     using numl.Supervised;
     using numl.Supervised.DecisionTree;
+    using numl.Supervised.NaiveBayes;
 
     using Slurper.Model;
 
@@ -53,20 +54,24 @@
 
             var testCandidates = GetTestCandidates(knownCompanyBrandRelationships, ItemLevelCandidates, classifier, tagger);
 
-            // Create naive bayes, holding back data
-            var d = Descriptor.Create<Candidate>();
-            var g = new DecisionTreeGenerator(d);
-            g.SetHint(0.5);
-            // The Learner uses 80% of the data to train the model and 20% to test the model. The learner also runs the generator 1000 times and returns the most accurate model.
-            var nbmodel = Learner.Learn(trainingCandidates, 0.80, 1000, g);
-            Console.WriteLine(nbmodel);
+            // Decision tree
+            //var d = Descriptor.Create<Candidate>();
+            //var decisionTreeGenerator = new DecisionTreeGenerator(d);
+            //decisionTreeGenerator.SetHint(0.5);
+            //// The Learner uses 80% of the data to train the model and 20% to test the model. The learner also runs the generator 1000 times and returns the most accurate model.
+            //var dtModel = Learner.Learn(trainingCandidates, 0.80, 1000, decisionTreeGenerator);
+            //Console.WriteLine(dtModel);
+            //ClassifyWithDecisionTree(testCandidates, dtModel);
 
-            // Create decision tree
-            var model = GenerateModel(trainingCandidates);
-
-            Console.WriteLine(model);
-
-            ClassifyTestCandidates(testCandidates, model);
+            // Naive bayes
+            // https://github.com/sethjuarez/numl/issues/12
+            IGenerator nbGenerator = new NaiveBayesGenerator(20);
+            nbGenerator.Descriptor = Descriptor.Create<Candidate>();
+            LearningModel learningModel = Learner.Learn(trainingCandidates, 0.80, 1000, nbGenerator);
+            IModel nbModel = learningModel.Model;
+            Console.WriteLine(nbModel);
+            Console.WriteLine(learningModel.Accuracy);
+            ClassifyWithNaiveBayes(testCandidates, nbModel);
 
             Helpers.OutputCandidates(testCandidates, "labelledTestCandidates");
 
@@ -77,13 +82,23 @@
             Console.ReadLine();
         }
 
-        private static void ClassifyTestCandidates(List<Candidate> testCandidates, IModel model)
+        private static void ClassifyWithNaiveBayes(List<Candidate> testCandidates, IModel nbModel)
         {
             for (int i = 0; i < testCandidates.Count; i++)
             {
-                testCandidates[i] = model.Predict<Candidate>(testCandidates[i]);
+                testCandidates[i] = nbModel.Predict(testCandidates[i]);
             }
         }
+
+        private static void ClassifyWithDecisionTree(List<Candidate> testCandidates, LearningModel model)
+        {
+            for (int i = 0; i < testCandidates.Count; i++)
+            {
+                //testCandidates[i] = model.<Candidate>(testCandidates[i]);
+            }
+        }
+
+
 
         private static IModel GenerateModel(List<Candidate> trainingCandidates)
         {
