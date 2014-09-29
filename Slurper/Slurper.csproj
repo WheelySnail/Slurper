@@ -163,8 +163,6 @@
     <Compile Include="Model\FreebaseBrand.cs" />
     <Compile Include="Model\FreeBaseBrandResponse.cs" />
     <Compile Include="Helpers.cs" />
-    <Compile Include="HtmlEncodeStringPropertiesConverter.cs" />
-    <Compile Include="HtmlUtility.cs" />
     <Compile Include="Model\Brand.cs" />
     <Compile Include="Model\Candidate.cs" />
     <Compile Include="Model\Company.cs" />
