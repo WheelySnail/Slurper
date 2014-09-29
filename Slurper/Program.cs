@@ -48,30 +48,33 @@
 
             var negativeTrainingCandidates = GetNegativeTrainingCandidates(
                                                                            knownCompanyBrandRelationships,
-                                                                           ItemLevelCandidates, classifier, tagger).Take(positivesCount);
+                                                                           ItemLevelCandidates, classifier, tagger, positivesCount);
 
             trainingCandidates.AddRange(negativeTrainingCandidates);
 
             var testCandidates = GetTestCandidates(knownCompanyBrandRelationships, ItemLevelCandidates, classifier, tagger);
 
-            // Decision tree
-            //var d = Descriptor.Create<Candidate>();
-            //var decisionTreeGenerator = new DecisionTreeGenerator(d);
-            //decisionTreeGenerator.SetHint(0.5);
-            //// The Learner uses 80% of the data to train the model and 20% to test the model. The learner also runs the generator 1000 times and returns the most accurate model.
-            //var dtModel = Learner.Learn(trainingCandidates, 0.80, 1000, decisionTreeGenerator);
-            //Console.WriteLine(dtModel);
-            //ClassifyWithDecisionTree(testCandidates, dtModel);
+             //Decision tree
+            var d = Descriptor.Create<Candidate>();
+            var decisionTreeGenerator = new DecisionTreeGenerator(d);
+            decisionTreeGenerator.SetHint(0.5);
+            // The Learner uses 80% of the data to train the model and 20% to test the model. The learner also runs the generator 1000 times and returns the most accurate model.
+            var dtModel = Learner.Learn(trainingCandidates, 0.80, 1000, decisionTreeGenerator);
+            Console.WriteLine(dtModel);
+            ClassifyWithDecisionTree(testCandidates, dtModel);
 
-            // Naive bayes
-            // https://github.com/sethjuarez/numl/issues/12
-            IGenerator nbGenerator = new NaiveBayesGenerator(20);
-            nbGenerator.Descriptor = Descriptor.Create<Candidate>();
-            LearningModel learningModel = Learner.Learn(trainingCandidates, 0.80, 1000, nbGenerator);
-            IModel nbModel = learningModel.Model;
-            Console.WriteLine(nbModel);
-            Console.WriteLine(learningModel.Accuracy);
-            ClassifyWithNaiveBayes(testCandidates, nbModel);
+            //// Naive bayes
+            //// https://github.com/sethjuarez/numl/issues/12
+            //IGenerator nbGenerator = new NaiveBayesGenerator(20);
+            //nbGenerator.Descriptor = Descriptor.Create<Candidate>();
+            //LearningModel learningModel = Learner.Learn(trainingCandidates, 0.80, 1000, nbGenerator);
+            //IModel nbModel = learningModel.Model;
+            //Console.WriteLine(nbModel);
+            //Console.WriteLine(learningModel.Accuracy);
+            //ClassifyWithNaiveBayes(testCandidates, nbModel);
+
+            // Neural network
+            // https://github.com/sethjuarez/numl/blob/master/numl.Tests/SupervisedTests/NeuralNetworkTests.cs
 
             Helpers.OutputCandidates(testCandidates, "labelledTestCandidates");
 
@@ -134,7 +137,7 @@
             return candidates;
         }
 
-        private static List<Candidate> GetNegativeTrainingCandidates(List<CompanyAndBrands> companyBrandRelationships, bool itemBrandLevelCandidates, CRFClassifier classifier, MaxentTagger tagger)
+        private static List<Candidate> GetNegativeTrainingCandidates(List<CompanyAndBrands> companyBrandRelationships, bool itemBrandLevelCandidates, CRFClassifier classifier, MaxentTagger tagger, int positivesCount)
         {
             var knownCompanyBrandNonRelationships =
                     Helpers.CreateKnownCompanyBrandNonRelationships(companyBrandRelationships);
@@ -145,7 +148,7 @@
                                                                             pages,
                                                                             knownCompanyBrandNonRelationships,
                                                                             itemBrandLevelCandidates,
-                                                                            false, classifier, tagger);
+                                                                            false, classifier, tagger, positivesCount);
 
             Helpers.OutputCandidates(negativeCandidates, "negativetraining");
 
@@ -154,11 +157,11 @@
 
         private static List<Candidate> GetTestCandidates(List<CompanyAndBrands> companyBrandRelationships, bool itemLevelCandidates, CRFClassifier classifier, MaxentTagger tagger)
         {
-            var testBrands = Helpers.GetTestBrands(companyBrandRelationships, tagger);
+            var testBrands = Helpers.GetTestBrands(companyBrandRelationships, tagger, classifier);
 
             var testCompanies = Helpers.GetTestCompanies(companyBrandRelationships);
 
-            // TODO Remove duplicates between the two lists
+            // Option to remove brands which are also in the companies list 
             //for (int i = testBrands.Count; i >= 0; i--)
             //{
             //    if (testCompanies.Any(tc => tc.Equals(testBrands[i])))

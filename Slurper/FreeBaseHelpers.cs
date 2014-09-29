@@ -9,6 +9,8 @@ namespace Slurper
     using System.Net.Http.Headers;
     using System.Text.RegularExpressions;
 
+    using CsQuery.ExtensionMethods.Internal;
+
     using Newtonsoft.Json;
 
     using Slurper.Model;
@@ -65,7 +67,7 @@ namespace Slurper
 
         internal static List<String> GetKnownCompaniesFromFreeBaseBusinessOperations()
         {
-            string companiesQuery = "?query=[{\"type\":\"/business/business_operation\",\"name\": null,\"limit\":100}]&key=" + API_KEY;
+            string companiesQuery = "?query=[{\"type\":\"/business/business_operation\",\"name\": null,\"limit\":1000}]&key=" + API_KEY;
 
             var client = new HttpClient();
             client.BaseAddress = new Uri(url);
@@ -119,11 +121,11 @@ namespace Slurper
             var productsResponse = new FreeBaseConsumerCompanyResponse();
 
             string companiesWithBrandsQuery =
-                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"brands\":[{\"brand\": null}],\"limit\":100}]&key="
+                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"brands\":[{\"brand\": null}],\"limit\":400}]&key="
                     + API_KEY;
 
             string companiesWithProductsQuery =
-                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"products\":[{\"consumer_product\": null}],\"limit\":100}]&key="
+                    "?query=[{\"type\":\"/business/consumer_company\",\"id\": null,\"name\": null,\"products\":[{\"consumer_product\": null}],\"limit\":400}]&key="
                     + API_KEY;
 
             var client = new HttpClient();
@@ -187,12 +189,23 @@ namespace Slurper
                 }
             }
 
+            // Merge 'Cadbury' and 'Cadbury Adams'
+            var cadburies = deDupedCompanyAndBrandsList.FirstOrDefault(cb => cb.CompanyName.Equals("Cadbury"));
+            var cadburyAdams = deDupedCompanyAndBrandsList.FirstOrDefault(cb => cb.CompanyName.Equals("Cadbury Adams"));
+            if (cadburies != null && cadburyAdams != null)
+            {
+                cadburies.BrandNames.AddRange(cadburyAdams.BrandNames);
+                deDupedCompanyAndBrandsList.Remove(cadburyAdams);
+            }
+
             // Remove any brands which were returned from FreeBase as 'null'
 
             foreach (var companyAndBrands in deDupedCompanyAndBrandsList)
             {
                 companyAndBrands.BrandNames.RemoveAll(bn => bn == null);
             }
+
+            deDupedCompanyAndBrandsList.RemoveAll(cb => cb.CompanyName.IsNullOrEmpty());
 
             return deDupedCompanyAndBrandsList;
         }
